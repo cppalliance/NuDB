@@ -1,4 +1,14 @@
+<img width="880" height = "80" alt = "NuDB"
+    src="https://raw.githubusercontent.com/vinniefalco/NuDB/master/doc/images/readme.png">
+
 # NuDB: A Key/Value Store For Decentralized Systems
+
+[![Join the chat at https://gitter.im/vinniefalco/NuDB](https://badges.gitter.im/vinniefalco/NuDB.svg)](https://gitter.im/vinniefalco/NuDB?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status]
+(https://travis-ci.org/vinniefalco/NuDB.svg?branch=master)](https://travis-ci.org/vinniefalco/NuDB) [![codecov]
+(https://codecov.io/gh/vinniefalco/NuDB/branch/master/graph/badge.svg)](https://codecov.io/gh/vinniefalco/NuDB) [![coveralls]
+(https://coveralls.io/repos/github/vinniefalco/NuDB/badge.svg?branch=master)](https://coveralls.io/github/vinniefalco/NuDB?branch=master) [![Documentation]
+(https://img.shields.io/badge/documentation-master-brightgreen.svg)](http://vinniefalco.github.io/nudb/) [![License]
+(https://img.shields.io/badge/license-boost-brightgreen.svg)](LICENSE_1_0.txt)
 
 The new breed of decentralized systems such as Ripple or Bitcoin
 that use embedded key/value databases place different demands on
@@ -19,13 +29,13 @@ insert operations to secondary storage, along with these features:
 * Hardened against algorithmic complexity attacks.
 * Header-only, nothing to build or link.
 
-Three files are used. 
+Three files are used.
 
 * The data file holds keys and values stored sequentially and size-prefixed.
 * The key file holds a series of fixed-size bucket records forming an on-disk
   hash table.
 * The log file stores bookkeeping information used to restore consistency when
-an external failure occurs. 
+an external failure occurs.
 
 In typical cases a fetch costs one I/O cycle to consult the key file, and if the
 key is present, one I/O cycle to read the value.
@@ -52,7 +62,7 @@ a good hash function.
 
 Callers must also provide these parameters when a database is _opened:_
 
-* `Appnum`: An application-defined integer constant which can be retrieved 
+* `Appnum`: An application-defined integer constant which can be retrieved
 later from the database [TODO].
 * `AllocSize`: A significant multiple of the average data size.
 
@@ -95,7 +105,7 @@ and immutable: once written, bytes are never changed.
 Initially the hash table in the key file consists of a single bucket.
 After the load factor is exceeded from insertions, the hash table grows
 in size by one bucket by doing a "split". The split operation is the
-[linear hashing algorithm](http://en.wikipedia.org/wiki/Linear_hashing) 
+[linear hashing algorithm](http://en.wikipedia.org/wiki/Linear_hashing)
 as described by Litwin and Larson.
 
 
