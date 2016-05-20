@@ -1,32 +1,20 @@
-//------------------------------------------------------------------------------
-/*
-    This file is part of Beast: https://github.com/vinniefalco/Beast
-    Copyright 2014, Vinnie Falco <vinnie.falco@gmail.com>
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose  with  or without fee is hereby granted, provided that the above
-    copyright notice and this permission notice appear in all copies.
-
-    THE  SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-    WITH  REGARD  TO  THIS  SOFTWARE  INCLUDING  ALL  IMPLIED  WARRANTIES  OF
-    MERCHANTABILITY  AND  FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-    ANY  SPECIAL ,  DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-    WHATSOEVER  RESULTING  FROM  LOSS  OF USE, DATA OR PROFITS, WHETHER IN AN
-    ACTION  OF  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-*/
-//==============================================================================
+//
+// Copyright (c) 2015-2016 Vinnie Falco (vinnie dot falco at gmail dot com)
+//
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+//
 
 #ifndef NUDB_TEST_UTIL_HPP
 #define NUDB_TEST_UTIL_HPP
 
 #include "fail_file.hpp"
-#include "xor_shift_engine.hpp"
 #include "temp_dir.hpp"
+#include "xor_shift_engine.hpp"
+#include "xxhasher.hpp"
 
 #include <nudb.hpp>
 #include <nudb/identity.hpp>
-#include <hash/xxhasher.hpp>
 #include <cstdint>
 #include <iomanip>
 #include <memory>
@@ -45,14 +33,14 @@ struct test_api : test_api_base
     using fail_store = nudb::store<
         typename test_api_base::hash_type,
             typename test_api_base::codec_type,
-            nudb::fail_file <typename test_api_base::file_type>>;
+                fail_file<typename test_api_base::file_type>>;
 };
 
-static std::size_t BEAST_CONSTEXPR arena_alloc_size = 16 * 1024 * 1024;
+static std::size_t constexpr arena_alloc_size = 16 * 1024 * 1024;
 
-static std::uint64_t BEAST_CONSTEXPR appnum = 1337;
+static std::uint64_t constexpr appnum = 1337;
 
-static std::uint64_t BEAST_CONSTEXPR salt = 42;
+static std::uint64_t constexpr salt = 42;
 
 //------------------------------------------------------------------------------
 
@@ -86,7 +74,7 @@ public:
     {
         if (capacity_ < size)
         {
-            capacity_ = detail::ceil_pow2(size);
+            capacity_ = nudb::detail::ceil_pow2(size);
             buf_.reset (
                 new std::uint8_t[capacity_]);
         }
@@ -154,7 +142,7 @@ private:
     };
 
     Storage s_;
-    beast::xor_shift_engine gen_;
+    xor_shift_engine gen_;
     std::uniform_int_distribution<std::uint32_t> d_size_;
 
 public:
@@ -210,47 +198,42 @@ num (T t)
     return s2;
 }
 
-template <class Log>
+inline
 void
-print (Log log,
-    beast::nudb::verify_info const& info)
+print(std::ostream& os, verify_info const& info)
 {
-    log << "avg_fetch:       " << std::fixed << std::setprecision(3) <<
-                                    info.avg_fetch;
-    log << "waste:           " << std::fixed << std::setprecision(3) <<
-                                    info.waste * 100 << "%";
-    log << "overhead:        " << std::fixed << std::setprecision(1) <<
-                                    info.overhead * 100 << "%";
-    log << "actual_load:     " << std::fixed << std::setprecision(0) <<
-                                    info.actual_load * 100 << "%";
-    log << "version:         " << num(info.version);
-    log << "uid:             " << std::showbase << std::hex << info.uid;
-    log << "appnum:          " << info.appnum;
-    log << "key_size:        " << num(info.key_size);
-    log << "salt:            " << std::showbase << std::hex << info.salt;
-    log << "pepper:          " << std::showbase << std::hex << info.pepper;
-    log << "block_size:      " << num(info.block_size);
-    log << "bucket_size:     " << num(info.bucket_size);
-    log << "load_factor:     " << std::fixed << std::setprecision(0) <<
-                                    info.load_factor * 100 << "%";
-    log << "capacity:        " << num(info.capacity);
-    log << "buckets:         " << num(info.buckets);
-    log << "key_count:       " << num(info.key_count);
-    log << "value_count:     " << num(info.value_count);
-    log << "value_bytes:     " << num(info.value_bytes);
-    log << "spill_count:     " << num(info.spill_count);
-    log << "spill_count_tot: " << num(info.spill_count_tot);
-    log << "spill_bytes:     " << num(info.spill_bytes);
-    log << "spill_bytes_tot: " << num(info.spill_bytes_tot);
-    log << "key_file_size:   " << num(info.key_file_size);
-    log << "dat_file_size:   " << num(info.dat_file_size);
+    os <<
+        "avg_fetch:       " << std::fixed << std::setprecision(3) << info.avg_fetch << "\n" <<
+        "waste:           " << std::fixed << std::setprecision(3) << info.waste * 100 << "%" << "\n" <<
+        "overhead:        " << std::fixed << std::setprecision(1) << info.overhead * 100 << "%" << "\n" <<
+        "actual_load:     " << std::fixed << std::setprecision(0) << info.actual_load * 100 << "%" << "\n" <<
+        "version:         " << num(info.version) << "\n" <<
+        "uid:             " << std::showbase << std::hex << info.uid << "\n" <<
+        "appnum:          " << info.appnum << "\n" <<
+        "key_size:        " << num(info.key_size) << "\n" <<
+        "salt:            " << std::showbase << std::hex << info.salt << "\n" <<
+        "pepper:          " << std::showbase << std::hex << info.pepper << "\n" <<
+        "block_size:      " << num(info.block_size) << "\n" <<
+        "bucket_size:     " << num(info.bucket_size) << "\n" <<
+        "load_factor:     " << std::fixed << std::setprecision(0) << info.load_factor * 100 << "%" << "\n" <<
+        "capacity:        " << num(info.capacity) << "\n" <<
+        "buckets:         " << num(info.buckets) << "\n" <<
+        "key_count:       " << num(info.key_count) << "\n" <<
+        "value_count:     " << num(info.value_count) << "\n" <<
+        "value_bytes:     " << num(info.value_bytes) << "\n" <<
+        "spill_count:     " << num(info.spill_count) << "\n" <<
+        "spill_count_tot: " << num(info.spill_count_tot) << "\n" <<
+        "spill_bytes:     " << num(info.spill_bytes) << "\n" <<
+        "spill_bytes_tot: " << num(info.spill_bytes_tot) << "\n" <<
+        "key_file_size:   " << num(info.key_file_size) << "\n" <<
+        "dat_file_size:   " << num(info.dat_file_size) << std::endl;
 
     std::string s;
     for (int i = 0; i < info.hist.size(); ++i)
         s += (i==0) ?
             std::to_string(info.hist[i]) :
             (", " + std::to_string(info.hist[i]));
-    log << "hist:            " << s;
+    os << "hist:            " << s << std::endl;
 }
 
 } // test

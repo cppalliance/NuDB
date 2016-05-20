@@ -47,7 +47,9 @@ project nudb
   : requirements
     <include>.
     <include>./include
+    <library>/boost/filesystem//boost_filesystem
     <library>/boost/program_options//boost_program_options
+    <library>/boost/system//boost_system
     <define>BOOST_ALL_NO_LIB=1
     <define>BOOST_SYSTEM_NO_DEPRECATED=1
     <threading>multi

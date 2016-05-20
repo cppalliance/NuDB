@@ -10,6 +10,7 @@
 
 #include <nudb/common.hpp>
 #include <cassert>
+#include <climits>
 #include <string>
 
 #ifndef NUDB_WIN32_FILE
@@ -321,8 +322,13 @@ win32_file<_>::read (std::size_t offset,
         ov.Offset = li.LowPart;
         ov.OffsetHigh = li.HighPart;
         ov.hEvent = NULL;
+        DWORD amount;
+        if(bytes > std::numeric_limits<DWORD>::max())
+            amount = std::numeric_limits<DWORD>::max();
+        else
+            amount = static_cast<DWORD>(bytes);
         BOOL const bSuccess = ::ReadFile(
-            hf_, buffer, bytes, &bytesRead, &ov);
+            hf_, buffer, amount, &bytesRead, &ov);
         if (! bSuccess)
         {
             DWORD const dwError = ::GetLastError();
@@ -353,9 +359,14 @@ win32_file<_>::write (std::size_t offset,
         ov.Offset = li.LowPart;
         ov.OffsetHigh = li.HighPart;
         ov.hEvent = NULL;
+        DWORD amount;
+        if(bytes > std::numeric_limits<DWORD>::max())
+            amount = std::numeric_limits<DWORD>::max();
+        else
+            amount = static_cast<DWORD>(bytes);
         DWORD bytesWritten;
         BOOL const bSuccess = ::WriteFile(
-            hf_, buffer, bytes, &bytesWritten, &ov);
+            hf_, buffer, amount, &bytesWritten, &ov);
         if (! bSuccess)
             throw file_win32_error(
                 "write file");

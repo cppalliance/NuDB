@@ -18,7 +18,21 @@ compile verify.cpp : : ;
 compile visit.cpp : : ;
 compile win32_file.cpp : : ;
 
-
-unit-test callgrind-test :
+unit-test callgrind-bench :
+    xxHash/xxhash.c
     callgrind_test.cpp
+    ;
+
+unit-test recover-test :
+    xxHash/xxhash.c
+    recover_test.cpp
+    ;
+
+unit-test store-test :
+    xxHash/xxhash.c
+    store_test.cpp
+    ;
+
+unit-test varint-test :
+    varint_test.cpp
     ;

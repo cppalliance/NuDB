@@ -131,7 +131,8 @@ success:
     // VFALCO Should it be 65536?
     //        How do we set the min?
     kh.load_factor = std::min<std::size_t>(
-        65536.0 * load_factor, 65535);
+        static_cast<std::size_t>(
+            65536.0 * load_factor), 65535);
     write (df, dh);
     write (kf, kh);
     buffer buf(block_size);

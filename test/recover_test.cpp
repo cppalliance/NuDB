@@ -5,20 +5,18 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <nudb/tests/common.hpp>
-#include <xor_shift_engine.hpp>
-#include <unit_test/suite.hpp>
+#include "suite.hpp"
+#include "test_util.hpp"
 #include <cmath>
 #include <cstring>
 #include <memory>
 #include <random>
 #include <utility>
 
-namespace beast {
 namespace nudb {
 namespace test {
 
-class basic_recover_test : public unit_test::suite
+class basic_recover_test : public suite
 {
 public:
     // Creates and opens a database, performs a bunch
@@ -26,43 +24,43 @@ public:
     // they are there. Uses a fail_file that causes the n-th
     // I/O to fail, causing an exception.
     void
-    do_work (std::size_t count, float load_factor,
+    do_work(std::size_t count, float load_factor,
         nudb::path_type const& path, fail_counter& c)
     {
         auto const dp = path + ".dat";
         auto const kp = path + ".key";
         auto const lp = path + ".log";
-        test_api::file_type::erase (dp);
-        test_api::file_type::erase (kp);
-        test_api::file_type::erase (lp);
-        expect(test_api::create (
+        test_api::file_type::erase(dp);
+        test_api::file_type::erase(kp);
+        test_api::file_type::erase(lp);
+        expect(test_api::create(
             dp, kp, lp, appnum, salt, sizeof(key_type),
                 block_size(path), load_factor), "create");
         test_api::fail_store db;
-        if (! expect(db.open(dp, kp, lp,
+        if(! expect(db.open(dp, kp, lp,
             arena_alloc_size, c), "open"))
         {
             // VFALCO open should never fail here, we need
             //        to report this and terminate the test.
         }
-        expect (db.appnum() == appnum, "appnum");
+        expect(db.appnum() == appnum, "appnum");
         Sequence seq;
-        for (std::size_t i = 0; i < count; ++i)
+        for(std::size_t i = 0; i < count; ++i)
         {
             auto const v = seq[i];
             expect(db.insert(&v.key, v.data, v.size),
                 "insert");
         }
         Storage s;
-        for (std::size_t i = 0; i < count; ++i)
+        for(std::size_t i = 0; i < count; ++i)
         {
             auto const v = seq[i];
-            if (! expect(db.fetch (&v.key, s),
+            if(! expect(db.fetch (&v.key, s),
                     "fetch"))
                 break;
-            if (! expect(s.size() == v.size, "size"))
+            if(! expect(s.size() == v.size, "size"))
                 break;
-            if (! expect(std::memcmp(s.get(),
+            if(! expect(std::memcmp(s.get(),
                     v.data, v.size) == 0, "data"))
                 break;
         }
@@ -74,12 +72,12 @@ public:
         }
         catch(...)
         {
-            print(log, info);
+            print(log(), info);
             throw;
         }
-        test_api::file_type::erase (dp);
-        test_api::file_type::erase (kp);
-        test_api::file_type::erase (lp);
+        test_api::file_type::erase(dp);
+        test_api::file_type::erase(kp);
+        test_api::file_type::erase(lp);
     }
 
     void
@@ -100,14 +98,14 @@ public:
     }
 
     void
-    test_recover (float load_factor, std::size_t count)
+    test_recover(float load_factor, std::size_t count)
     {
-        testcase << count << " inserts";
+        log() << count << " inserts" << std::endl;
 
-        beast::UnitTestUtilities::TempDirectory tempDir;
+        temp_dir td;
 
-        auto const path = tempDir.path();
-        for (std::size_t n = 1;;++n)
+        auto const path = td.path();
+        for(std::size_t n = 1;;++n)
         {
             try
             {
@@ -115,10 +113,10 @@ public:
                 do_work (count, load_factor, path, c);
                 break;
             }
-            catch (nudb::fail_error const&)
+            catch(fail_error const&)
             {
             }
-            for (std::size_t m = 1;;++m)
+            for(std::size_t m = 1;;++m)
             {
                 fail_counter c(m);
                 try
@@ -126,7 +124,7 @@ public:
                     do_recover (path, c);
                     break;
                 }
-                catch (nudb::fail_error const&)
+                catch(fail_error const&)
                 {
                 }
             }
@@ -141,14 +139,12 @@ public:
     run() override
     {
         float lf = 0.55f;
-        test_recover (lf, 0);
-        test_recover (lf, 10);
-        test_recover (lf, 100);
-        test_recover (lf, 1000);
+        test_recover(lf, 0);
+        test_recover(lf, 10);
+        test_recover(lf, 100);
+        test_recover(lf, 1000);
     }
 };
-
-BEAST_DEFINE_TESTSUITE(recover,nudb,beast);
 
 class recover_big_test : public basic_recover_test
 {
@@ -157,12 +153,17 @@ public:
     run() override
     {
         float lf = 0.90f;
-        test_recover (lf, 10000);
-        test_recover (lf, 100000);
+        test_recover(lf, 10000);
+        test_recover(lf, 100000);
     }
 };
 
 } // test
 } // nudb
-} // beast
 
+int main()
+{
+    std::cout << "recover_test:" << std::endl;
+    nudb::test::recover_test t;
+    return t(std::cerr) ? EXIT_SUCCESS : EXIT_FAILURE;
+}
