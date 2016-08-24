@@ -1,8 +1,6 @@
 <img width="880" height = "80" alt = "NuDB"
     src="https://raw.githubusercontent.com/vinniefalco/NuDB/master/doc/images/readme.png">
 
-# NuDB: A Key/Value Store For Decentralized Systems
-
 [![Join the chat at https://gitter.im/vinniefalco/NuDB](https://badges.gitter.im/vinniefalco/NuDB.svg)](https://gitter.im/vinniefalco/NuDB?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status]
 (https://travis-ci.org/vinniefalco/NuDB.svg?branch=master)](https://travis-ci.org/vinniefalco/NuDB) [![codecov]
 (https://codecov.io/gh/vinniefalco/NuDB/branch/master/graph/badge.svg)](https://codecov.io/gh/vinniefalco/NuDB) [![coveralls]
@@ -10,24 +8,94 @@
 (https://img.shields.io/badge/documentation-master-brightgreen.svg)](http://vinniefalco.github.io/nudb/) [![License]
 (https://img.shields.io/badge/license-boost-brightgreen.svg)](LICENSE_1_0.txt)
 
-The new breed of decentralized systems such as Ripple or Bitcoin
-that use embedded key/value databases place different demands on
-these database than what is traditional. NuDB provides highly
-optimized and concurrent atomic, durable, and isolated fetch and
-insert operations to secondary storage, along with these features:
+# A Key/Value Store For Decentralized Systems
+
+- [Introduction](#introduction)
+- [Requirements](#requirements)
+- [Building](#building)
+- [Algorithm](#algorithm)
+- [Licence](#licence)
+- [Contact](#contact)
+
+---
+
+## Introduction
+
+NuDB is an append only, key/value store specifically optimized for random
+read performance on modern SSDs or equivalent high-IOPS decices. The most
+common application for NuDB is content addressible storage where a
+cryptographic digest of the data is used as the key. The read performance
+and memory usage are independent of the size of the database. These are
+some other features:
 
 * Low memory footprint.
 * Values are immutable.
-* Value sizes from 1 to 2^48 bytes (281TB).
+* Value sizes from 1 to 2^32 bytes (4GB).
 * All keys are the same size.
 * Performance independent of growth.
 * Optimized for concurrent fetch.
 * Key file can be rebuilt if needed.
 * Inserts are atomic and consistent.
 * Data files may be efficiently iterated.
-* Key and data files may be on different volumes.
+* Key and data files may be on different devices.
 * Hardened against algorithmic complexity attacks.
 * Header-only, nothing to build or link.
+
+## Requirements
+
+* Boost 1.58 or higher
+* C++11 or greater
+* SSD drive, or equivalent device with high IOPS
+
+## Building
+
+NuDB is header-only so there are no libraries to build or link with.
+To use it in your project, simply copy the NuDB sources to your
+project's source tree (alternatively, bring NuDB into your Git repository
+using the `git subtree` or `git submodule` commands). Then, edit your
+build scripts to add the `include/` directory to the list of paths checked
+by the C++ compiler when searching for includes. NuDB `#include` lines
+ will look like this:
+```
+#include <nudb/nudb.hpp>
+```
+
+For the examples and tests, NuDB provides build scripts for Boost.Build (bjam)
+and CMake. Developers using Microsoft Visual Studio can generate Visual Studio
+project files by executing these commands from the root of the repository:
+
+
+```
+cd bin
+cmake ..                                    # for 32-bit builds
+cd ../bin64
+cmake -G"Visual Studio 14 2015 Win64" ..    # for 64-bit builds
+```
+
+To build with Boost.Build, it is necessary to have the bjam executable
+in your path. And bjam needs to know how to find the Boost sources. The
+easiest way to do this is make sure that the version of bjam in your path
+is the one at the root of the Boost source tree, which is built when
+running `bootstrap.sh` (or `bootstrap.bat` on Windows).
+
+Once bjam is in your path, simply run bjam in the root of the Beast
+repository to automatically build the required Boost libraries if they
+are not already built, build the examples, then build and run the unit
+tests.
+
+The files in the repository are laid out thusly:
+
+```
+./
+    bin/            Holds executables and project files
+    bin64/          Holds 64-bit Windows executables and project files
+    include/        Add this to your compiler includes
+        nudb/
+    extras/         Additional APIs, may change
+    test/           Unit tests and benchmarks
+```
+
+## Algorithm
 
 Three files are used.
 
@@ -40,7 +108,7 @@ an external failure occurs.
 In typical cases a fetch costs one I/O cycle to consult the key file, and if the
 key is present, one I/O cycle to read the value.
 
-## Usage
+### Usage
 
 Callers must define these parameters when _creating_ a database:
 
@@ -74,19 +142,19 @@ allocated blocks.
 
 Two operations are defined: `fetch`, and `insert`.
 
-### `fetch`
+#### `fetch`
 
 The `fetch` operation retrieves a variable length value given the
 key. The caller supplies a factory used to provide a buffer for storing
 the value. This interface allows custom memory allocation strategies.
 
-### `insert`
+#### `insert`
 
 `insert` adds a key/value pair to the store. Value data must contain at least
 one byte. Duplicate keys are disallowed. Insertions are serialized, which means
 [TODO].
 
-## Implementation
+### Implementation
 
 All insertions are buffered in memory, with inserted values becoming
 immediately discoverable in subsequent or concurrent calls to fetch.
@@ -107,7 +175,6 @@ After the load factor is exceeded from insertions, the hash table grows
 in size by one bucket by doing a "split". The split operation is the
 [linear hashing algorithm](http://en.wikipedia.org/wiki/Linear_hashing)
 as described by Litwin and Larson.
-
 
 When a bucket is split, each key is rehashed, and either remains in the
 original bucket or gets moved to the a bucket appended to the end of
@@ -148,12 +215,12 @@ These unused bytes can be removed by visiting each value in the value
 file using an off-line process and inserting it into a new database,
 then delete the old database and use the new one instead.
 
-## Recovery
+### Recovery
 
 To provide atomicity and consistency, a log file associated with the
 database stores information used to roll back partial commits.
 
-## Iteration
+### Iteration
 
 Each record in the data file is prefixed with a header identifying
 whether it is a value record or a spill record, along with the size of
@@ -162,19 +229,19 @@ be iterated by incrementing a byte counter. A key file can be regenerated from
 just the data file by iterating the values and performing the key
 insertion algorithm.
 
-## Concurrency
+### Concurrency
 
 Locks are never held during disk reads and writes. Fetches are fully
 concurrent, while inserts are serialized. Inserts fail on duplicate
 keys, and are atomic: they either succeed immediately or fail.
 After an insert, the key is immediately visible to subsequent fetches.
 
-## Formats
+### Formats
 
 All integer values are stored as big endian. The uint48_t format
 consists of 6 bytes.
 
-### Key File
+#### Key File
 
 The Key File contains the Header followed by one or more
 fixed-length Bucket Records.
@@ -265,7 +332,7 @@ belonging to the same database can be identified.
     uint16              Size            Bytes in spill bucket (for skipping)
     Bucket              SpillBucket     Bucket Record
 
-### Log File
+#### Log File
 
 The Log file contains the Header followed by zero or more fixed size
 log records. Each log record contains a snapshot of a bucket. When a
@@ -296,3 +363,14 @@ the data and key files are truncated to the last known good size.
 
 Compact buckets include only Size entries. These are primarily
 used to minimize the volume of writes to the log file.
+
+## License
+
+Distributed under the Boost Software License, Version 1.0.
+(See accompanying file [LICENSE_1_0.txt](LICENSE_1_0.txt) or copy at
+http://www.boost.org/LICENSE_1_0.txt)
+
+## Contact
+
+Please report issues or questions here:
+https://github.com/vinniefalco/NuDB/issues
