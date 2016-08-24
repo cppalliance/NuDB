@@ -27,14 +27,28 @@ namespace nudb {
     key file in memory; only a single iteration of the data file
     is needed in this case.
 
+    During a rekey, spill records may be appended to the data
+    file. If the rekey operation is abnormally terminated, this
+    would normally result in a corrupted data file. To prevent this,
+    the function creates a log file using the specified path so
+    that the database can be fixed in a subsequent call to recover.
+
+    @note If a log file is already present, this function will
+    fail with @ref error::need_recover.
+
     @tparam Hasher The hash function to use. This type must
     meet the requirements of @b HashFunction. The hash function
     must be the same as that used to create the database, or
     else an error is returned.
 
+    @tparam File The type of file to use. This type must meet
+    the requirements of @b File.
+
     @param dat_path The path to the data file.
 
     @param key_path The path to the key file.
+
+    @param log_path The path to the log file.
 
     @param itemCount The number of items in the data file.
 
@@ -53,11 +67,15 @@ namespace nudb {
     @endcode
 */
 // VFALCO Should this delete the key file on an error?
-template<class Hasher, class Progress>
+template<
+    class Hasher,
+    class Progress,
+    class File = native_file>
 void
 rekey(
     path_type const& dat_path,
     path_type const& key_path,
+    path_type const& log_path,
     std::uint64_t itemCount,
     std::size_t bufferSize,
     Progress& progress,

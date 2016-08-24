@@ -24,7 +24,10 @@ namespace errc = boost::system::errc;
 /// Database error codes.
 enum class error
 {
-    /// No error
+    /** No error.
+
+        The operation completed successfully.
+    */
     success = 0,
 
     /// A file read returned less data than expected
@@ -32,6 +35,11 @@ enum class error
 
     /// A file write stored less data than expected
     short_write,
+
+    /// Recover required
+    recover_needed,
+
+
 
     /// Not a data file
     not_data_file,

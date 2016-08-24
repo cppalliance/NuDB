@@ -167,13 +167,16 @@ public:
             "        file is present.  Running commands on an unrecovered database\n"
             "        may result in lost or corrupted data.\n"
             "\n"
-            "    rekey <dat-path] <key-path> --count=<items> --buffer=<bytes>\n"
+            "    rekey <dat-path] <key-path> <log-path> --count=<items> --buffer=<bytes>\n"
             "\n"
             "        Generate the key file for a data file.  The buffer  option is\n"
             "        required,  larger  buffers process faster.  A buffer equal to\n"
             "        the size of the key file  processes the fastest. This command\n"
             "        must be  passed  the count of  items in the data file,  which\n"
             "        can be calculated with the 'visit' command.\n"
+            "\n"
+            "        If the rekey is aborted before completion,  the database must\n"
+            "        be subsequently restored by running the 'recover' command.\n"
             "\n"
             "    verify <dat-path> <key-path> [--buffer=<bytes>]\n"
             "\n"
@@ -378,17 +381,20 @@ private:
             return error("Missing data file path");
         if(! vm.count("key"))
             return error("Missing key file path");
+        if(! vm.count("log"))
+            return error("Missing log file path");
         if(! vm.count("count"))
             return error("Missing item count");
         if(! vm.count("buffer"))
             return error("Missing buffer size");
         auto const dp = vm["dat"].as<std::string>();
         auto const kp = vm["key"].as<std::string>();
+        auto const lp = vm["log"].as<std::string>();
         auto const itemCount = vm["count"].as<std::size_t>();
         auto const bufferSize = vm["buffer"].as<std::size_t>();
         error_code ec;
         progress p{std::cout};
-        rekey<Hasher>(dp, kp, itemCount, bufferSize, p, ec);
+        rekey<Hasher>(dp, kp, lp, itemCount, bufferSize, p, ec);
         if(ec)
         {
             std::cerr << "rekey: " << ec.message() << "\n";

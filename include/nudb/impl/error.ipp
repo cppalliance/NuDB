@@ -33,6 +33,11 @@ nudb_category()
             case error::short_write:
                 return "short write";
 
+            case error::recover_needed:
+                return "recover needed";
+
+
+
             case error::not_data_file:
                 return "not a data file";
 
