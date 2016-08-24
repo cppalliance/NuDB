@@ -237,7 +237,7 @@ at(nkey_t i) const ->
     // Bucket Entry
     detail::read<uint48_t>(
         is, result.offset);             // Offset
-    detail::read<uint48_t>(
+    detail::read_size48(
         is, result.size);               // Size
     detail::read<f_hash>(
         is, result.hash);               // Hash

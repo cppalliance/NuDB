@@ -107,13 +107,13 @@ rekey(
         {
             auto const offset = r.offset();
             // Data Record or Spill Record
-            std::size_t size;
+            nsize_t size;
             auto is = r.prepare(
                 detail::field<detail::uint48_t>::size, ec); // Size
             if(ec)
                 return;
             progress((b0 / chunkSize) * df_size + r.offset(), nwork);
-            detail::read<detail::uint48_t>(is, size);
+            detail::read_size48(is, size);
             if(size > 0)
             {
                 // Data Record

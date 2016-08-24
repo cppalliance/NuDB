@@ -73,7 +73,7 @@ verify_normal(
             if(ec)
                 return;
             nsize_t size;
-            read<uint48_t>(is, size);
+            read_size48(is, size);
             if(size > 0)
             {
                 // Data Record
@@ -288,7 +288,7 @@ verify_fast(
     // Verify contiguous sequential sections of the
     // key file using multiple passes over the data.
     //
-    auto const chunkSize = std::min(kh.buckets,
+    auto chunkSize = std::min(kh.buckets,
         (bufferSize < 2 * kh.block_size) ? 0 :
             ((bufferSize - kh.block_size) / kh.block_size));
     if(chunkSize == 0)
@@ -305,15 +305,17 @@ verify_fast(
     std::uint64_t fetches = 0;
     buffer buf{(chunkSize + 1) * kh.block_size};
     bucket tmp{kh.block_size, buf.get() + chunkSize * kh.block_size};
-    for(std::uint64_t b0 = 0; b0 < kh.buckets; b0 += chunkSize)
+    for(nsize_t b0 = 0; b0 < kh.buckets; b0 += chunkSize)
     {
         // Load key file chunk to buffer
-        auto const b1 = std::min(
-            b0 + chunkSize, kh.buckets);
+        auto const b1 = std::min(b0 + chunkSize, kh.buckets);
         // Buffered range is [b0, b1)
         auto const bn = b1 - b0;
-        kf.read((b0 + 1) * kh.block_size,
-            buf.get(), bn * kh.block_size, ec);
+        kf.read(
+            static_cast<noff_t>(b0 + 1) * kh.block_size,
+            buf.get(),
+            static_cast<noff_t>(bn * kh.block_size),
+            ec);
         if(ec)
             return;
         work += bn * kh.block_size;
@@ -368,7 +370,7 @@ verify_fast(
             if(ec)
                 return;
             nsize_t size;
-            read<uint48_t>(is, size);
+            detail::read_size48(is, size);
             if(size > 0)
             {
                 // Data Record

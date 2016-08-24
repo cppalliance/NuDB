@@ -50,12 +50,12 @@ visit(
     while(! r.eof())
     {
         // Data Record or Spill Record
-        std::size_t size;
+        nsize_t size;
         auto is = r.prepare(
             field<uint48_t>::size, ec); // Size
         if(ec)
             return;
-        read<uint48_t>(is, size);
+        detail::read_size48(is, size);
         if(size > 0)
         {
             // Data Record

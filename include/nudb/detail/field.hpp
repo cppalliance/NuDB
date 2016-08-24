@@ -12,6 +12,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <stdexcept>
 #include <type_traits>
 
@@ -162,6 +163,16 @@ void
 read(istream& is, U& u)
 {
     readp<T>(is.data(field<T>::size), u);
+}
+
+inline
+void
+read_size48(istream& is, std::size_t& u)
+{
+    std::uint64_t v;
+    read<uint48_t>(is, v);
+    assert(v <= std::numeric_limits<std::uint32_t>::max());
+    u = static_cast<std::uint32_t>(v);
 }
 
 // write field to ostream

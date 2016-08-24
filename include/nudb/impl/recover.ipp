@@ -97,7 +97,6 @@ recover(
             log_file_header::size, lf_size, readSize};
         while(! r.eof())
         {
-            nbuck_t n;
             // Log Record
             auto is = r.prepare(field<std::uint64_t>::size, ec);
             // Log file is incomplete, so roll back.
@@ -108,8 +107,15 @@ recover(
             }
             if(ec)
                 return;
-            read<std::uint64_t>(is, n); // Index
-            b.read(r, ec);              // Bucket
+            nsize_t n;
+            {
+                std::uint64_t v;
+                // VFALCO This should have been a uint32_t
+                read<std::uint64_t>(is, v); // Index
+                assert(v <= std::numeric_limits<std::uint32_t>::max());
+                n = static_cast<nsize_t>(v);
+            }
+            b.read(r, ec);                  // Bucket
             if(ec == error::short_read)
             {
                 ec = {};

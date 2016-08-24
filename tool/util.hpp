@@ -15,6 +15,8 @@
 #include <iostream>
 #include <sstream>
 
+namespace nudb {
+
 template<class = void>
 int
 log2(std::uint64_t n)
@@ -274,5 +276,7 @@ public:
         return now_ - start_;
     }
 };
+
+} // nudb
 
 #endif
