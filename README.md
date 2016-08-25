@@ -1,3 +1,6 @@
+<img width="880" height = "80" alt = "NuDB"
+    src="https://raw.githubusercontent.com/vinniefalco/NuDB/master/doc/images/readme.png">
+
 # NuDB: A Key/Value Store For Decentralized Systems
 
 The new breed of decentralized systems such as Ripple or Bitcoin
@@ -19,13 +22,13 @@ insert operations to secondary storage, along with these features:
 * Hardened against algorithmic complexity attacks.
 * Header-only, nothing to build or link.
 
-Three files are used. 
+Three files are used.
 
 * The data file holds keys and values stored sequentially and size-prefixed.
 * The key file holds a series of fixed-size bucket records forming an on-disk
   hash table.
 * The log file stores bookkeeping information used to restore consistency when
-an external failure occurs. 
+an external failure occurs.
 
 In typical cases a fetch costs one I/O cycle to consult the key file, and if the
 key is present, one I/O cycle to read the value.
@@ -52,7 +55,7 @@ a good hash function.
 
 Callers must also provide these parameters when a database is _opened:_
 
-* `Appnum`: An application-defined integer constant which can be retrieved 
+* `Appnum`: An application-defined integer constant which can be retrieved
 later from the database [TODO].
 * `AllocSize`: A significant multiple of the average data size.
 
@@ -95,7 +98,7 @@ and immutable: once written, bytes are never changed.
 Initially the hash table in the key file consists of a single bucket.
 After the load factor is exceeded from insertions, the hash table grows
 in size by one bucket by doing a "split". The split operation is the
-[linear hashing algorithm](http://en.wikipedia.org/wiki/Linear_hashing) 
+[linear hashing algorithm](http://en.wikipedia.org/wiki/Linear_hashing)
 as described by Litwin and Larson.
 
 
