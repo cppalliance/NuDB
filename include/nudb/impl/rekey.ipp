@@ -39,6 +39,7 @@ rekey(
     using namespace detail;
     auto const bulk_size = 64 * 1024 * 1024UL;
     float const load_factor = 0.5;
+
     // Open data file for reading and appending
     File df{args...};
     df.open(file_mode::append, dat_path, ec);
@@ -48,17 +49,25 @@ rekey(
     read(df, dh, ec);
     if(ec)
         return;
+    verify(dh, ec);
+    if(ec)
+        return;
     auto const df_size = df.size(ec);
     if(ec)
         return;
+
+    // Create a log file with size 0
     File lf{args...};
     lf.create(file_mode::append, log_path, ec);
     if(ec)
     {
+        // Recover is needed
         if(ec == errc::file_exists)
-            ec = error::recover_needed;
+            ec = error::log_file_exists;
         return;
     }
+
+    // Set up key file header
     key_file_header kh;
     kh.version = currentVersion;
     kh.uid = dh.uid;
@@ -73,6 +82,27 @@ rekey(
         std::ceil(itemCount /(
             bucket_capacity(kh.block_size) * load_factor)));
     kh.modulus = ceil_pow2(kh.buckets);
+
+    // Write log file header
+    {
+        log_file_header lh;
+        lh.version = currentVersion;            // Version
+        lh.uid = kh.uid;                        // UID
+        lh.appnum = kh.appnum;                  // Appnum
+        lh.key_size = kh.key_size;              // Key Size
+        lh.salt = kh.salt;                      // Salt
+        lh.pepper = pepper<Hasher>(kh.salt);    // Pepper
+        lh.block_size = kh.block_size;          // Block Size
+        lh.key_file_size = 0;                   // Key File Size
+        lh.dat_file_size = df_size;             // Data File Size
+        write(lf, lh, ec);
+        if(ec)
+            return;
+        lf.sync(ec);
+        if(ec)
+            return;
+    }
+
     // Create or open empty key file
     File kf;
     kf.create(file_mode::append, key_path, ec);
@@ -94,25 +124,6 @@ rekey(
     }
     if(ec)
         return;
-    // Create log file
-    {
-        log_file_header lh;
-        lh.version = currentVersion;            // Version
-        lh.uid = kh.uid;                        // UID
-        lh.appnum = kh.appnum;                  // Appnum
-        lh.key_size = kh.key_size;              // Key Size
-        lh.salt = kh.salt;                      // Salt
-        lh.pepper = pepper<Hasher>(kh.salt);    // Pepper
-        lh.block_size = kh.block_size;          // Block Size
-        lh.key_file_size = 0;                   // Key File Size
-        lh.dat_file_size = df_size;             // Data File Size
-        write(lf, lh, ec);
-        if(ec)
-            return;
-        lf.sync(ec);
-        if(ec)
-            return;
-    }
 
     // Create full key file
     buffer buf{kh.block_size};

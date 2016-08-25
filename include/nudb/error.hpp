@@ -30,15 +30,39 @@ enum class error
     */
     success = 0,
 
-    /// A file read returned less data than expected
+    /** A file read returned less data than expected.
+
+        This can be caused by premature application
+        termination during a commit cycle.
+    */
     short_read,
 
-    /// A file write stored less data than expected
+    /** A file write stored less data than expected.
+
+        This is typically due to running out of space
+        on a device holding a database file.
+    */
     short_write,
 
-    /// Recover required
-    recover_needed,
+    /** A log file is present.
 
+        Indicates that the database needs to have the
+        associated log file applied to perform a recovery.
+        This error is returned by functions such as @ref rekey.
+    */
+    log_file_exists,
+
+    /** No key file exists.
+
+        This error is returned by the recover process when
+        there is no valid key file. It happens when a
+        @ref rekey operation prematurely terminates. A
+        database without a key file cannot be opened. To
+        fix this error, it is necessary for an invocation of
+        @ref rekey to complete successfully.
+    */
+    no_key_file,
+        
 
 
     /// Not a data file

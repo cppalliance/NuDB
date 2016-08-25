@@ -33,9 +33,11 @@ nudb_category()
             case error::short_write:
                 return "short write";
 
-            case error::recover_needed:
-                return "recover needed";
+            case error::log_file_exists:
+                return "a log file exists";
 
+            case error::no_key_file:
+                return "no key file";
 
 
             case error::not_data_file:

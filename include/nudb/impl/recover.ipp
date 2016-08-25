@@ -33,16 +33,33 @@ recover(
 {
     static_assert(is_Hasher<Hasher>::value,
         "Hasher requirements not met");
+    // VFALCO TODO is_File concept check
     using namespace detail;
-    File df(args...);
-    File lf(args...);
-    File kf(args...);
+
+    // Open data file
+    File df{args...};
     df.open(file_mode::append, dat_path, ec);
     if(ec)
         return;
+    auto const dataFileSize = df.size(ec);
+    if(ec)
+        return;
+    dat_file_header dh;
+    read(df, dh, ec);
+    if(ec)
+        return;
+    verify(dh, ec);
+    if(ec)
+        return;
+
+    // Open key file
+    File kf{args...};
     kf.open(file_mode::write, key_path, ec);
     if(ec)
         return;
+
+    // Open log file
+    File lf{args...};
     lf.open(file_mode::append, log_path, ec);
     if(ec == errc::no_such_file_or_directory)
     {
@@ -51,50 +68,46 @@ recover(
     }
     if(ec)
         return;
-    key_file_header kh;
-    read(kf, kh, ec);
-    if(ec)
-        return;
-    auto const readSize = 32 * kh.block_size;
-    // VFALCO should the number of buckets be based on the
-    //        file size in the log record instead?
-    verify<Hasher>(kh, ec);
-    if(ec)
-        return;
-    dat_file_header dh;
-    read(df, dh, ec);
-    if(ec)
-        return;
-    verify<Hasher>(dh, kh, ec);
-    if(ec)
-        return;
-    auto const lf_size = lf.size(ec);
-    if(ec)
-        return;
-    if(lf_size == 0)
-    {
-        // Nothing to recover
-        lf.close();
-        File::erase(log_path, ec);
-        return;
-    }
-    auto const bucketSize = bucket_size(kh.capacity);
     log_file_header lh;
     read(lf, lh, ec);
-    if(ec != error::short_read)
+    if(ec == error::short_read)
     {
+        ec = {};
+        goto clear_log;
+    }
+    if(ec)
+        return;
+    verify<Hasher>(lh, ec);
+    if(ec)
+        return;
+    if(lh.key_file_size == 0)
+        goto trunc_files;
+    auto const logFileSize = lf.size(ec);
+    if(ec)
+        return;
+
+    {
+        // Read key file header
+        key_file_header kh;
+        read(kf, kh, ec);
+        if(ec)
+            return;
+        verify<Hasher>(kh, ec);
+        if(ec)
+            return;
+        verify<Hasher>(dh, kh, ec);
         if(ec)
             return;
         verify<Hasher>(kh, lh, ec);
         if(ec)
             return;
-        auto const dataFileSize = df.size(ec);
-        if(ec)
-            return;
+
+        auto const readSize = 32 * kh.block_size;
+        auto const bucketSize = bucket_size(kh.capacity);
         buffer buf{kh.block_size};
         bucket b{kh.block_size, buf.get()};
         bulk_reader<File> r{lf,
-            log_file_header::size, lf_size, readSize};
+            log_file_header::size, logFileSize, readSize};
         while(! r.eof())
         {
             // Log Record
@@ -135,12 +148,16 @@ recover(
             if(ec)
                 return;
         }
-        df.trunc(lh.dat_file_size, ec);
-        if(ec)
-            return;
-        df.sync(ec);
-        if(ec)
-            return;
+    }
+trunc_files:
+    df.trunc(lh.dat_file_size, ec);
+    if(ec)
+        return;
+    df.sync(ec);
+    if(ec)
+        return;
+    if(lh.key_file_size != 0)
+    {
         kf.trunc(lh.key_file_size, ec);
         if(ec)
             return;
@@ -150,9 +167,12 @@ recover(
     }
     else
     {
-        // Log file is incomplete, so roll back.
-        ec = {};
+        kf.close();
+        File::erase(key_path, ec);
+        if(ec)
+            return;
     }
+clear_log:
     lf.trunc(0, ec);
     if(ec)
         return;

@@ -26,6 +26,12 @@ public:
     do_rekey(
         std::size_t N, nsize_t block_size, float load_factor)
     {
+    }
+
+    void
+    do_recover(
+        std::size_t N, nsize_t block_size, float load_factor)
+    {
         auto const keys = static_cast<std::size_t>(
             load_factor * detail::bucket_capacity(block_size));
         std::size_t const bufferSize =
@@ -124,12 +130,6 @@ public:
             if(! expect(info.value_count == N))
                 return;
         }
-    }
-
-    void
-    do_recover(
-        std::size_t N, nsize_t block_size, float load_factor)
-    {
     }
 
     void
