@@ -13,6 +13,7 @@ add_executable(test-all
     test_util.hpp
     basic_store.cpp
     callgrind_test.cpp
+    concepts.cpp
     create.cpp
     error.cpp
     file.cpp
