@@ -296,12 +296,11 @@ verify_fast(
     // Verify contiguous sequential sections of the
     // key file using multiple passes over the data.
     //
-    auto chunkSize = std::min(kh.buckets,
-        (bufferSize < 2 * kh.block_size) ? 0 :
-            ((bufferSize - kh.block_size) / kh.block_size));
-    if(chunkSize == 0)
+    if(bufferSize < 2 * kh.block_size)
         throw std::logic_error("invalid buffer size");
-    auto const passes = (chunkSize == 0) ? 0 :
+    auto chunkSize = std::min(kh.buckets,
+        (bufferSize - kh.block_size) / kh.block_size);
+    auto const passes =
         (kh.buckets + chunkSize - 1) / chunkSize;
 
     // Calculate the work required
@@ -312,7 +311,8 @@ verify_fast(
 
     std::uint64_t fetches = 0;
     buffer buf{(chunkSize + 1) * kh.block_size};
-    bucket tmp{kh.block_size, buf.get() + chunkSize * kh.block_size};
+    bucket tmp{kh.block_size,
+        buf.get() + chunkSize * kh.block_size};
     for(nsize_t b0 = 0; b0 < kh.buckets; b0 += chunkSize)
     {
         // Load key file chunk to buffer
@@ -465,7 +465,7 @@ verify_fast(
                     ec = error::invalid_spill_size;
                     return;
                 }
-                tmp.read(r, ec);                    // Bucket
+                r.prepare(size, ec);                // Bucket
                 if(ec == error::short_read)
                 {
                     ec = error::short_spill;
