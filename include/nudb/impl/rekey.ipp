@@ -8,6 +8,9 @@
 #ifndef NUDB_IMPL_REKEY_IPP
 #define NUDB_IMPL_REKEY_IPP
 
+#include <nudb/concepts.hpp>
+#include <nudb/create.hpp>
+#include <nudb/detail/bucket.hpp>
 #include <nudb/detail/bulkio.hpp>
 #include <nudb/detail/format.hpp>
 #include <cmath>

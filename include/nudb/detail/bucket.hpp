@@ -37,7 +37,11 @@ bucket_index(nhash_t h, nbuck_t buckets, std::uint64_t modulus)
 //------------------------------------------------------------------------------
 
 // Tag for constructing empty buckets
-struct empty_t {};
+struct empty_t
+{
+    empty_t() = default;
+};
+
 static empty_t constexpr empty;
 
 // Allows inspection and manipulation of bucket blobs in memory

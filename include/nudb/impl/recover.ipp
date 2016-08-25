@@ -83,6 +83,9 @@ recover(
     }
     if(ec)
         return;
+    auto const logFileSize = lf.size(ec);
+    if(ec)
+        return;
     // Read log file header
     log_file_header lh;
     read(lf, lh, ec);
@@ -99,10 +102,6 @@ recover(
         return;
     if(lh.key_file_size == 0)
         goto trunc_files;
-    auto const logFileSize = lf.size(ec);
-    if(ec)
-        return;
-
     {
         // Read key file header
         key_file_header kh;
