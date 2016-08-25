@@ -329,10 +329,10 @@ verify_fast(
         work += bn * kh.block_size;
         progress(work, nwork);
         // Count keys in buckets, including spills
-        for(nbuck_t i = b0 ; i < b1; ++i)
+        for(nbuck_t i = 0 ; i < bn; ++i)
         {
-            bucket b{kh.block_size, buf.get() +
-                (i - b0) * kh.block_size};
+            bucket b{kh.block_size,
+                buf.get() + i * kh.block_size};
             nkeys[i] = b.size();
             std::size_t nspill = 0;
             auto spill = b.spill();
@@ -346,7 +346,6 @@ verify_fast(
                 }
                 if(ec)
                     return;
-                // VFALCO Remove this cast and fix the warning
                 nkeys[i] += tmp.size();
                 spill = tmp.spill();
                 ++nspill;
@@ -440,7 +439,7 @@ verify_fast(
                 // Update
                 ++info.value_count;
                 info.value_bytes += size;
-                if(nkeys[n]-- == 0)
+                if(nkeys[n - b0]-- == 0)
                 {
                     ec = error::orphaned_value;
                     return;
@@ -484,17 +483,16 @@ verify_fast(
             }
             progress(work + offset, nwork);
         }
-        work += info.dat_file_size;
-    }
-
-    // Make sure every key in every bucket was visited
-    for(std::size_t i = 0; i < kh.buckets; ++i)
-    {
-        if(nkeys[i] != 0)
+        // Make sure every key in every bucket was visited
+        for(std::size_t i = 0; i < bn; ++i)
         {
-            ec = error::missing_value;
-            return;
+            if(nkeys[i] != 0)
+            {
+                ec = error::missing_value;
+                return;
+            }
         }
+        work += info.dat_file_size;
     }
 
     float sum = 0;

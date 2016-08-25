@@ -34,12 +34,8 @@ public:
     {
         auto const keys = static_cast<std::size_t>(
             load_factor * detail::bucket_capacity(block_size));
-#if 1
         std::size_t const bufferSize =
             block_size * (1 + ((N + keys - 1) / keys));
-#else
-        std::size_t const bufferSize = 0;
-#endif
 
         temp_dir td;
         auto const dp  = td.file ("nudb.dat");
@@ -155,11 +151,7 @@ public:
         float const load_factor = 0.95f;
 
         do_rekey(N, block_size, load_factor);
-        for(std::size_t n = 0; n < 100; ++n)
-        {
-            log << n << std::endl;
-            do_recover(N, block_size, load_factor);
-        }
+        do_recover(N, block_size, load_factor);
     }
 };
 
