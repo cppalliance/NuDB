@@ -3,6 +3,8 @@
 
 # NuDB: A Key/Value Store For Decentralized Systems
 
+[![Join the chat at https://gitter.im/vinniefalco/NuDB](https://badges.gitter.im/vinniefalco/NuDB.svg)](https://gitter.im/vinniefalco/NuDB?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 The new breed of decentralized systems such as Ripple or Bitcoin
 that use embedded key/value databases place different demands on
 these database than what is traditional. NuDB provides highly
