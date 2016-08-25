@@ -59,8 +59,8 @@ public:
                 }
                 {
                     error_code ev;
-                    native_file::erase(lp, ev);
-                    expect(ev == errc::no_such_file_or_directory, ev.message());
+                    erase_file(lp, ev);
+                    expect(! ev, ev.message());
                 }
             });
         store db;

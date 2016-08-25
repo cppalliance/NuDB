@@ -38,7 +38,6 @@ public:
             block_size * (1 + ((N + keys - 1) / keys));
 
         temp_dir td;
-        error_code ec;
         auto const dp  = td.file ("nudb.dat");
         auto const kp  = td.file ("nudb.key");
         auto const kp2 = td.file ("nudb.key2");
@@ -46,20 +45,12 @@ public:
         finisher f(
             [&]
             {
-                {
-                    error_code ev;
-                    native_file::erase(dp, ev);
-                }
-                {
-                    error_code ev;
-                    native_file::erase(kp, ev);
-                }
-                {
-                    error_code ev;
-                    native_file::erase(lp, ev);
-                }
+                erase_file(dp);
+                erase_file(kp);
+                erase_file(lp);
             });
         {
+            error_code ec;
             Sequence seq;
             store db;
             create<xxhasher>(dp, kp, lp, appnumValue,
@@ -84,6 +75,7 @@ public:
         }
         // Verify
         {
+            error_code ec;
             verify_info info;
             verify<xxhasher>(
                 info, dp, kp, bufferSize, no_progress{}, ec);
@@ -97,6 +89,7 @@ public:
         // Rekey
         for(std::size_t n = 1;; ++n)
         {
+            error_code ec;
             fail_counter fc{n};
             rekey<xxhasher, fail_file<native_file>>(
                 dp, kp2, lp, N, bufferSize, ec, no_progress{}, fc);
@@ -106,12 +99,11 @@ public:
                 return;
             ec = {};
             recover<xxhasher, native_file>(dp, kp2, lp, ec);
-            if(! expect(! ec ||
-                ec == errc::no_such_file_or_directory,
-                    ec.message()))
+            if(ec == error::no_key_file)
+                continue;
+            if(! expect(! ec, ec.message()))
                 return;
-            native_file::erase(kp2, ec);
-            ec = {};
+            erase_file(kp2);
             verify_info info;
             verify<xxhasher>(
                 info, dp, kp, bufferSize, no_progress{}, ec);
@@ -122,6 +114,7 @@ public:
         }
         // Verify
         {
+            error_code ec;
             verify_info info;
             verify<xxhasher>(
                 info, dp, kp2, bufferSize, no_progress{}, ec);

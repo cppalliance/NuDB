@@ -140,10 +140,9 @@ create(
         return;
     }
 fail:
-    error_code ec2;
-    File::erase(dat_path, ec2);
-    File::erase(key_path, ec2);
-    File::erase(log_path, ec2);
+    erase_file(dat_path);
+    erase_file(key_path);
+    erase_file(log_path);
 }
 
 } // nudb

@@ -56,16 +56,14 @@ rekey(
     if(ec)
         return;
 
-    // Create a log file with size 0
+    // Make sure log file doesn't exist
     File lf{args...};
-    lf.create(file_mode::append, log_path, ec);
-    if(ec)
-    {
-        // Recover is needed
-        if(ec == errc::file_exists)
-            ec = error::log_file_exists;
+    lf.open(file_mode::read, log_path, ec);
+    if(! ec)
+        ec = error::log_file_exists;
+    if(ec != errc::no_such_file_or_directory)
         return;
-    }
+    ec = {};
 
     // Set up key file header
     key_file_header kh;
@@ -82,7 +80,29 @@ rekey(
         std::ceil(itemCount /(
             bucket_capacity(kh.block_size) * load_factor)));
     kh.modulus = ceil_pow2(kh.buckets);
+    // Create key file
+    File kf{args...};
+    kf.create(file_mode::write, key_path, ec);
+    if(ec)
+        return;
+    // Write key file header
+    // Note, file size is less than any valid block_size here
+    {
+        std::array<std::uint8_t, key_file_header::size> buf;
+        ostream os{buf.data(), buf.size()};
+        write(os, kh);
+        kf.write(0, buf.data(), buf.size(), ec);
+        if(ec)
+            return;
+        kf.sync(ec);
+        if(ec)
+            return;
+    }
 
+    // Create log file
+    lf.create(file_mode::append, log_path, ec);
+    if(ec)
+        return;
     // Write log file header
     {
         log_file_header lh;
@@ -103,43 +123,19 @@ rekey(
             return;
     }
 
-    // Create or open empty key file
-    File kf;
-    kf.create(file_mode::append, key_path, ec);
-    if(ec == errc::file_exists)
-    {
-        ec = {};
-        kf.open(file_mode::append, key_path, ec);
-        if(ec)
-            return;
-        auto const size = kf.size(ec);
-        if(ec)
-            return;
-        if(size != 0)
-        {
-            ec = error_code{
-                errc::file_exists, generic_category()};
-            return;
-        }
-    }
-    if(ec)
-        return;
-
     // Create full key file
     buffer buf{kh.block_size};
     {
         // Write key file header
         std::memset(buf.get(), 0, kh.block_size);
-        ostream os(buf.get(), kh.block_size);
+        ostream os{buf.get(), kh.block_size};
         write(os, kh);
-        kf.write(0, buf.get(), kh.block_size, ec);
+        kf.write(0, buf.get(), buf.size(), ec);
         if(ec)
             return;
         kf.sync(ec);
         if(ec)
             return;
-    }
-    {
         // Pre-allocate space for the entire key file
         std::uint8_t zero = 0;
         kf.write(
@@ -151,6 +147,7 @@ rekey(
         if(ec)
             return;
     }
+    
     // Build contiguous sequential sections of the
     // key file using multiple passes over the data.
     //
@@ -171,10 +168,8 @@ rekey(
         auto const bn = b1 - b0;
         // Create empty buckets
         for(std::size_t i = 0; i < bn; ++i)
-        {
-            bucket b(kh.block_size,
-                buf.get() + i * kh.block_size, empty);
-        }
+            bucket b{kh.block_size,
+                buf.get() + i * kh.block_size, empty};
         // Insert all keys into buckets
         // Iterate Data File
         bulk_reader<File> r{df,

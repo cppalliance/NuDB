@@ -38,7 +38,7 @@ recover(
 
     // Open data file
     File df{args...};
-    df.open(file_mode::append, dat_path, ec);
+    df.open(file_mode::write, dat_path, ec);
     if(ec)
         return;
     auto const dataFileSize = df.size(ec);
@@ -57,6 +57,21 @@ recover(
     kf.open(file_mode::write, key_path, ec);
     if(ec)
         return;
+    auto const keyFileSize = kf.size(ec);
+    if(ec)
+        return;
+    if(keyFileSize <= key_file_header::size)
+    {
+        kf.close();
+        erase_file(log_path, ec);
+        if(ec)
+            return;
+        File::erase(key_path, ec);
+        if(ec)
+            return;
+        ec = error::no_key_file;
+        return;
+    }
 
     // Open log file
     File lf{args...};
@@ -68,10 +83,12 @@ recover(
     }
     if(ec)
         return;
+    // Read log file header
     log_file_header lh;
     read(lf, lh, ec);
     if(ec == error::short_read)
     {
+        assert(keyFileSize > key_file_header::size);
         ec = {};
         goto clear_log;
     }

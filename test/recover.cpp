@@ -79,14 +79,10 @@ public:
             error_code ev;
             nudb::native_file::erase(dp, ev);
             expect(! ev, ev.message());
-        }
-        {
-            error_code ev;
+            ev = {};
             nudb::native_file::erase(kp, ev);
             expect(! ev, ev.message());
-        }
-        {
-            error_code ev;
+            ev = {};
             nudb::native_file::erase(lp, ev);
         }
         if(ec)
