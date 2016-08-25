@@ -395,7 +395,8 @@ private:
         error_code ec;
         progress p{std::cout};
         rekey<Hasher, native_file>(dp, kp, lp,
-            itemCount, bufferSize, ec, p);
+            block_size(kp), 0.5f, itemCount,
+                bufferSize, ec, p);
         if(ec)
         {
             std::cerr << "rekey: " << ec.message() << "\n";

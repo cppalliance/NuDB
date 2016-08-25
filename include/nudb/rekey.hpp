@@ -50,6 +50,19 @@ namespace nudb {
 
     @param log_path The path to the log file.
 
+    @param blockSize The size of a key file block. Larger
+    blocks hold more keys but require more I/O cycles per
+    operation. The ideal block size the largest size that
+    may be read in a single I/O cycle, and device dependent.
+    The return value of @ref block_size returns a suitable
+    value for the volume of a given path.
+    
+    @param loadFactor A number between zero and one
+    representing the average bucket occupancy (number of
+    items). A value of 0.5 is perfect. Lower numbers
+    waste space, and higher numbers produce negligible
+    savings at the cost of increased I/O cycles.
+
     @param itemCount The number of items in the data file.
 
     @param bufferSize The number of bytes to allocate for the buffer.
@@ -79,6 +92,8 @@ rekey(
     path_type const& dat_path,
     path_type const& key_path,
     path_type const& log_path,
+    std::size_t blockSize,
+    float loadFactor,
     std::uint64_t itemCount,
     std::size_t bufferSize,
     error_code& ec,

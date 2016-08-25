@@ -183,11 +183,12 @@ verify_normal(
         for(std::size_t n = 0; n < kh.buckets; ++n)
         {
             std::size_t nspill = 0;
-            b.read(kf,
-                static_cast<noff_t>(n + 1) * kh.block_size, ec);
+            b.read(kf, static_cast<noff_t>(
+                n + 1) * kh.block_size, ec);
             if(ec)
                 return;
-            work += static_cast<std::uint64_t>(adjust * kh.block_size);
+            work += static_cast<std::uint64_t>(
+                adjust * kh.block_size);
             bool spill = false;
             for(;;)
             {
@@ -204,7 +205,8 @@ verify_normal(
                     if(ec)
                         return;
                     if(! spill)
-                        work += static_cast<std::uint64_t>(adjust * kh.block_size);
+                        work += static_cast<std::uint64_t>(
+                            adjust * kh.block_size);
                     // Data Record
                     istream is{pd, dh_len};
                     std::uint64_t size;
@@ -296,10 +298,11 @@ verify_fast(
     // Verify contiguous sequential sections of the
     // key file using multiple passes over the data.
     //
-    if(bufferSize < 2 * kh.block_size)
+    if(bufferSize < 2 * kh.block_size + sizeof(nkey_t))
         throw std::logic_error("invalid buffer size");
     auto chunkSize = std::min(kh.buckets,
-        (bufferSize - kh.block_size) / kh.block_size);
+        (bufferSize - kh.block_size) /
+            (kh.block_size + sizeof(nkey_t)));
     auto const passes =
         (kh.buckets + chunkSize - 1) / chunkSize;
 
@@ -586,13 +589,20 @@ verify(
 
     // Determine which algorithm requires the least amount
     // of file I/O given the available buffer size
-    auto const chunkSize = std::min(kh.buckets,
-        (bufferSize < 2 * kh.block_size) ? 0 :
-            ((bufferSize - kh.block_size) / kh.block_size));
-    auto const passes = (chunkSize == 0) ? 0 :
-        (kh.buckets + chunkSize - 1) / chunkSize;
-    if(! chunkSize || (
-        (
+    std::size_t chunkSize;
+    if(bufferSize >= 2 * kh.block_size + sizeof(nkey_t))
+        chunkSize = std::min(kh.buckets,
+            (bufferSize - kh.block_size) /
+                (kh.block_size + sizeof(nkey_t)));
+    else
+        chunkSize = 0;
+    std::size_t passes;
+    if(chunkSize > 0)
+        passes = (kh.buckets + chunkSize - 1) / chunkSize;
+    else
+        passes = 0;
+    if(! chunkSize ||
+        ((
             info.dat_file_size +
             (kh.buckets * kh.load_factor * kh.capacity * kh.block_size) +
             info.key_file_size

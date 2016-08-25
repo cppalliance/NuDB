@@ -26,6 +26,8 @@ rekey(
     path_type const& dat_path,
     path_type const& key_path,
     path_type const& log_path,
+    std::size_t blockSize,
+    float loadFactor,
     std::uint64_t itemCount,
     std::size_t bufferSize,
     error_code& ec,
@@ -37,8 +39,8 @@ rekey(
     static_assert(is_Progress<Progress>::value,
         "Progress requirements not met");
     using namespace detail;
-    auto const bulk_size = 64 * 1024 * 1024UL;
-    float const load_factor = 0.5;
+    auto const readSize = 16 * block_size(dat_path);
+    auto const writeSize = 16 * block_size(key_path);
 
     // Open data file for reading and appending
     File df{args...};
@@ -73,12 +75,12 @@ rekey(
     kh.key_size = dh.key_size;
     kh.salt = make_salt();
     kh.pepper = pepper<Hasher>(kh.salt);
-    kh.block_size = block_size(key_path);
+    kh.block_size = blockSize;
     kh.load_factor = std::min<std::size_t>(
-        static_cast<std::size_t>(65536.0 * load_factor), 65535);
+        static_cast<std::size_t>(65536.0 * loadFactor), 65535);
     kh.buckets = static_cast<std::size_t>(
         std::ceil(itemCount /(
-            bucket_capacity(kh.block_size) * load_factor)));
+            bucket_capacity(kh.block_size) * loadFactor)));
     kh.modulus = ceil_pow2(kh.buckets);
     // Create key file
     File kf{args...};
@@ -160,7 +162,7 @@ rekey(
     progress(0, nwork);
 
     buf.reserve(chunkSize * kh.block_size);
-    bulk_writer<File> dw{df, dataFileSize, bulk_size};
+    bulk_writer<File> dw{df, dataFileSize, writeSize};
     for(nbuck_t b0 = 0; b0 < kh.buckets; b0 += chunkSize)
     {
         auto const b1 = std::min<std::size_t>(b0 + chunkSize, kh.buckets);
@@ -173,7 +175,7 @@ rekey(
         // Insert all keys into buckets
         // Iterate Data File
         bulk_reader<File> r{df,
-            dat_file_header::size, dataFileSize, bulk_size};
+            dat_file_header::size, dataFileSize, readSize};
         while(! r.eof())
         {
             auto const offset = r.offset();

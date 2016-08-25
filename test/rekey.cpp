@@ -23,19 +23,12 @@ class rekey_test : public beast::unit_test::suite
 {
 public:
     void
-    do_rekey(
-        std::size_t N, nsize_t block_size, float load_factor)
-    {
-    }
-
-    void
-    do_recover(
-        std::size_t N, nsize_t block_size, float load_factor)
+    do_recover(std::size_t N, nsize_t blockSize, float loadFactor)
     {
         auto const keys = static_cast<std::size_t>(
-            load_factor * detail::bucket_capacity(block_size));
+            loadFactor * detail::bucket_capacity(blockSize));
         std::size_t const bufferSize =
-            block_size * (1 + ((N + keys - 1) / keys));
+            blockSize * (1 + ((N + keys - 1) / keys));
 
         temp_dir td;
         auto const dp  = td.file ("nudb.dat");
@@ -54,8 +47,8 @@ public:
             Sequence seq;
             store db;
             create<xxhasher>(dp, kp, lp, appnumValue,
-                saltValue, sizeof(key_type), block_size,
-                    load_factor, ec);
+                saltValue, sizeof(key_type), blockSize,
+                    loadFactor, ec);
             if(! expect(! ec, ec.message()))
                 return;
             db.open(dp, kp, lp, arenaAllocSize, ec);
@@ -92,7 +85,8 @@ public:
             error_code ec;
             fail_counter fc{n};
             rekey<xxhasher, fail_file<native_file>>(
-                dp, kp2, lp, N, bufferSize, ec, no_progress{}, fc);
+                dp, kp2, lp, blockSize, loadFactor,
+                    N, bufferSize, ec, no_progress{}, fc);
             if(! ec)
                 break;
             if(! expect(ec == test::test_error::failure, ec.message()))
@@ -150,7 +144,6 @@ public:
 
         float const load_factor = 0.95f;
 
-        do_rekey(N, block_size, load_factor);
         do_recover(N, block_size, load_factor);
     }
 };
