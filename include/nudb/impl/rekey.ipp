@@ -52,7 +52,7 @@ rekey(
     verify(dh, ec);
     if(ec)
         return;
-    auto const df_size = df.size(ec);
+    auto const dataFileSize = df.size(ec);
     if(ec)
         return;
 
@@ -94,7 +94,7 @@ rekey(
         lh.pepper = pepper<Hasher>(kh.salt);    // Pepper
         lh.block_size = kh.block_size;          // Block Size
         lh.key_file_size = 0;                   // Key File Size
-        lh.dat_file_size = df_size;             // Data File Size
+        lh.dat_file_size = dataFileSize;        // Data File Size
         write(lf, lh, ec);
         if(ec)
             return;
@@ -159,11 +159,11 @@ rekey(
     // Calculate work required
     auto const passes =
        (kh.buckets + chunkSize - 1) / chunkSize;
-    auto const nwork = passes * df_size;
+    auto const nwork = passes * dataFileSize;
     progress(0, nwork);
 
     buf.reserve(chunkSize * kh.block_size);
-    bulk_writer<File> dw{df, df_size, bulk_size};
+    bulk_writer<File> dw{df, dataFileSize, bulk_size};
     for(nbuck_t b0 = 0; b0 < kh.buckets; b0 += chunkSize)
     {
         auto const b1 = std::min<std::size_t>(b0 + chunkSize, kh.buckets);
@@ -178,7 +178,7 @@ rekey(
         // Insert all keys into buckets
         // Iterate Data File
         bulk_reader<File> r{df,
-            dat_file_header::size, df_size, bulk_size};
+            dat_file_header::size, dataFileSize, bulk_size};
         while(! r.eof())
         {
             auto const offset = r.offset();
@@ -188,7 +188,7 @@ rekey(
                 field<uint48_t>::size, ec); // Size
             if(ec)
                 return;
-            progress((b0 / chunkSize) * df_size + r.offset(), nwork);
+            progress((b0 / chunkSize) * dataFileSize + r.offset(), nwork);
             read_size48(is, size);
             if(size > 0)
             {
