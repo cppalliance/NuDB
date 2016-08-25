@@ -125,7 +125,7 @@ public:
         if(! expect(! ec, ec.message()))
             return;
         expect(info.hist[1] > 0);
-        print(log, info);
+        log << info;
     }
 
     void

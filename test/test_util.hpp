@@ -15,6 +15,7 @@
 #include <cstdint>
 #include <functional>
 #include <iomanip>
+#include <iostream>
 #include <memory>
 
 namespace nudb {
@@ -30,7 +31,6 @@ static std::uint64_t constexpr saltValue = 42;
 static std::uint64_t constexpr appnumValue = 1337;
 
 static std::size_t constexpr arenaAllocSize = 16 * 1024 * 1024;
-
 
 //------------------------------------------------------------------------------
 
@@ -205,9 +205,9 @@ num (T t)
     return s2;
 }
 
-template<class Stream>
-void
-print(Stream& os, verify_info const& info)
+template<class = void>
+std::ostream&
+operator<<(std::ostream& os, verify_info const& info)
 {
     auto const fhex =
         [](std::uint64_t v)
@@ -250,6 +250,7 @@ print(Stream& os, verify_info const& info)
             std::to_string(info.hist[i]) :
             (", " + std::to_string(info.hist[i]));
     os << "hist:            " << s << std::endl;
+    return os;
 }
 
 } // test

@@ -459,7 +459,8 @@ verify_fast(
                 if(ec)
                     return;
                 read<std::uint16_t>(is, size);      // Size
-                if(size != info.bucket_size)
+                if(bucket_size(
+                    bucket_capacity(size)) != size)
                 {
                     ec = error::invalid_spill_size;
                     return;

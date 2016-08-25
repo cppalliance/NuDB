@@ -87,7 +87,7 @@ public:
         }
         if(ec)
         {
-            print(log, info);
+            log << info;
             return;
         }
     }
