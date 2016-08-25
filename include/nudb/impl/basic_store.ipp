@@ -160,6 +160,8 @@ fetch(
     error_code& ec)
 {
     using namespace detail;
+    if(! is_open())
+        throw std::logic_error("nudb: not open");
     if(ecb_)
     {
         ec = ec_;
@@ -210,14 +212,18 @@ insert(
     error_code& ec)
 {
     using namespace detail;
+    if(! is_open())
+        throw std::logic_error("nudb: not open");
     if(ecb_)
     {
         ec = ec_;
         return false;
     }
     // Data Record
+    if(size == 0)
+        throw std::domain_error("nudb: zero size values disallowed");
     if(size > field<uint32_t>::max)
-        throw std::logic_error("nudb: value size too large");
+        throw std::domain_error("nudb: value size too large");
     auto const h =
 #if 1
         hash(key, s_->kh.key_size, s_->hasher);

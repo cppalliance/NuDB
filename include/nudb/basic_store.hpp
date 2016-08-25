@@ -255,6 +255,8 @@ public:
         occurs, the return value is undefined.
 
         @return `true` if a matching key was found.
+
+        @throws `std::logic_error` if the database is not open.
     */
     template<class Callback>
     bool
@@ -268,6 +270,10 @@ public:
 
         @param ec Set to the error, if any occurred. If an error
         occurs, the return value is undefined.
+
+        @throws `std::logic_error` if the database is not open,
+        `std::domain_error` if the size is out of the allowable range.
+
     */
     bool
     insert(void const* key, void const* data,

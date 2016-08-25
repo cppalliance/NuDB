@@ -65,12 +65,15 @@ namespace nudb {
         std::uint64_t total     // Total amount of work to do
     );
     @endcode
+
+    @param args Optional parameters passed to File constructors.
 */
-// VFALCO Should this delete the key file on an error?
 template<
     class Hasher,
+    class File,
     class Progress,
-    class File = native_file>
+    class... Args
+>
 void
 rekey(
     path_type const& dat_path,
@@ -78,8 +81,9 @@ rekey(
     path_type const& log_path,
     std::uint64_t itemCount,
     std::size_t bufferSize,
-    Progress& progress,
-    error_code& ec);
+    error_code& ec,
+    Progress&& progress,
+    Args&&... args);
 
 } // nudb
 

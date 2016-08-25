@@ -8,6 +8,7 @@
 #ifndef NUDB_IMPL_VISIT_IPP
 #define NUDB_IMPL_VISIT_IPP
 
+#include <nudb/concepts.hpp>
 #include <nudb/error.hpp>
 #include <nudb/type_traits.hpp>
 #include <nudb/native_file.hpp>
@@ -19,7 +20,9 @@
 
 namespace nudb {
 
-template<class Callback, class Progress>
+template<
+    class Callback,
+    class Progress>
 void
 visit(
     path_type const& path,
@@ -27,6 +30,9 @@ visit(
     Progress&& progress,
     error_code& ec)
 {
+    // VFALCO Need concept check for Callback
+    static_assert(is_Progress<Progress>::value,
+        "Progress requirements not met");
     using namespace detail;
     using File = native_file;
     auto const readSize = 4096 * block_size(path);

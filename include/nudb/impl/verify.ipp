@@ -25,7 +25,10 @@ namespace detail {
 
 // Normal verify that does not require a buffer
 //
-template<class Hasher, class File, class Progress>
+template<
+    class Hasher,
+    class File,
+    class Progress>
 void
 verify_normal(
     verify_info& info,
@@ -36,6 +39,11 @@ verify_normal(
     Progress&& progress,
     error_code& ec)
 {
+    static_assert(is_Hasher<Hasher>::value,
+        "Hasher requirements not met");
+    // VFALCO TODO concept check for File
+    static_assert(is_Progress<Progress>::value,
+        "Progress requirements not met");
     info.algorithm = 0;
     auto const readSize = kh.block_size;
 

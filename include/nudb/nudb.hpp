@@ -13,6 +13,7 @@
 #include <nudb/error.hpp>
 #include <nudb/file.hpp>
 #include <nudb/posix_file.hpp>
+#include <nudb/progress.hpp>
 #include <nudb/recover.hpp>
 #include <nudb/rekey.hpp>
 #include <nudb/store.hpp>

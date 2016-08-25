@@ -17,7 +17,7 @@ namespace nudb {
 namespace detail {
 
 template<class T>
-class is_Hasher
+class check_is_Hasher
 {
     template<class U, class R =
         std::is_constructible<U, std::uint64_t>>
@@ -42,7 +42,7 @@ public:
 };
 
 template<class T>
-class is_Progress
+class check_is_Progress
 {
     template<class U, class R = decltype(
         std::declval<U>().operator()(
@@ -63,7 +63,7 @@ template<class T>
 #if GENERATING_DOCS
 struct is_Hasher : std::integral_constant<bool, ...>{};
 #else
-using is_Hasher = typename detail::is_Hasher<T>::type;
+using is_Hasher = typename detail::check_is_Hasher<T>::type;
 #endif
 
 /// Determine if `T` meets the requirements of `Progress`
@@ -71,7 +71,7 @@ template<class T>
 #if GENERATING_DOCS
 struct is_Progress : std::integral_constant<bool, ...>{};
 #else
-using is_Progress = typename detail::is_Progress<T>::type;
+using is_Progress = typename detail::check_is_Progress<T>::type;
 #endif
 
 } // nudb

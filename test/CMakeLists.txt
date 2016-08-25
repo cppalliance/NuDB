@@ -19,9 +19,8 @@ add_executable(test-all
     native_file.cpp
     posix_file.cpp
     recover.cpp
-    recover_test.cpp
+    rekey.cpp
     store.cpp
-    store_test.cpp
     type_traits.cpp
     verify.cpp
     version.cpp

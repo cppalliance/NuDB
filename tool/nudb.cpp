@@ -394,7 +394,8 @@ private:
         auto const bufferSize = vm["buffer"].as<std::size_t>();
         error_code ec;
         progress p{std::cout};
-        rekey<Hasher>(dp, kp, lp, itemCount, bufferSize, p, ec);
+        rekey<Hasher, native_file>(dp, kp, lp,
+            itemCount, bufferSize, ec, p);
         if(ec)
         {
             std::cerr << "rekey: " << ec.message() << "\n";

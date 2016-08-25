@@ -6,11 +6,10 @@
 //
 
 #include "test_util.hpp"
-#include "beast/unit_test/suite.hpp"
 
 #include <nudb/create.hpp>
 #include <nudb/native_file.hpp>
-
+#include <beast/unit_test/suite.hpp>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>

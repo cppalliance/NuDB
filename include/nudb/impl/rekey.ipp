@@ -15,7 +15,12 @@
 namespace nudb {
 
 // VFALCO Should this delete the key file on an error?
-template<class Hasher, class Progress, class File>
+template<
+    class Hasher,
+    class File,
+    class Progress,
+    class... Args
+>
 void
 rekey(
     path_type const& dat_path,
@@ -23,18 +28,19 @@ rekey(
     path_type const& log_path,
     std::uint64_t itemCount,
     std::size_t bufferSize,
-    Progress& progress,
-    error_code& ec)
+    error_code& ec,
+    Progress&& progress,
+    Args&&... args)
 {
-    using namespace detail;
-    static_assert(nudb::is_Hasher<Hasher>::value,
+    static_assert(is_Hasher<Hasher>::value,
         "Hasher requirements not met");
-    static_assert(nudb::is_Progress<Progress>::value,
+    static_assert(is_Progress<Progress>::value,
         "Progress requirements not met");
+    using namespace detail;
     auto const bulk_size = 64 * 1024 * 1024UL;
     float const load_factor = 0.5;
     // Open data file for reading and appending
-    File df;
+    File df{args...};
     df.open(file_mode::append, dat_path, ec);
     if(ec)
         return;
@@ -45,7 +51,7 @@ rekey(
     auto const df_size = df.size(ec);
     if(ec)
         return;
-    File lf;
+    File lf{args...};
     lf.create(file_mode::append, log_path, ec);
     if(ec)
     {
@@ -67,26 +73,7 @@ rekey(
         std::ceil(itemCount /(
             bucket_capacity(kh.block_size) * load_factor)));
     kh.modulus = ceil_pow2(kh.buckets);
-    {
-        log_file_header lh;
-        lh.version = currentVersion;    // Version
-        lh.uid = kh.uid;                        // UID
-        lh.appnum = kh.appnum;                  // Appnum
-        lh.key_size = kh.key_size;              // Key Size
-        lh.salt = kh.salt;                      // Salt
-        lh.pepper = pepper<Hasher>(kh.salt);    // Pepper
-        lh.block_size = kh.block_size;          // Block Size
-        lh.key_file_size = 0;                   // Key File Size
-        lh.dat_file_size = df_size;             // Data File Size
-        write(lf, lh, ec);
-        if(ec)
-            return;
-        lf.sync(ec);
-        if(ec)
-            return;
-    }
-
-    // Create key file
+    // Create or open empty key file
     File kf;
     kf.create(file_mode::append, key_path, ec);
     if(ec == errc::file_exists)
@@ -107,6 +94,27 @@ rekey(
     }
     if(ec)
         return;
+    // Create log file
+    {
+        log_file_header lh;
+        lh.version = currentVersion;            // Version
+        lh.uid = kh.uid;                        // UID
+        lh.appnum = kh.appnum;                  // Appnum
+        lh.key_size = kh.key_size;              // Key Size
+        lh.salt = kh.salt;                      // Salt
+        lh.pepper = pepper<Hasher>(kh.salt);    // Pepper
+        lh.block_size = kh.block_size;          // Block Size
+        lh.key_file_size = 0;                   // Key File Size
+        lh.dat_file_size = df_size;             // Data File Size
+        write(lf, lh, ec);
+        if(ec)
+            return;
+        lf.sync(ec);
+        if(ec)
+            return;
+    }
+
+    // Create full key file
     buffer buf{kh.block_size};
     {
         // Write key file header

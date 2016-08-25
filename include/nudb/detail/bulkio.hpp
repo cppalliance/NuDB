@@ -8,6 +8,7 @@
 #ifndef NUDB_DETAIL_BULKIO_HPP
 #define NUDB_DETAIL_BULKIO_HPP
 
+#include <nudb/type_traits.hpp>
 #include <nudb/detail/buffer.hpp>
 #include <nudb/detail/stream.hpp>
 #include <nudb/error.hpp>
