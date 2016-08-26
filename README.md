@@ -8,7 +8,7 @@
 (https://img.shields.io/badge/documentation-master-brightgreen.svg)](http://vinniefalco.github.io/nudb/) [![License]
 (https://img.shields.io/badge/license-boost-brightgreen.svg)](LICENSE_1_0.txt)
 
-# A Key/Value Store For Decentralized Systems
+# A Key/Value Store For SSDs
 
 - [Introduction](#introduction)
 - [Requirements](#requirements)
@@ -60,10 +60,18 @@ by the C++ compiler when searching for includes. NuDB `#include` lines
 #include <nudb/nudb.hpp>
 ```
 
+NuDB tests require Beast, and the benchmarks require RocksDB. These projects
+are linked to the repository using git submodules. Before building the tests
+or benchmarks, these commands should be issued at the root of the repository:
+
+```
+git submodule init
+git submodule update
+```
+
 For the examples and tests, NuDB provides build scripts for Boost.Build (bjam)
 and CMake. Developers using Microsoft Visual Studio can generate Visual Studio
 project files by executing these commands from the root of the repository:
-
 
 ```
 cd bin
