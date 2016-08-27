@@ -17,8 +17,8 @@
 */
 //==============================================================================
 
-#ifndef CHRONO_UTIL_H_INCLUDED
-#define CHRONO_UTIL_H_INCLUDED
+#ifndef CHRONO_UTIL_HPP
+#define CHRONO_UTIL_HPP
 
 #include <chrono>
 

@@ -8,6 +8,7 @@ add_executable (nudb
     ${NUDB_INCLUDES}
     nudb.cpp
     basic_seconds_clock.hpp
+    chrono_util.hpp
     util.hpp
 )
 

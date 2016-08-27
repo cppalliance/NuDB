@@ -8,7 +8,7 @@
 #ifndef BASIC_SECONDS_CLOCK_HPP
 #define BASIC_SECONDS_CLOCK_HPP
 
-#include "chrono_util.h"
+#include "chrono_util.hpp"
 
 #include <algorithm>
 #include <chrono>
