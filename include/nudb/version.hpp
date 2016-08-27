@@ -16,6 +16,6 @@
 //
 #define NUDB_VERSION 100000
 
-#define NUDB_VERSION_STRING "1.0.0-b1"
+#define NUDB_VERSION_STRING "1.0.0-b2"
 
 #endif

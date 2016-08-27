@@ -1,5 +1,6 @@
 1.0.0-b2
 
+* Minor documentation and tidying
 * Add CHANGELOG
 
 ---
