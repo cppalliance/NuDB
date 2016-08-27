@@ -1,3 +1,9 @@
+1.0.0-b3
+
+* Tune buffer sizes for performance
+
+---
+
 1.0.0-b2
 
 * Minor documentation and tidying

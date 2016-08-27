@@ -42,7 +42,7 @@ rekey(
     static_assert(is_Progress<Progress>::value,
         "Progress requirements not met");
     using namespace detail;
-    auto const readSize = 16 * block_size(dat_path);
+    auto const readSize = 1024 * block_size(dat_path);
     auto const writeSize = 16 * block_size(key_path);
 
     // Open data file for reading and appending

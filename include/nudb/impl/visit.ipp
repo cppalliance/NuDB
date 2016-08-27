@@ -35,7 +35,7 @@ visit(
         "Progress requirements not met");
     using namespace detail;
     using File = native_file;
-    auto const readSize = 4096 * block_size(path);
+    auto const readSize = 1024 * block_size(path);
     File df;
     df.open(file_mode::scan, path, ec);
     if(ec)

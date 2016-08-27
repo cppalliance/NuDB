@@ -119,7 +119,7 @@ recover(
         if(ec)
             return;
 
-        auto const readSize = 32 * kh.block_size;
+        auto const readSize = 1024 * kh.block_size;
         auto const bucketSize = bucket_size(kh.capacity);
         buffer buf{kh.block_size};
         bucket b{kh.block_size, buf.get()};

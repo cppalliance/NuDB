@@ -45,7 +45,7 @@ verify_normal(
     static_assert(is_Progress<Progress>::value,
         "Progress requirements not met");
     info.algorithm = 0;
-    auto const readSize = kh.block_size;
+    auto const readSize = 1024 * kh.block_size;
 
     // This ratio balances the 2 work phases.
     // The number is determined empirically.
@@ -287,7 +287,7 @@ verify_fast(
     error_code& ec)
 {
     info.algorithm = 1;
-    auto const readSize = kh.block_size;
+    auto const readSize = 1024 * kh.block_size;
 
     // Counts unverified keys per bucket
     if(kh.buckets > std::numeric_limits<nbuck_t>::max())
