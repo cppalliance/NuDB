@@ -39,7 +39,7 @@ some other features:
 * Data files may be efficiently iterated.
 * Key and data files may be on different devices.
 * Hardened against algorithmic complexity attacks.
-* Header-only, nothing to build or link.
+* Header-only, no separate library to build.
 
 ## Requirements
 
@@ -49,16 +49,21 @@ some other features:
 
 ## Building
 
-NuDB is header-only so there are no libraries to build or link with.
-To use it in your project, simply copy the NuDB sources to your
-project's source tree (alternatively, bring NuDB into your Git repository
-using the `git subtree` or `git submodule` commands). Then, edit your
-build scripts to add the `include/` directory to the list of paths checked
-by the C++ compiler when searching for includes. NuDB `#include` lines
- will look like this:
+NuDB is header-only so there are no libraries to build. To use it in your
+project, simply copy the NuDB sources to your project's source tree
+(alternatively, bring NuDB into your Git repository using the
+`git subtree` or `git submodule` commands). Then, edit your build scripts
+to add the `include/` directory to the list of paths checked by the C++
+compiler when searching for includes. NuDB `#include` lines will look
+like this:
+
 ```
 #include <nudb/nudb.hpp>
 ```
+
+To link your program successfully, you'll need to add the Boost.Thread and
+Boost.System libraries to link with. Please visit the Boost documentation
+for instructions on how to do this for your particular build system.
 
 NuDB tests require Beast, and the benchmarks require RocksDB. These projects
 are linked to the repository using git submodules. Before building the tests
@@ -75,9 +80,11 @@ project files by executing these commands from the root of the repository:
 
 ```
 cd bin
-cmake ..                                    # for 32-bit builds
+cmake ..                                    # for 32-bit Windows build
+
 cd ../bin64
-cmake -G"Visual Studio 14 2015 Win64" ..    # for 64-bit builds
+cmake ..                                    # for Linux/Mac builds, OR
+cmake -G"Visual Studio 14 2015 Win64" ..    # for 64-bit Windows builds
 ```
 
 To build with Boost.Build, it is necessary to have the bjam executable
