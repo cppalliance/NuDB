@@ -217,11 +217,11 @@ class progress
     using clock_type = basic_seconds_clock<std::chrono::steady_clock>;
 
     std::ostream& os_;
-    clock_type::time_point start_ = clock_type::now();
-    clock_type::time_point now_ = clock_type::now();
-    clock_type::time_point report_ = clock_type::now();
-    std::uint64_t prev_ = 0;
-    bool estimate_ = false;
+    clock_type::time_point start_;
+    clock_type::time_point now_;
+    clock_type::time_point report_;
+    std::uint64_t prev_;
+    bool estimate_;
 
 public:
     explicit
@@ -235,6 +235,15 @@ public:
     {
         using namespace std::chrono;
         auto const now = clock_type::now();
+        if(amount == 0)
+        {
+            now_ = clock_type::now();
+            start_ = now_;
+            report_ = now_;
+            prev_ = 0;
+            estimate_ = false;
+            return;
+        }
         if(now == now_)
             return;
         now_ = now;
@@ -251,15 +260,13 @@ public:
             // Only show estimates periodically
             return;
         }
-        if(amount < 1)
-            amount = 1;
         auto const rate = double(amount) / elapsed.count();
         auto const remain = clock_type::duration{
             static_cast<clock_type::duration::rep>(
                (total - amount) / rate)};
         os_ <<
             "Remaining: " << fmtdur(remain) <<
-                "(" << fdec(amount) << " of " << fdec(total) <<
+                " (" << fdec(amount) << " of " << fdec(total) <<
                     " in " << fmtdur(elapsed) <<
                 ", " << fdec(amount - prev_) <<
                     " in " << fmtdur(now - report_) <<

@@ -58,7 +58,7 @@ verify_normal(
         info.dat_file_size + keys * kh.block_size +
         adjust * (info.key_file_size + keys * kh.block_size));
     std::uint64_t work = 0;
-    progress(work, nwork);
+    progress(0, nwork);
 
     // Iterate Data File
     // Data Record
@@ -310,7 +310,7 @@ verify_fast(
     std::uint64_t work = 0;
     std::uint64_t const nwork =
         passes * info.dat_file_size + info.key_file_size;
-    progress(work, nwork);
+    progress(0, nwork);
 
     std::uint64_t fetches = 0;
     buffer buf{(chunkSize + 1) * kh.block_size};
