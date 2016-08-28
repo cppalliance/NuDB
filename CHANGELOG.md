@@ -4,6 +4,7 @@
 * Fix large POSIX and Win32 writes
 * Adjust progress indicator for nudb tool
 * Document link requirements
+* Add visit test
 
 ---
 
