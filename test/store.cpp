@@ -29,7 +29,98 @@ class store_test : public beast::unit_test::suite
 {
 public:
     void
-    do_test (std::size_t N,
+    do_errors()
+    {
+        temp_dir td;
+        error_code ec;
+        auto const dp = td.file ("nudb.dat");
+        auto const kp = td.file ("nudb.key");
+        auto const lp = td.file ("nudb.log");
+        store db;
+        // Fetch without open database
+        try
+        {
+            key_type key = 0;
+            db.fetch(&key,
+                [](void const*, std::size_t)
+                {
+                }, ec);
+            return fail();
+        }
+        catch(std::exception const&)
+        {
+            pass();
+        }
+        // Insert without open database
+        try
+        {
+            key_type key = 0;
+            std::uint64_t data = 0;
+            db.insert(&key, &data, sizeof(data), ec);
+            return fail();
+        }
+        catch(std::exception const&)
+        {
+            pass();
+        }
+        create<xxhasher>(dp, kp, lp, appnumValue,
+            saltValue, sizeof(key_type), block_size(dp),
+                0.5, ec);
+        if(! expect(! ec, ec.message()))
+            return;
+        finisher f(
+            [&]
+            {
+                {
+                    error_code ev;
+                    native_file::erase(dp, ev);
+                    expect(! ev, ev.message());
+                }
+                {
+                    error_code ev;
+                    native_file::erase(kp, ev);
+                    expect(! ev, ev.message());
+                }
+                {
+                    error_code ev;
+                    erase_file(lp, ev);
+                    expect(! ev, ev.message());
+                }
+            });
+        db.open(dp, kp, lp, arenaAllocSize, ec);
+        if(! expect(! ec, ec.message()))
+            return;
+        // Insert 0-size value
+        try
+        {
+            key_type key = 0;
+            std::uint64_t data = 0;
+            db.insert(&key, &data, 0, ec);
+            return fail();
+        }
+        catch(std::exception const&)
+        {
+            pass();
+        }
+        try
+        {
+            db.open(dp, kp, lp, arenaAllocSize, ec);
+            return fail();
+        }
+        catch(std::exception const&)
+        {
+            pass();
+        }
+        db.close(ec);
+        if(! expect(! ec, ec.message()))
+            return;
+        db.open(td.file("dat.dat"), kp, lp, arenaAllocSize, ec);
+        if(! expect(ec == errc::no_such_file_or_directory))
+            return;
+    }
+
+    void
+    do_inserts(std::size_t N,
         nsize_t block_size, float load_factor)
     {
         temp_dir td;
@@ -139,7 +230,8 @@ public:
 
         float const load_factor = 0.95f;
 
-        do_test (N, block_size, load_factor);
+        do_errors();
+        do_inserts(N, block_size, load_factor);
     }
 };
 

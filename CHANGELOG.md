@@ -5,6 +5,7 @@
 * Adjust progress indicator for nudb tool
 * Document link requirements
 * Add visit test
+* Improved coverage
 
 ---
 

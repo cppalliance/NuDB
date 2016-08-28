@@ -3,7 +3,7 @@
 
 [![Join the chat at https://gitter.im/vinniefalco/NuDB](https://badges.gitter.im/vinniefalco/NuDB.svg)](https://gitter.im/vinniefalco/NuDB?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status]
 (https://travis-ci.org/vinniefalco/NuDB.svg?branch=master)](https://travis-ci.org/vinniefalco/NuDB) [![codecov]
-(https://codecov.io/gh/vinniefalco/NuDB/branch/master/graph/badge.svg)](https://codecov.io/gh/vinniefalco/NuDB) [![coveralls]
+(https://codecov.io/gh/vinniefalco/NuDB/branch/develop/graph/badge.svg)](https://codecov.io/gh/vinniefalco/NuDB) [![coveralls]
 (https://coveralls.io/repos/github/vinniefalco/NuDB/badge.svg?branch=master)](https://coveralls.io/github/vinniefalco/NuDB?branch=master) [![Documentation]
 (https://img.shields.io/badge/documentation-master-brightgreen.svg)](http://vinniefalco.github.io/nudb/) [![License]
 (https://img.shields.io/badge/license-boost-brightgreen.svg)](LICENSE_1_0.txt)
