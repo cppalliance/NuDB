@@ -1,6 +1,9 @@
 1.0.0-b3
 
 * Tune buffer sizes for performance
+* Fix large POSIX and Win32 writes
+* Adjust progress indicator for nudb tool
+* Document link requirements
 
 ---
 

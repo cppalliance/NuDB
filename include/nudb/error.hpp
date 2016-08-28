@@ -37,13 +37,6 @@ enum class error
     */
     short_read,
 
-    /** A file write stored less data than expected.
-
-        This is typically due to running out of space
-        on a device holding a database file.
-    */
-    short_write,
-
     /** A log file is present.
 
         Indicates that the database needs to have the

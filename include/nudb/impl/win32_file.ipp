@@ -179,7 +179,8 @@ write(std::uint64_t offset,
             return last_err(ec);
         if(bytesWritten == 0)
         {
-            ec = error::short_write;
+            ec = error_code{errc::no_space_on_device,
+                generic_category()};;
             return;
         }
         offset += bytesWritten;

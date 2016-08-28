@@ -140,7 +140,7 @@ read(std::uint64_t offset,
                 continue;
             return err(ev, ec);
         }
-        if(n < amount)
+        if(n == 0)
         {
             ec = error::short_read;
             return;
@@ -169,11 +169,6 @@ write(std::uint64_t offset,
             if(ev == EINTR)
                 continue;
             return err(ev, ec);
-        }
-        if(n < amount)
-        {
-            ec = error::short_write;
-            return;
         }
         offset += n;
         bytes -= n;

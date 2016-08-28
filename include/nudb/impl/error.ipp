@@ -30,9 +30,6 @@ nudb_category()
             case error::short_read:
                 return "short read";
 
-            case error::short_write:
-                return "short write";
-
             case error::log_file_exists:
                 return "a log file exists";
 
