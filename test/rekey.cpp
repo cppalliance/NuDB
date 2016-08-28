@@ -28,7 +28,8 @@ public:
         auto const keys = static_cast<std::size_t>(
             loadFactor * detail::bucket_capacity(blockSize));
         std::size_t const bufferSize =
-            blockSize * (1 + ((N + keys - 1) / keys));
+            (blockSize * (1 + ((N + keys - 1) / keys)))
+                / 2;
 
         temp_dir td;
         auto const dp  = td.file ("nudb.dat");
