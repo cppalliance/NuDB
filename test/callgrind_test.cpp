@@ -5,10 +5,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include "test_util.hpp"
-
-#include <nudb/create.hpp>
-#include <nudb/native_file.hpp>
+#include <nudb/test/test_store.hpp>
 #include <beast/unit_test/suite.hpp>
 #include <cmath>
 #include <cstdlib>
@@ -29,87 +26,63 @@ public:
     // with keys not present.
     //
     void
-    testCallgrind(std::size_t count, path_type const& path)
+    testCallgrind(std::size_t N)
     {
+        using key_type = std::uint64_t;
+        std::size_t const blockSize = 4096;
+        float const loadFactor = 0.5;
+
         error_code ec;
-        auto const dp = path + ".dat";
-        auto const kp = path + ".key";
-        auto const lp = path + ".log";
-        create<xxhasher>(dp, kp, lp,
-            appnumValue,
-            saltValue,
-            sizeof(key_type),
-            nudb::block_size(path),
-            0.50,
-            ec);
-        if(! expect(! ec, ec.message()))
+        test_store ts{sizeof(key_type), blockSize, loadFactor};
+        ts.create(ec);
+        if(! BEAST_EXPECTS(! ec, ec.message()))
             return;
-        finisher f(
-            [&]
-            {
-                {
-                    error_code ev;
-                    native_file::erase(dp, ev);
-                    expect(! ev, ev.message());
-                }
-                {
-                    error_code ev;
-                    native_file::erase(kp, ev);
-                    expect(! ev, ev.message());
-                }
-                {
-                    error_code ev;
-                    erase_file(lp, ev);
-                    expect(! ev, ev.message());
-                }
-            });
-        store db;
-        db.open(dp, kp, lp, arenaAllocSize, ec);
-        if(! expect(! ec, ec.message()))
+        ts.open(ec);
+        if(! BEAST_EXPECTS(! ec, ec.message()))
             return;
-        expect(db.appnum() == appnumValue, "appnum");
-        Sequence seq;
-        for(std::size_t i = 0; i < count; ++i)
+        for(std::size_t i = 0; i < N; ++i)
         {
-            auto const v = seq[i];
-            db.insert(&v.key, v.data, v.size, ec);
-            if(! expect(! ec, ec.message()))
+            auto const item = ts[i];
+            ts.db.insert(item.key, item.data, item.size, ec);
+            if(! BEAST_EXPECTS(! ec, ec.message()))
                 return;
         }
-        Storage s;
-        for(std::size_t i = 0; i < count * 2; ++i)
+        Buffer b;
+        for(std::size_t i = 0; i < N * 2; ++i)
         {
             if(! (i%2))
             {
-                auto const v = seq[i/2];
-                db.fetch(&v.key, s, ec);
-                if(! expect(! ec, ec.message()))
+                auto const item = ts[i/2];
+                ts.db.fetch(item.key, b, ec);
+                if(! BEAST_EXPECTS(! ec, ec.message()))
                     return;
-                expect (s.size() == v.size, "size");
-                expect (std::memcmp(s.get(),
-                    v.data, v.size) == 0, "data");
+                if(! BEAST_EXPECT(b.size() == item.size))
+                    return;
+                if(! BEAST_EXPECT(std::memcmp(b.data(),
+                        item.data, item.size) == 0))
+                    return;
             }
             else
             {
-                auto const v = seq[count + i/2];
-                db.fetch (&v.key, s, ec);
-                if(! expect(ec == error::key_not_found, ec.message()))
+                auto const item = ts[N + i/2];
+                ts.db.fetch(item.key, b, ec);
+                if(! BEAST_EXPECTS(ec ==
+                        error::key_not_found, ec.message()))
                     return;
                 ec = {};
             }
         }
-        db.close(ec);
-        if(! expect(! ec, ec.message()))
+        ts.close(ec);
+        if(! BEAST_EXPECTS(! ec, ec.message()))
             return;
     }
 
     void run()
     {
         // higher numbers, more pain
-        static std::size_t constexpr N = 100000;
+        std::size_t constexpr N = 100000;
 
-        temp_dir td;
-        testCallgrind(N, td.path());
+        testCallgrind(N);
     }
 };
 

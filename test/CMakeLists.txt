@@ -10,7 +10,6 @@ add_executable(test-all
     ${NUDB_INCLUDES}
     ${BEAST_INCLUDES}
     ../extras/beast/extras/beast/unit_test/main.cpp
-    test_util.hpp
     basic_store.cpp
     callgrind_test.cpp
     concepts.cpp

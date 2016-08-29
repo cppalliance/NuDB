@@ -199,6 +199,18 @@ public:
     std::size_t
     key_size() const;
 
+    /** Return the block size associated with the database.
+
+        Preconditions:
+            The database must be open.
+
+        @return The size of blocks in the key file.
+
+        @throws std::logic_error if the database is not open.
+    */
+    std::size_t
+    block_size() const;
+
     /** Close the database.
 
         All data is committed before closing.

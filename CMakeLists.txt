@@ -69,9 +69,8 @@ include_directories (
     )
 
 file (GLOB_RECURSE NUDB_INCLUDES
-    ${PROJECT_SOURCE_DIR}/include/nudb/*.hpp
-    ${PROJECT_SOURCE_DIR}/include/nudb/*.ipp
-    ${PROJECT_SOURCE_DIR}/extras/nudb/*.hpp
+    ${PROJECT_SOURCE_DIR}/include/nudb/*
+    ${PROJECT_SOURCE_DIR}/extras/nudb/*
 )
 
 file (GLOB_RECURSE BEAST_INCLUDES

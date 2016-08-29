@@ -8,7 +8,9 @@
 // Test that header file is self-contained
 #include <nudb/recover.hpp>
 
-#include "test_util.hpp"
+#include <nudb/test/fail_file.hpp>
+#include <nudb/test/test_store.hpp>
+#include <nudb/progress.hpp>
 #include <beast/unit_test/suite.hpp>
 #include <cmath>
 #include <cstring>
@@ -22,67 +24,81 @@ namespace test {
 class basic_recover_test : public beast::unit_test::suite
 {
 public:
+    using key_type = std::uint32_t;
+
+    void
+    test_ok()
+    {
+        std::size_t const keySize = 8;
+        std::size_t const blockSize = 256;
+        float const loadFactor = 0.5f;
+        
+        error_code ec;
+        test_store ts{keySize, blockSize, loadFactor};
+        ts.create(ec);
+        if(! BEAST_EXPECTS(! ec, ec.message()))
+            return;
+        recover<xxhasher>(ts.dp, ts.kp, ts.lp, ec);
+        if(! BEAST_EXPECTS(! ec, ec.message()))
+            return;
+    }
+
     // Creates and opens a database, performs a bunch
     // of inserts, then fetches all of them to make sure
     // they are there. Uses a fail_file that causes the n-th
     // I/O to fail, causing an exception.
     void
-    do_work(std::size_t count, float load_factor,
-        nudb::path_type const& path, fail_counter& c,
-            error_code& ec)
+    do_work(
+        test_store& ts,
+        std::size_t N,
+        fail_counter& c,
+        error_code& ec)
     {
-        auto const dp = path + ".dat";
-        auto const kp = path + ".key";
-        auto const lp = path + ".log";
-        create<xxhasher>(dp, kp, lp,
-            appnumValue, saltValue, sizeof(key_type),
-                block_size(path), load_factor, ec);
+        ts.create(ec);
         if(ec)
             return;
-        fail_store db;
-        db.open(dp, kp, lp, arenaAllocSize, ec, c);
+        basic_store<xxhasher, fail_file<native_file>> db;
+        db.open(ts.dp, ts.kp, ts.lp, 16 * 1024 * 1024, ec, c);
         if(ec)
             return;
-        expect(db.appnum() == appnumValue, "appnum");
-        Sequence seq;
-        for(std::size_t i = 0; i < count; ++i)
+        if(! BEAST_EXPECT(db.appnum() == ts.appnum))
+            return;
+        // Insert
+        for(std::size_t i = 0; i < N; ++i)
         {
-            auto const v = seq[i];
-            db.insert(&v.key, v.data, v.size, ec);
-            expect(ec != error::key_exists, ec.message());
-            if(ec)
+            auto const item = ts[i];
+            db.insert(item.key, item.data, item.size, ec);
+            if(ec == test_error::failure)
+                return;
+            if(! BEAST_EXPECTS(! ec, ec.message()))
                 return;
         }
-        Storage s;
-        for(std::size_t i = 0; i < count; ++i)
+        // Fetch
+        Buffer b;
+        for(std::size_t i = 0; i < N; ++i)
         {
-            auto const v = seq[i];
-            db.fetch(&v.key, s, ec);
-            expect(ec != error::key_not_found, ec.message());
-            if(ec)
+            auto const item = ts[i];
+            db.fetch(item.key, b, ec);
+            if(ec == test_error::failure)
                 return;
-            if(! expect(s.size() == v.size))
+            if(! BEAST_EXPECTS(! ec, ec.message()))
                 return;
-            if(! expect(std::memcmp(s.get(),
-                    v.data, v.size) == 0, "data"))
+            if(! BEAST_EXPECT(b.size() == item.size))
+                return;
+            if(! BEAST_EXPECT(std::memcmp(b.data(),
+                    item.data, item.size) == 0))
                 return;
         }
         db.close(ec);
-        if(ec)
+        if(ec == test_error::failure)
             return;
+        if(! BEAST_EXPECTS(! ec, ec.message()))
+            return;
+        // Verify
         verify_info info;
-        verify<xxhasher>(
-            info, dp, kp, 0, no_progress{}, ec);
-        {
-            error_code ev;
-            nudb::native_file::erase(dp, ev);
-            expect(! ev, ev.message());
-            ev = {};
-            nudb::native_file::erase(kp, ev);
-            expect(! ev, ev.message());
-            ev = {};
-            nudb::native_file::erase(lp, ev);
-        }
+        verify<xxhasher>(info, ts.dp, ts.kp,
+            0, no_progress{}, ec);
+        ts.erase();
         if(ec)
         {
             log << info;
@@ -91,52 +107,49 @@ public:
     }
 
     void
-    do_recover(path_type const& path,
-        fail_counter& c, error_code& ec)
+    do_recover(
+        test_store& ts, fail_counter& c, error_code& ec)
     {
-        auto const dp = path + ".dat";
-        auto const kp = path + ".key";
-        auto const lp = path + ".log";
-        recover<xxhasher, fail_file<native_file>>(dp, kp, lp, ec, c);
+        recover<xxhasher, fail_file<native_file>>(
+            ts.dp, ts.kp, ts.lp, ec, c);
         if(ec)
             return;
+        // Verify
         verify_info info;
-        verify<xxhasher>(
-            info, dp, kp, 0, no_progress{}, ec);
+        verify<xxhasher>(info, ts.dp, ts.kp,
+            0, no_progress{}, ec);
         if(ec)
             return;
-        error_code ec2;
-        native_file::erase(dp, ec2);
-        native_file::erase(kp, ec2);
-        native_file::erase(lp, ec2);
+        ts.erase();
     }
 
     void
-    test_recover(float load_factor, std::size_t count)
+    test_recover(float load_factor, std::size_t N)
     {
-        testcase(std::to_string(count) + " inserts",
+        testcase(std::to_string(N) + " inserts",
             beast::unit_test::abort_on_fail);
-        temp_dir td;
-        auto const path = td.path();
+        test_store ts{sizeof(key_type), 256, 0.95f};
         for(std::size_t n = 1;; ++n)
         {
             {
                 error_code ec;
                 fail_counter c{n};
-                do_work (count, load_factor, path, c, ec);
+                do_work(ts, N, c, ec);
                 if(! ec)
                     break;
-                if(! expect(ec == test::test_error::failure, ec.message()))
+                if(! expect(ec ==
+                        test::test_error::failure, ec.message()))
                     return;
             }
             for(std::size_t m = 1;; ++m)
             {
                 error_code ec;
                 fail_counter c{m};
-                do_recover (path, c, ec);
+                do_recover(ts, c, ec);
                 if(! ec)
                     break;
-                if(! expect(ec == test::test_error::failure, ec.message()))
+                if(! expect(ec ==
+                        test::test_error::failure, ec.message()))
                     return;
             }
         }
@@ -149,11 +162,11 @@ public:
     void
     run() override
     {
-        float lf = 0.55f;
-        test_recover(lf, 0);
-        test_recover(lf, 10);
-        test_recover(lf, 100);
-        test_recover(lf, 1000);
+        test_ok();
+        test_recover(0.55f, 0);
+        test_recover(0.55f, 10);
+        test_recover(0.55f, 100);
+        test_recover(0.55f, 1000);
     }
 };
 
@@ -163,9 +176,9 @@ public:
     void
     run() override
     {
-        float lf = 0.90f;
-        test_recover(lf, 10000);
-        test_recover(lf, 100000);
+        float loadFactor = 0.90f;
+        test_recover(loadFactor, 10000);
+        test_recover(loadFactor, 100000);
     }
 };
 

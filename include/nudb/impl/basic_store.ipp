@@ -101,6 +101,16 @@ key_size() const
 }
 
 template<class Hasher, class File>
+std::size_t
+basic_store<Hasher, File>::
+block_size() const
+{
+    if(! is_open())
+        throw std::logic_error("nudb: not open");
+    return s_->kh.block_size;
+}
+
+template<class Hasher, class File>
 template<class... Args>
 void
 basic_store<Hasher, File>::
@@ -168,8 +178,8 @@ open(
         ec = error::short_key_file;
         return;
     }
-    dataWriteSize_ = 32 * block_size(dat_path);
-    logWriteSize_ = 32 * block_size(log_path);
+    dataWriteSize_ = 32 * nudb::block_size(dat_path);
+    logWriteSize_ = 32 * nudb::block_size(log_path);
     s_.emplace(std::move(*s));
     open_ = true;
     thread_ = std::thread(&basic_store::run, this);
@@ -218,11 +228,7 @@ fetch(
         return;
     }
     auto const h =
-#if 1
         hash(key, s_->kh.key_size, s_->hasher);
-#else
-        hash<Hasher>(key, s_->kh.key_size, s_->kh.salt);
-#endif
     shared_lock_type m{m_};
     {
         auto iter = s_->p1.find(key);
@@ -274,11 +280,7 @@ insert(
     if(size > field<uint32_t>::max)
         throw std::domain_error("nudb: value size too large");
     auto const h =
-#if 1
         hash(key, s_->kh.key_size, s_->hasher);
-#else
-        hash<Hasher>(key, s_->kh.key_size, s_->kh.salt);
-#endif
     std::lock_guard<std::mutex> u{u_};
     {
         shared_lock_type m{m_};

@@ -8,7 +8,8 @@
 // Test that header file is self-contained
 #include <nudb/rekey.hpp>
 
-#include "test_util.hpp"
+#include <nudb/test/fail_file.hpp>
+#include <nudb/test/test_store.hpp>
 #include <nudb/progress.hpp>
 #include <nudb/verify.hpp>
 #include <beast/unit_test/suite.hpp>
@@ -23,113 +24,94 @@ class rekey_test : public beast::unit_test::suite
 {
 public:
     void
-    do_recover(std::size_t N, nsize_t blockSize, float loadFactor)
+    do_recover(
+        std::size_t N, nsize_t blockSize, float loadFactor)
     {
+        using key_type = std::uint32_t;
+
         auto const keys = static_cast<std::size_t>(
             loadFactor * detail::bucket_capacity(blockSize));
         std::size_t const bufferSize =
             (blockSize * (1 + ((N + keys - 1) / keys)))
                 / 2;
-
-        temp_dir td;
-        auto const dp  = td.file ("nudb.dat");
-        auto const kp  = td.file ("nudb.key");
-        auto const kp2 = td.file ("nudb.key2");
-        auto const lp  = td.file ("nudb.log");
-        finisher f(
-            [&]
-            {
-                erase_file(dp);
-                erase_file(kp);
-                erase_file(lp);
-            });
+        error_code ec;
+        test_store ts{sizeof(key_type), 256, 0.55f};
+        ts.create(ec);
+        if(! BEAST_EXPECTS(! ec, ec.message()))
+            return;
+        ts.open(ec);
+        if(! BEAST_EXPECTS(! ec, ec.message()))
+            return;
+        // Insert
+        for(std::size_t i = 0; i < N; ++i)
         {
-            error_code ec;
-            Sequence seq;
-            store db;
-            create<xxhasher>(dp, kp, lp, appnumValue,
-                saltValue, sizeof(key_type), blockSize,
-                    loadFactor, ec);
+            auto const item = ts[i];
+            ts.db.insert(item.key, item.data, item.size, ec);
             if(! expect(! ec, ec.message()))
                 return;
-            db.open(dp, kp, lp, arenaAllocSize, ec);
-            if(! expect(! ec, ec.message()))
-                return;
-            Storage s;
-            // Insert
-            for(std::size_t i = 0; i < N; ++i)
-            {
-                auto const v = seq[i];
-                db.insert(&v.key, v.data, v.size, ec);
-                if(! expect(! ec, ec.message()))
-                    return;
-            }
         }
+        ts.close(ec);
+        if(! BEAST_EXPECTS(! ec, ec.message()))
+            return;
         // Verify
-        {
-            error_code ec;
-            verify_info info;
-            verify<xxhasher>(
-                info, dp, kp, bufferSize, no_progress{}, ec);
-            if(! expect(! ec, ec.message()))
-                return;
-            if(! expect(info.value_count == N))
-                return;
-            if(! expect(info.spill_count > 0))
-                return;
-        }
+        verify_info info;
+        verify<xxhasher>(
+            info, ts.dp, ts.kp, bufferSize, no_progress{}, ec);
+        if(! BEAST_EXPECTS(! ec, ec.message()))
+            return;
+        if(! BEAST_EXPECT(info.value_count == N))
+            return;
+        if(! BEAST_EXPECT(info.spill_count > 0))
+            return;
         // Rekey
+        auto const kp2 = ts.kp + "2";
         for(std::size_t n = 1;; ++n)
         {
-            error_code ec;
             fail_counter fc{n};
             rekey<xxhasher, fail_file<native_file>>(
-                dp, kp2, lp, blockSize, loadFactor,
+                ts.dp, kp2, ts.lp, blockSize, loadFactor,
                     N, bufferSize, ec, no_progress{}, fc);
             if(! ec)
                 break;
-            if(! expect(ec == test::test_error::failure, ec.message()))
+            if(! BEAST_EXPECTS(ec ==
+                    test::test_error::failure, ec.message()))
                 return;
             ec = {};
-            recover<xxhasher, native_file>(dp, kp2, lp, ec);
+            recover<xxhasher, native_file>(
+                ts.dp, kp2, ts.lp, ec);
             if(ec == error::no_key_file)
+            {
+                ec = {};
                 continue;
-            if(! expect(! ec, ec.message()))
+            }
+            if(! BEAST_EXPECTS(! ec, ec.message()))
                 return;
             native_file::erase(kp2, ec);
             if(ec == errc::no_such_file_or_directory)
                 ec = {};
-            if(! expect(! ec, ec.message()))
+            if(! BEAST_EXPECTS(! ec, ec.message()))
                 return;
-            verify_info info;
-            verify<xxhasher>(
-                info, dp, kp, bufferSize, no_progress{}, ec);
-            if(! expect(! ec, ec.message()))
+            // Verify
+            verify<xxhasher>(info, ts.dp, ts.kp,
+                bufferSize, no_progress{}, ec);
+            if(! BEAST_EXPECTS(! ec, ec.message()))
                 return;
-            if(! expect(info.value_count == N))
+            if(! BEAST_EXPECT(info.value_count == N))
                 return;
         }
         // Verify
-        {
-            error_code ec;
-            verify_info info;
-            verify<xxhasher>(
-                info, dp, kp, bufferSize, no_progress{}, ec);
-            if(! expect(! ec, ec.message()))
-                return;
-            if(! expect(info.value_count == N))
-                return;
-        }
-        {
-            error_code ec;
-            verify_info info;
-            verify<xxhasher>(
-                info, dp, kp2, bufferSize, no_progress{}, ec);
-            if(! expect(! ec, ec.message()))
-                return;
-            if(! expect(info.value_count == N))
-                return;
-        }
+        verify<xxhasher>(info, ts.dp, ts.kp,
+            bufferSize, no_progress{}, ec);
+        if(! BEAST_EXPECTS(! ec, ec.message()))
+            return;
+        if(! BEAST_EXPECT(info.value_count == N))
+            return;
+        verify<xxhasher>(info, ts.dp, kp2,
+            bufferSize, no_progress{}, ec);
+        if(! BEAST_EXPECTS(! ec, ec.message()))
+            return;
+        if(! BEAST_EXPECT(info.value_count == N))
+            return;
     }
 
     void

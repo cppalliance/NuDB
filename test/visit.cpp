@@ -8,9 +8,11 @@
 // Test that header file is self-contained
 #include <nudb/visit.hpp>
 
-#include "test_util.hpp"
+#include <nudb/test/test_store.hpp>
+#include <nudb/progress.hpp>
 #include <beast/unit_test/suite.hpp>
 #include <unordered_map>
+#include <vector>
 
 namespace nudb {
 namespace test {
@@ -19,57 +21,53 @@ class visit_test : public beast::unit_test::suite
 {
 public:
     void
-    do_visit(std::size_t N, float loadFactor)
+    do_visit(
+        std::size_t N,
+        std::size_t blockSize,
+        float loadFactor)
     {
-        temp_dir td;
+        using key_type = std::uint32_t;
+
         error_code ec;
-        auto const dp = td.file ("nudb.dat");
-        auto const kp = td.file ("nudb.key");
-        auto const lp = td.file ("nudb.log");
-        create<xxhasher>(dp, kp, lp, appnumValue,
-            saltValue, sizeof(key_type), block_size(dp),
-                loadFactor, ec);
-        if(! expect(! ec, ec.message()))
+        test_store ts{sizeof(key_type), blockSize, loadFactor};
+
+        // File not present
+        visit(ts.dp,
+            [&](void const* key, std::size_t keySize,
+                void const* data, std::size_t dataSize,
+                error_code& ec)
+            {
+            }, no_progress{}, ec);
+        if(! BEAST_EXPECTS(ec ==
+                errc::no_such_file_or_directory, ec.message()))
             return;
-        finisher f(
-            [&]
-            {
-                {
-                    error_code ev;
-                    native_file::erase(dp, ev);
-                    expect(! ev, ev.message());
-                }
-                {
-                    error_code ev;
-                    native_file::erase(kp, ev);
-                    expect(! ev, ev.message());
-                }
-                {
-                    error_code ev;
-                    erase_file(lp, ev);
-                    expect(! ev, ev.message());
-                }
-            });
-        Sequence seq;
+        ec = {};
+
+        ts.create(ec);
+        if(! BEAST_EXPECTS(! ec, ec.message()))
+            return;
+        ts.open(ec);
+        if(! BEAST_EXPECTS(! ec, ec.message()))
+            return;
         std::unordered_map<key_type, std::size_t> map;
+        // Insert
+        for(std::size_t i = 0; i < N; ++i)
         {
-            store db;
-            db.open(dp, kp, lp, arenaAllocSize, ec);
-            if(! expect(! ec, ec.message()))
+            auto const item = ts[i];
+            key_type const k =         item.key[0]         +
+                (static_cast<key_type>(item.key[1]) <<  8) +
+                (static_cast<key_type>(item.key[2]) << 16) +
+                (static_cast<key_type>(item.key[3]) << 24);
+            map[k] = i;
+            ts.db.insert(item.key, item.data, item.size, ec);
+            if(! BEAST_EXPECTS(! ec, ec.message()))
                 return;
-            Storage s;
-            // Insert
-            for(std::size_t i = 0; i < N; ++i)
-            {
-                auto const v = seq[i];
-                map[v.key] = i;
-                db.insert(&v.key, v.data, v.size, ec);
-                if(! expect(! ec, ec.message()))
-                    return;
-            }
         }
+        ts.close(ec);
+        if(! BEAST_EXPECTS(! ec, ec.message()))
+            return;
         // Visit
-        visit(dp,
+        visit(ts.dp,
             [&](void const* key, std::size_t keySize,
                 void const* data, std::size_t dataSize,
                 error_code& ec)
@@ -82,21 +80,22 @@ public:
                     };
                 if(! expect(keySize == sizeof(key_type)))
                     return fail();
-                // VFALCO This could fail on non intel since it
-                //        could be doing an unaligned integer read.
-                auto const& k =
-                *reinterpret_cast<key_type const*>(key);
+                auto const p =
+                    reinterpret_cast<std::uint8_t const*>(key);
+                key_type const k =         p[0]         +
+                    (static_cast<key_type>(p[1]) <<  8) +
+                    (static_cast<key_type>(p[2]) << 16) +
+                    (static_cast<key_type>(p[3]) << 24);
                 auto const it = map.find(k);
                 if(it == map.end())
                     return fail();
-                auto const v = seq[it->second];
-                if(! expect(dataSize == v.size))
+                auto const item = ts[it->second];
+                if(! expect(dataSize == item.size))
                     return fail();
                 auto const result =
-                    std::memcmp(data, v.data, v.size);
+                    std::memcmp(data, item.data, item.size);
                 if(result != 0)
                     return fail();
-
             }, no_progress{}, ec);
         if(! expect(! ec, ec.message()))
             return;
@@ -105,7 +104,7 @@ public:
     void
     run() override
     {
-        do_visit(5000, 0.95f);
+        do_visit(5000, 4096, 0.95f);
     }
 };
 
@@ -113,4 +112,3 @@ BEAST_DEFINE_TESTSUITE(visit, test, nudb);
 
 } // test
 } // nudb
-
