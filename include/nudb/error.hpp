@@ -30,6 +30,22 @@ enum class error
     */
     success = 0,
 
+    /** The specified key was not found.
+
+        Returned when @ref basic_store::fetch does not
+        find the specified key.
+    */
+    key_not_found,
+
+    /** The specified key already exists.
+
+        Returned when @ref basic_store::insert finds
+        the specified key already in the database.
+    */
+    key_exists,
+
+
+
     /** A file read returned less data than expected.
 
         This can be caused by premature application

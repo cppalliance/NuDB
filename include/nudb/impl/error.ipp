@@ -27,6 +27,17 @@ nudb_category()
         {
             switch(static_cast<error>(ev))
             {
+            case error::success:
+                return "the operation completed successfully";
+
+            case error::key_not_found:
+                return "key not found";
+
+            case error::key_exists:
+                return "key already exists";
+
+
+
             case error::short_read:
                 return "short read";
 

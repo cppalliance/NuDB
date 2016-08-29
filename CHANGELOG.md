@@ -2,6 +2,11 @@
 
 * Use master branch for codecov badge
 
+### API Changes:
+
+* `insert` sets `error::key_exists` instead of returning `false`
+* `fetch` sets `error::key_not_found` instead of returning `false`
+
 ---
 
 1.0.0-b3

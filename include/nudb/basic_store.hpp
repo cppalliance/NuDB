@@ -236,8 +236,17 @@ public:
 
     /** Fetch a value.
 
-        where data and size represent the value. If the
-        key is not found, the handler is not called.
+        The function checks the database for the specified
+        key, and invokes the callback if it is found. If
+        the key is not found, `ec` is set to @ref error::key_not_found.
+        If any other errors occurs, `ec` is set to the
+        corresponding error.
+
+        @note If the implementation encounters an error while
+        committing data to the database, this function will
+        immediately return with `ec` set to the error which
+        occurred. All subsequent calls to @ref fetch will
+        return the same error until the database is closed.
 
         @param callback A function which will be called with the
         value data if the fetch is successful. The equivalent
@@ -251,37 +260,47 @@ public:
         The buffer provided to the callback remains valid
         until the callback returns, ownership is not transferred.
 
-        @param ec Set to the error, if any occurred. If an error
-        occurs, the return value is undefined.
-
-        @return `true` if a matching key was found.
+        @param ec Set to the error, if any occurred.
 
         @throws `std::logic_error` if the database is not open.
     */
     template<class Callback>
-    bool
+    void
     fetch(void const* key, Callback && callback, error_code& ec);
 
     /** Insert a value.
 
-        Returns:
-            `true` if the key was inserted,
-            `false` if the key already existed
+        This function attempts to insert the specified key/value
+        pair into the database. If the key already exists,
+        `ec` is set to @ref error::key_exists. If an error
+        occurs, `ec` is set to the corresponding error.
 
-        @param ec Set to the error, if any occurred. If an error
-        occurs, the return value is undefined.
+        @note If the implementation encounters an error while
+        committing data to the database, this function will
+        immediately return with `ec` set to the error which
+        occurred. All subsequent calls to @ref insert will
+        return the same error until the database is closed.
+
+        @param key A buffer holding the key to be inserted. The
+        size of the buffer should be at least the `key_size`
+        associated with the open database.
+
+        @param data A buffer holding the value to be inserted.
+
+        @param bytes The size of the buffer holding the value data.
+
+        @param ec Set to the error, if any occurred.
 
         @throws `std::logic_error` if the database is not open,
         `std::domain_error` if the size is out of the allowable range.
-
     */
-    bool
+    void
     insert(void const* key, void const* data,
         nsize_t bytes, error_code& ec);
 
 private:
     template<class Callback>
-    bool
+    void
     fetch(detail::nhash_t h, void const* key,
         detail::bucket b, Callback && callback, error_code& ec);
 

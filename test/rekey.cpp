@@ -60,11 +60,9 @@ public:
             for(std::size_t i = 0; i < N; ++i)
             {
                 auto const v = seq[i];
-                auto const success =
-                    db.insert(&v.key, v.data, v.size, ec);
+                db.insert(&v.key, v.data, v.size, ec);
                 if(! expect(! ec, ec.message()))
                     return;
-                expect(success);
             }
         }
         // Verify

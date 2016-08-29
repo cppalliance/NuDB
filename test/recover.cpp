@@ -48,20 +48,18 @@ public:
         for(std::size_t i = 0; i < count; ++i)
         {
             auto const v = seq[i];
-            auto const success = db.insert(
-                &v.key, v.data, v.size, ec);
+            db.insert(&v.key, v.data, v.size, ec);
+            expect(ec != error::key_exists, ec.message());
             if(ec)
                 return;
-            expect(success);
         }
         Storage s;
         for(std::size_t i = 0; i < count; ++i)
         {
             auto const v = seq[i];
-            auto const found = db.fetch(&v.key, s, ec);
+            db.fetch(&v.key, s, ec);
+            expect(ec != error::key_not_found, ec.message());
             if(ec)
-                return;
-            if(! expect(found))
                 return;
             if(! expect(s.size() == v.size))
                 return;
@@ -165,7 +163,6 @@ public:
     void
     run() override
     {
-        testcase("");
         float lf = 0.90f;
         test_recover(lf, 10000);
         test_recover(lf, 100000);

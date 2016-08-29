@@ -72,11 +72,9 @@ public:
         for(std::size_t i = 0; i < count; ++i)
         {
             auto const v = seq[i];
-            auto const success = db.insert(
-                &v.key, v.data, v.size, ec);
+            db.insert(&v.key, v.data, v.size, ec);
             if(! expect(! ec, ec.message()))
                 return;
-            expect(success);
         }
         Storage s;
         for(std::size_t i = 0; i < count * 2; ++i)
@@ -84,7 +82,7 @@ public:
             if(! (i%2))
             {
                 auto const v = seq[i/2];
-                expect (db.fetch(&v.key, s, ec), "fetch");
+                db.fetch(&v.key, s, ec);
                 if(! expect(! ec, ec.message()))
                     return;
                 expect (s.size() == v.size, "size");
@@ -94,10 +92,10 @@ public:
             else
             {
                 auto const v = seq[count + i/2];
-                auto const found = db.fetch (&v.key, s, ec);
-                if(! expect(! ec, ec.message()))
+                db.fetch (&v.key, s, ec);
+                if(! expect(ec == error::key_not_found, ec.message()))
                     return;
-                expect(! found);
+                ec = {};
             }
         }
         db.close(ec);

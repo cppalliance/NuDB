@@ -30,6 +30,9 @@ public:
 
     void run() override
     {
+        check("nudb", error::success);
+        check("nudb", error::key_not_found);
+        check("nudb", error::key_exists);
         check("nudb", error::short_read);
         check("nudb", error::log_file_exists);
         check("nudb", error::no_key_file);

@@ -152,7 +152,7 @@ close(error_code& ec)
 
 template<class Hasher, class File>
 template<class Callback>
-bool
+void
 basic_store<Hasher, File>::
 fetch(
     void const* key,
@@ -165,7 +165,7 @@ fetch(
     if(ecb_)
     {
         ec = ec_;
-        return false;
+        return;
     }
     auto const h =
 #if 1
@@ -182,9 +182,8 @@ fetch(
             if(iter == s_->p0.end())
                 goto cont;
         }
-        buffer buf;
         callback(iter->first.data, iter->first.size);
-        return true;
+        return;
     }
 cont:
     auto const n = bucket_index(h, buckets_, modulus_);
@@ -198,12 +197,12 @@ cont:
     bucket b{s_->kh.block_size, buf.get()};
     b.read(s_->kf, (n + 1) * b.block_size(), ec);
     if(ec)
-        return false;
-    return fetch(h, key, b, callback, ec);
+        return;
+    fetch(h, key, b, callback, ec);
 }
 
 template<class Hasher, class File>
-bool
+void
 basic_store<Hasher, File>::
 insert(
     void const* key,
@@ -217,7 +216,7 @@ insert(
     if(ecb_)
     {
         ec = ec_;
-        return false;
+        return;
     }
     // Data Record
     if(size == 0)
@@ -233,10 +232,12 @@ insert(
     std::lock_guard<std::mutex> u{u_};
     {
         shared_lock_type m{m_};
-        if(s_->p1.find(key) != s_->p1.end())
-            return false;
-        if(s_->p0.find(key) != s_->p0.end())
-            return false;
+        if(s_->p1.find(key) != s_->p1.end() ||
+           s_->p0.find(key) != s_->p0.end())
+        {
+            ec = error::key_exists;
+            return;
+        }
         auto const n = bucket_index(h, buckets_, modulus_);
         auto const iter = s_->c1.find(n);
         if(iter != s_->c1.end())
@@ -244,9 +245,12 @@ insert(
             auto const found = exists(
                 h, key, &m, iter->second, ec);
             if(ec)
-                return false;
+                return;
             if(found)
-                return false;
+            {
+                ec = error::key_exists;
+                return;
+            }
             // m is now unlocked
         }
         else
@@ -260,12 +264,15 @@ insert(
             b.read(s_->kf,
                    static_cast<noff_t>(n + 1) * s_->kh.block_size, ec);
             if(ec)
-                return false;
+                return;
             auto const found = exists(h, key, nullptr, b, ec);
             if(ec)
-                return false;
+                return;
             if(found)
-                return false;
+            {
+                ec = error::key_exists;
+                return;
+            }
         }
     }
     // Perform insert
@@ -288,14 +295,13 @@ insert(
     m.unlock();
     if(notify)
         cond_.notify_all();
-    return true;
 }
 
 // Fetch key in loaded bucket b or its spills.
 //
 template<class Hasher, class File>
 template<class Callback>
-bool
+void
 basic_store<Hasher, File>::
 fetch(
     detail::nhash_t h,
@@ -323,13 +329,13 @@ fetch(
                 field<uint48_t>::size,  // Size
                     buf0.get(), len, ec);
             if(ec)
-                return false;
+                return;
             if(std::memcmp(buf0.get(), key,
                 s_->kh.key_size) == 0)
             {
                 callback(
                     buf0.get() + s_->kh.key_size, item.size);
-                return true;
+                return;
             }
         }
         auto const spill = b.spill();
@@ -340,9 +346,9 @@ fetch(
             buf1.get());
         b.read(s_->df, spill, ec);
         if(ec)
-            return false;
+            return;
     }
-    return false;
+    ec = error::key_not_found;
 }
 
 // Returns `true` if the key exists

@@ -63,11 +63,9 @@ public:
             {
                 auto const v = seq[i];
                 map[v.key] = i;
-                auto const success =
-                    db.insert(&v.key, v.data, v.size, ec);
+                db.insert(&v.key, v.data, v.size, ec);
                 if(! expect(! ec, ec.message()))
                     return;
-                expect(success);
             }
         }
         // Visit

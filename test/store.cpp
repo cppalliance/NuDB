@@ -162,20 +162,17 @@ public:
         for(std::size_t i = 0; i < N; ++i)
         {
             auto const v = seq[i];
-            auto const success =
-                db.insert(&v.key, v.data, v.size, ec);
+            db.insert(&v.key, v.data, v.size, ec);
             if(! expect(! ec, ec.message()))
                 return;
-            expect(success);
         }
         // fetch
         for(std::size_t i = 0; i < N; ++i)
         {
             auto const v = seq[i];
-            bool const found = db.fetch (&v.key, s, ec);
+            db.fetch (&v.key, s, ec);
             if(! expect(! ec, ec.message()))
                 return;
-            expect(found);
             expect(s.size() == v.size);
             expect(std::memcmp(s.get(),
                 v.data, v.size) == 0);
@@ -184,28 +181,24 @@ public:
         for(std::size_t i = 0; i < N; ++i)
         {
             auto const v = seq[i];
-            auto const success = db.insert(
-                &v.key, v.data, v.size, ec);
-            if(! expect(! ec, ec.message()))
+            db.insert(&v.key, v.data, v.size, ec);
+            if(! expect(ec == error::key_exists, ec.message()))
                 return;
-            expect(! success);
+            ec = {};
         }
         // insert/fetch
         for(std::size_t i = 0; i < N; ++i)
         {
             auto v = seq[i];
-            bool const found = db.fetch (&v.key, s, ec);
+            db.fetch (&v.key, s, ec);
             if(! expect(! ec, ec.message()))
                 return;
-            expect(found);
             expect(s.size() == v.size);
             expect(memcmp(s.get(), v.data, v.size) == 0);
             v = seq[i + N];
-            auto const success = db.insert(
-                &v.key, v.data, v.size, ec);
+            db.insert(&v.key, v.data, v.size, ec);
             if(! expect(! ec, ec.message()))
                 return;
-            expect(success);
         }
         db.close(ec);
         if(! expect(! ec, ec.message()))
