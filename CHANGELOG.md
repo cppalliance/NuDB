@@ -1,3 +1,9 @@
+1.0.0-b4
+
+* Use master branch for codecov badge
+
+---
+
 1.0.0-b3
 
 * Tune buffer sizes for performance
