@@ -51,6 +51,56 @@ basic_store<Hasher, File>::
 }
 
 template<class Hasher, class File>
+path_type const&
+basic_store<Hasher, File>::
+dat_path() const
+{
+    if(! is_open())
+        throw std::logic_error("nudb: not open");
+    return s_->dp;
+}
+
+template<class Hasher, class File>
+path_type const&
+basic_store<Hasher, File>::
+key_path() const
+{
+    if(! is_open())
+        throw std::logic_error("nudb: not open");
+    return s_->kp;
+}
+
+template<class Hasher, class File>
+path_type const&
+basic_store<Hasher, File>::
+log_path() const
+{
+    if(! is_open())
+        throw std::logic_error("nudb: not open");
+    return s_->lp;
+}
+
+template<class Hasher, class File>
+std::uint64_t
+basic_store<Hasher, File>::
+appnum() const
+{
+    if(! is_open())
+        throw std::logic_error("nudb: not open");
+    return s_->kh.appnum;
+}
+
+template<class Hasher, class File>
+std::size_t
+basic_store<Hasher, File>::
+key_size() const
+{
+    if(! is_open())
+        throw std::logic_error("nudb: not open");
+    return s_->kh.key_size;
+}
+
+template<class Hasher, class File>
 template<class... Args>
 void
 basic_store<Hasher, File>::

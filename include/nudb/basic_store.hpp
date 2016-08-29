@@ -145,12 +145,11 @@ public:
             The database must be open.
 
         @return The data file path.
+
+        @throws std::logic_error if the database is not open.
     */
     path_type const&
-    dat_path() const
-    {
-        return s_->dp;
-    }
+    dat_path() const;
 
     /** Return the path to the key file.
 
@@ -158,12 +157,11 @@ public:
             The database must be open.
 
         @return The key file path.
+
+        @throws std::logic_error if the database is not open.
     */
     path_type const&
-    key_path() const
-    {
-        return s_->kp;
-    }
+    key_path() const;
 
     /** Return the path to the log file.
 
@@ -171,12 +169,11 @@ public:
             The database must be open.
 
         @return The log file path.
+
+        @throws std::logic_error if the database is not open.
     */
     path_type const&
-    log_path() const
-    {
-        return s_->lp;
-    }
+    log_path() const;
 
     /** Return the appnum associated with the database.
 
@@ -184,12 +181,23 @@ public:
             The database must be open.
 
         @return The appnum.
+
+        @throws std::logic_error if the database is not open.
     */
     std::uint64_t
-    appnum() const
-    {
-        return s_->kh.appnum;
-    }
+    appnum() const;
+
+    /** Return the key size associated with the database.
+
+        Preconditions:
+            The database must be open.
+
+        @return The size of keys in the database.
+
+        @throws std::logic_error if the database is not open.
+    */
+    std::size_t
+    key_size() const;
 
     /** Close the database.
 
