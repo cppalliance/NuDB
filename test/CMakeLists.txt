@@ -2,15 +2,15 @@
 
 GroupSources(test "/")
 GroupSources(include/nudb nudb)
-GroupSources(extras/nudb nudb)
+GroupSources(extras/nudb extras)
 GroupSources(extras/beast/include/beast beast)
 GroupSources(extras/beast/extras/beast beast)
 
 add_executable(test-all
+    ${EXTRAS_INCLUDES}
     ${NUDB_INCLUDES}
     ${BEAST_INCLUDES}
     ../extras/beast/extras/beast/unit_test/main.cpp
-    test_util.hpp
     basic_store.cpp
     callgrind_test.cpp
     concepts.cpp

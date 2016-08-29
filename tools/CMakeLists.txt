@@ -1,15 +1,13 @@
 # Part of nudb
 
 GroupSources (include/nudb nudb)
-GroupSources (extras/nudb nudb)
-GroupSources (tool "/")
+GroupSources (extras/nudb extras)
+GroupSources (tools "/")
 
 add_executable (nudb
     ${NUDB_INCLUDES}
+    ${EXTRAS_INCLUDES}
     nudb.cpp
-    basic_seconds_clock.hpp
-    chrono_util.hpp
-    util.hpp
 )
 
 if (WIN32)

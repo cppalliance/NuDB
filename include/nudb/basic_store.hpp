@@ -199,6 +199,18 @@ public:
     std::size_t
     key_size() const;
 
+    /** Return the block size associated with the database.
+
+        Preconditions:
+            The database must be open.
+
+        @return The size of blocks in the key file.
+
+        @throws std::logic_error if the database is not open.
+    */
+    std::size_t
+    block_size() const;
+
     /** Close the database.
 
         All data is committed before closing.
@@ -247,7 +259,7 @@ public:
         The function checks the database for the specified
         key, and invokes the callback if it is found. If
         the key is not found, `ec` is set to @ref error::key_not_found.
-        If any other errors occurs, `ec` is set to the
+        If any other errors occur, `ec` is set to the
         corresponding error.
 
         @note If the implementation encounters an error while

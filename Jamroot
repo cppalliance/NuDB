@@ -88,4 +88,4 @@ project nudb
   ;
 
 build-project test ;
-#build-project tool ;
+build-project tools ;

@@ -5,9 +5,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include "util.hpp"
-
 #include <nudb/nudb.hpp>
+#include <nudb/util.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <chrono>

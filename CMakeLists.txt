@@ -68,16 +68,18 @@ include_directories (
     extras/beast/extras
     )
 
-file (GLOB_RECURSE NUDB_INCLUDES
-    ${PROJECT_SOURCE_DIR}/include/nudb/*.hpp
-    ${PROJECT_SOURCE_DIR}/include/nudb/*.ipp
-    ${PROJECT_SOURCE_DIR}/extras/nudb/*.hpp
-)
-
 file (GLOB_RECURSE BEAST_INCLUDES
     ${PROJECT_SOURCE_DIR}/extras/beast/extras/beast/unit_test/*.hpp
     ${PROJECT_SOURCE_DIR}/extras/beast/extras/beast/unit_test/*.ipp
 )
 
-add_subdirectory (tool)
+file (GLOB_RECURSE EXTRAS_INCLUDES
+    ${PROJECT_SOURCE_DIR}/extras/nudb/*
+)
+
+file (GLOB_RECURSE NUDB_INCLUDES
+    ${PROJECT_SOURCE_DIR}/include/nudb/*
+)
+
 add_subdirectory (test)
+add_subdirectory (tools)

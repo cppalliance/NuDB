@@ -540,6 +540,7 @@ verify(
         "Hasher requirements not met");
     static_assert(is_Progress<Progress>::value,
         "Progress requirements not met");
+    info = {};
     using namespace detail;
     using File = native_file;
     File df;

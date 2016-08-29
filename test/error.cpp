@@ -18,18 +18,19 @@ public:
     void check(char const* name, error ev)
     {
         auto const ec = make_error_code(ev);
-        expect(std::string{ec.category().name()} == name);
-        expect(! ec.message().empty());
-        expect(std::addressof(ec.category()) ==
+        BEAST_EXPECT(std::string{ec.category().name()} == name);
+        BEAST_EXPECT(! ec.message().empty());
+        BEAST_EXPECT(std::addressof(ec.category()) ==
             std::addressof(nudb_category()));
-        expect(nudb_category().equivalent(static_cast<int>(ev),
+        BEAST_EXPECT(nudb_category().equivalent(static_cast<int>(ev),
             ec.category().default_error_condition(static_cast<int>(ev))));
-        expect(nudb_category().equivalent(
+        BEAST_EXPECT(nudb_category().equivalent(
             ec, static_cast<int>(ev)));
     }
 
     void run() override
     {
+        nudb_category().message(0);
         check("nudb", error::success);
         check("nudb", error::key_not_found);
         check("nudb", error::key_exists);
