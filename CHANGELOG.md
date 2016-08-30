@@ -1,6 +1,9 @@
 1.0.0-b4
 
+* Improved test coverage
 * Use master branch for codecov badge
+* Throw on API calls when no database open
+* Benchmarks vs. RocksDB
 
 ### API Changes:
 
