@@ -102,12 +102,14 @@ The files in the repository are laid out thusly:
 
 ```
 ./
+    bench/          Holds the benchmark sources and scripts
     bin/            Holds executables and project files
     bin64/          Holds 64-bit Windows executables and project files
     include/        Add this to your compiler includes
         nudb/
     extras/         Additional APIs, may change
     test/           Unit tests and benchmarks
+    tools/          Holds the command line tool sources
 ```
 
 ## Algorithm

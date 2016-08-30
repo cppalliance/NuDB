@@ -12,7 +12,6 @@
 #include <nudb/progress.hpp>
 #include <beast/unit_test/suite.hpp>
 #include <unordered_map>
-#include <vector>
 
 namespace nudb {
 namespace test {
@@ -78,7 +77,7 @@ public:
                         ec = error_code{
                             errc::invalid_argument, generic_category()};
                     };
-                if(! expect(keySize == sizeof(key_type)))
+                if(! BEAST_EXPECT(keySize == sizeof(key_type)))
                     return fail();
                 auto const p =
                     reinterpret_cast<std::uint8_t const*>(key);
@@ -90,14 +89,14 @@ public:
                 if(it == map.end())
                     return fail();
                 auto const item = ts[it->second];
-                if(! expect(dataSize == item.size))
+                if(! BEAST_EXPECT(dataSize == item.size))
                     return fail();
                 auto const result =
                     std::memcmp(data, item.data, item.size);
                 if(result != 0)
                     return fail();
             }, no_progress{}, ec);
-        if(! expect(! ec, ec.message()))
+        if(! BEAST_EXPECTS(! ec, ec.message()))
             return;
     }
 

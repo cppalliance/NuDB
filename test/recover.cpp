@@ -138,7 +138,7 @@ public:
                 do_work(ts, N, c, ec);
                 if(! ec)
                     break;
-                if(! expect(ec ==
+                if(! BEAST_EXPECTS(ec ==
                         test::test_error::failure, ec.message()))
                     return;
             }
@@ -149,7 +149,7 @@ public:
                 do_recover(ts, c, ec);
                 if(! ec)
                     break;
-                if(! expect(ec ==
+                if(! BEAST_EXPECTS(ec ==
                         test::test_error::failure, ec.message()))
                     return;
             }

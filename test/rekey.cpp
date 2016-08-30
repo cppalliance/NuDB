@@ -47,7 +47,7 @@ public:
         {
             auto const item = ts[i];
             ts.db.insert(item.key, item.data, item.size, ec);
-            if(! expect(! ec, ec.message()))
+            if(! BEAST_EXPECTS(! ec, ec.message()))
                 return;
         }
         ts.close(ec);

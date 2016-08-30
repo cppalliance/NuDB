@@ -198,7 +198,7 @@ class basic_test_store
     using Hasher = xxhasher;
 
     temp_dir td_;
-    std::function<std::size_t(xor_shift_engine&)> sizef_;
+    std::uniform_int_distribution<std::size_t> sizef_;
     std::function<void(error_code&)> createf_;
     std::function<void(error_code&)> openf_;
     Buffer buf_;
@@ -221,15 +221,8 @@ public:
 
     ~basic_test_store();
 
-    template<class SizeFunction>
-    void
-    size_function(SizeFunction const& sf)
-    {
-        sizef_ = sf;
-    }
-
     item_type
-    operator[](std::size_t i);
+    operator[](std::uint64_t i);
 
     void
     create(error_code& ec);
@@ -259,7 +252,8 @@ template<class... Args>
 basic_test_store<File>::
 basic_test_store(std::size_t keySize_, std::size_t blockSize_,
         float loadFactor_, Args&&... args)
-    : createf_(
+    : sizef_(250, 750)
+    , createf_(
         [this, args...](error_code& ec)
         {
             nudb::create<Hasher, File>(
@@ -280,9 +274,6 @@ basic_test_store(std::size_t keySize_, std::size_t blockSize_,
     , blockSize(blockSize_)
     , loadFactor(loadFactor_)
 {
-    using dist =
-        std::uniform_int_distribution<std::size_t>;
-    size_function(dist{250, 2500});
 }
 
 template<class File>
@@ -295,11 +286,10 @@ basic_test_store<File>::
 template<class File>
 auto
 basic_test_store<File>::
-operator[](std::size_t i) ->
+operator[](std::uint64_t i) ->
     item_type
 {
-    xor_shift_engine g;
-    g.seed(i + 1);
+    xor_shift_engine g{i + 1};
     item_type item;
     item.size = sizef_(g);
     auto const needed = keySize + item.size;

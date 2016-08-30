@@ -87,5 +87,6 @@ project nudb
     build-dir bin
   ;
 
+build-project bench ;
 build-project test ;
 build-project tools ;

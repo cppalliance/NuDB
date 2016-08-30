@@ -17,6 +17,7 @@
 #include <utility>
 #include <vector>
 #include <unordered_map>
+#include <boost/container/flat_map.hpp>
 
 namespace nudb {
 namespace detail {
@@ -38,8 +39,12 @@ private:
         factor = 64
     };
 
+#if 0
     using map_type = std::unordered_map<
         nbuck_t, void*>;
+#else
+    using map_type = boost::container::flat_map<nbuck_t, void*>;
+#endif
 
     struct transform
     {

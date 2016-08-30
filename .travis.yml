@@ -27,6 +27,8 @@ packages: &gcc5_pkgs
   - automake
   - autotools-dev
   - libc6-dbg
+  # Needed to build rocksdb
+  - libsnappy-dev
 
 matrix:
   include:

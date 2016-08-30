@@ -81,5 +81,6 @@ file (GLOB_RECURSE NUDB_INCLUDES
     ${PROJECT_SOURCE_DIR}/include/nudb/*
 )
 
+add_subdirectory (bench)
 add_subdirectory (test)
 add_subdirectory (tools)

@@ -85,6 +85,8 @@ public:
                     BEAST_EXPECT(
                         std::memcmp(data, item.data, size) == 0);
                 }, ec);
+            if(! BEAST_EXPECTS(! ec, ec.message()))
+                return;
         }
         // Insert Duplicate
         for(std::size_t n = 0; n < N; ++n)
@@ -110,6 +112,8 @@ public:
                         BEAST_EXPECT(
                             std::memcmp(data, item.data, size) == 0);
                     }, ec);
+                if(! BEAST_EXPECTS(! ec, ec.message()))
+                    return;
                 item = ts[N + n];
                 ts.db.insert(item.key, item.data, item.size, ec);
                 if(! BEAST_EXPECTS(! ec, ec.message()))
@@ -122,6 +126,8 @@ public:
                         BEAST_EXPECT(
                             std::memcmp(data, item.data, size) == 0);
                     }, ec);
+                if(! BEAST_EXPECTS(! ec, ec.message()))
+                    return;
             }
         }
         if(sleep)
@@ -149,7 +155,7 @@ public:
             {
             case 1: N = 10; break;
             case 2: N = 100; break;
-            case 3: N = 500; break;
+            case 3: N = 250; break;
             default:
                 N = 5000;
                 break;
