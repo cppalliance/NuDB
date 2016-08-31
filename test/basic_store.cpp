@@ -44,6 +44,36 @@ namespace test {
 class basic_store_test : public beast::unit_test::suite
 {
 public:
+    void
+    test_members()
+    {
+        std::size_t const keySize = 4;
+        std::size_t const blockSize = 4096;
+        float loadFactor = 0.5f;
+
+        error_code ec;
+        test_store ts{keySize, blockSize, loadFactor};
+
+        // Files not found
+        ts.open(ec);
+        if(! BEAST_EXPECTS(ec ==
+                errc::no_such_file_or_directory, ec.message()))
+            return;
+        ec = {};
+        ts.create(ec);
+        if(! BEAST_EXPECTS(! ec, ec.message()))
+            return;
+        ts.open(ec);
+        if(! BEAST_EXPECTS(! ec, ec.message()))
+            return;
+        BEAST_EXPECT(ts.db.dat_path() == ts.dp);
+        BEAST_EXPECT(ts.db.key_path() == ts.kp);
+        BEAST_EXPECT(ts.db.log_path() == ts.lp);
+        BEAST_EXPECT(ts.db.appnum() == ts.appnum);
+        BEAST_EXPECT(ts.db.key_size() == ts.keySize);
+        BEAST_EXPECT(ts.db.block_size() == ts.blockSize);
+    }
+
     // Inserts a bunch of values then fetches them
     void
     do_insert_fetch(
@@ -165,102 +195,10 @@ public:
         }
     }
 
-    template<class F>
-    void
-    check_throw(F const& f)
-    {
-        try
-        {
-            f();
-            BEAST_EXPECT(false);
-        }
-        catch(std::exception const&)
-        {
-            pass();
-        }
-        catch(...)
-        {
-            BEAST_EXPECT(false);
-        }
-    }
-
-    // 32-bit std::size_t
-    template<class = void>
-    void
-    test_throws(test_store&, std::false_type)
-    {
-    }
-
-    // 64-bit std::size_t
-    template<class = void>
-    void
-    test_throws(test_store& ts, std::true_type)
-    {
-        static_assert(sizeof(std::size_t) >= 8, "");
-        std::size_t size =
-            std::numeric_limits<std::size_t>::max() + 1;
-        error_code ec;
-        check_throw([&]{ ts.db.insert(nullptr, nullptr, size, ec); });
-    }
-
-    // Test that APIs throw when the db is not open
-    void
-    test_throws()
-    {
-        std::size_t const keySize = 4;
-        std::size_t const blockSize = 4096;
-        float loadFactor = 0.5f;
-
-        error_code ec;
-        test_store ts{keySize, blockSize, loadFactor};
-
-        // Operations without open files
-        check_throw([&]{ ts.db.dat_path(); });
-        check_throw([&]{ ts.db.key_path(); });
-        check_throw([&]{ ts.db.log_path(); });
-        check_throw([&]{ ts.db.appnum(); });
-        check_throw([&]{ ts.db.key_size(); });
-        check_throw([&]{ ts.db.block_size(); });
-        check_throw([&]{ ts.db.fetch(nullptr,
-            [](void const*, std::size_t)
-            {
-            }, ec);});
-        check_throw([&]{ ts.db.insert(
-            nullptr, nullptr, 0, ec); });
-
-        // Files not found
-        ts.open(ec);
-        if(! BEAST_EXPECTS(ec ==
-                errc::no_such_file_or_directory, ec.message()))
-            return;
-        ec = {};
-
-        ts.create(ec);
-        if(! BEAST_EXPECTS(! ec, ec.message()))
-            return;
-        ts.open(ec);
-        if(! BEAST_EXPECTS(! ec, ec.message()))
-            return;
-        BEAST_EXPECT(ts.dp == ts.db.dat_path());
-        BEAST_EXPECT(ts.kp == ts.db.key_path());
-        BEAST_EXPECT(ts.lp == ts.db.log_path());
-
-        // Already open
-        check_throw([&]{ ts.open(ec); });
-
-        // Insert 0-size value
-        check_throw([&]{ ts.db.insert(
-            nullptr, nullptr, 0, ec); });
-
-        // Insert value size too large
-        test_throws(ts, std::integral_constant<bool,
-            sizeof(std::size_t) >= 8>{});
-    }
-
     void
     run() override
     {
-        test_throws();
+        test_members();
         test_insert_fetch();
     }
 };

@@ -36,8 +36,6 @@ nudb_category()
             case error::key_exists:
                 return "key already exists";
 
-
-
             case error::short_read:
                 return "short read";
 
@@ -47,6 +45,10 @@ nudb_category()
             case error::no_key_file:
                 return "no key file";
 
+
+
+            case error::too_many_buckets:
+                return "too many buckets";
 
             case error::not_data_file:
                 return "not a data file";

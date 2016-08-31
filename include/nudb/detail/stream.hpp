@@ -8,8 +8,8 @@
 #ifndef NUDB_DETAIL_STREAM_HPP
 #define NUDB_DETAIL_STREAM_HPP
 
+#include <boost/assert.hpp>
 #include <array>
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -59,7 +59,7 @@ template<class _>
 std::uint8_t const*
 istream_t<_>::data(std::size_t bytes)
 {
-    assert(bytes <= size_);
+    BOOST_ASSERT(bytes <= size_);
     if(size_ < bytes)
         throw std::logic_error("short read from istream");
     auto const data = buf_;

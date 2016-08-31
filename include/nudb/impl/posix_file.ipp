@@ -8,6 +8,7 @@
 #ifndef NUDB_IMPL_POSIX_FILE_IPP
 #define NUDB_IMPL_POSIX_FILE_IPP
 
+#include <boost/assert.hpp>
 #include <limits.h>
 
 namespace nudb {
@@ -58,7 +59,7 @@ posix_file::
 create(file_mode mode, path_type const& path, error_code& ec)
 {
     auto const result = flags(mode);
-    assert(! is_open());
+    BOOST_ASSERT(! is_open());
     fd_ = ::open(path.c_str(), result.first);
     if(fd_ != -1)
     {
@@ -84,7 +85,7 @@ void
 posix_file::
 open(file_mode mode, path_type const& path, error_code& ec)
 {
-    assert(! is_open());
+    BOOST_ASSERT(! is_open());
     auto const result = flags(mode);
     fd_ = ::open(path.c_str(), result.first);
     if(fd_ == -1)

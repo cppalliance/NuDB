@@ -8,8 +8,8 @@
 #ifndef NUDB_DETAIL_ARENA_HPP
 #define NUDB_DETAIL_ARENA_HPP
 
+#include <boost/assert.hpp>
 #include <algorithm>
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -181,7 +181,7 @@ arena_t<_>::
 alloc(std::size_t n)
 {
     // Undefined behavior: Zero byte allocations
-    assert(n != 0);
+    BOOST_ASSERT(n != 0);
     n = 8 *((n + 7) / 8);
     if(used_ && used_->remain() >= n)
         return used_->alloc(n);

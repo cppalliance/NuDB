@@ -11,6 +11,7 @@
 #include <nudb/detail/arena.hpp>
 #include <nudb/detail/bucket.hpp>
 #include <nudb/detail/format.hpp>
+#include <boost/assert.hpp>
 #include <cstdint>
 #include <cstring>
 #include <memory>
@@ -218,7 +219,7 @@ insert(nhash_t h,
                 std::make_tuple(0));
    (void)result.second;
     // Must not already exist!
-    assert(result.second);
+    BOOST_ASSERT(result.second);
     data_size_ += size;
 }
 

@@ -14,6 +14,7 @@
 #include <nudb/detail/bucket.hpp>
 #include <nudb/detail/bulkio.hpp>
 #include <nudb/detail/format.hpp>
+#include <boost/assert.hpp>
 #include <algorithm>
 #include <cstddef>
 #include <string>
@@ -92,7 +93,7 @@ recover(
     read(lf, lh, ec);
     if(ec == error::short_read)
     {
-        assert(keyFileSize > key_file_header::size);
+        BOOST_ASSERT(keyFileSize > key_file_header::size);
         ec = {};
         goto clear_log;
     }
@@ -142,7 +143,7 @@ recover(
                 std::uint64_t v;
                 // VFALCO This should have been a uint32_t
                 read<std::uint64_t>(is, v); // Index
-                assert(v <= std::numeric_limits<std::uint32_t>::max());
+                BOOST_ASSERT(v <= std::numeric_limits<std::uint32_t>::max());
                 n = static_cast<nsize_t>(v);
             }
             b.read(r, ec);                  // Bucket

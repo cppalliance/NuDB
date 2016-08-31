@@ -10,6 +10,7 @@
 
 #include <nudb/concepts.hpp>
 #include <nudb/recover.hpp>
+#include <boost/assert.hpp>
 #include <memory>
 
 namespace nudb {
@@ -55,8 +56,7 @@ path_type const&
 basic_store<Hasher, File>::
 dat_path() const
 {
-    if(! is_open())
-        throw std::logic_error("nudb: not open");
+    BOOST_ASSERT(is_open());
     return s_->dp;
 }
 
@@ -65,8 +65,7 @@ path_type const&
 basic_store<Hasher, File>::
 key_path() const
 {
-    if(! is_open())
-        throw std::logic_error("nudb: not open");
+    BOOST_ASSERT(is_open());
     return s_->kp;
 }
 
@@ -75,8 +74,7 @@ path_type const&
 basic_store<Hasher, File>::
 log_path() const
 {
-    if(! is_open())
-        throw std::logic_error("nudb: not open");
+    BOOST_ASSERT(is_open());
     return s_->lp;
 }
 
@@ -85,8 +83,7 @@ std::uint64_t
 basic_store<Hasher, File>::
 appnum() const
 {
-    if(! is_open())
-        throw std::logic_error("nudb: not open");
+    BOOST_ASSERT(is_open());
     return s_->kh.appnum;
 }
 
@@ -95,8 +92,7 @@ std::size_t
 basic_store<Hasher, File>::
 key_size() const
 {
-    if(! is_open())
-        throw std::logic_error("nudb: not open");
+    BOOST_ASSERT(is_open());
     return s_->kh.key_size;
 }
 
@@ -105,8 +101,7 @@ std::size_t
 basic_store<Hasher, File>::
 block_size() const
 {
-    if(! is_open())
-        throw std::logic_error("nudb: not open");
+    BOOST_ASSERT(is_open());
     return s_->kh.block_size;
 }
 
@@ -125,8 +120,7 @@ open(
     static_assert(is_Hasher<Hasher>::value,
         "Hasher requirements not met");
     using namespace detail;
-    if(is_open())
-        throw std::logic_error("nudb: already open");
+    BOOST_ASSERT(! is_open());
     ec_ = {};
     ecb_.store(false);
     recover<Hasher, File>(
@@ -192,8 +186,6 @@ close(error_code& ec)
 {
     if(open_)
     {
-        // Set this first otherwise a
-        // throw can cause another close().
         open_ = false;
         cond_.notify_all();
         thread_.join();
@@ -220,8 +212,7 @@ fetch(
     error_code& ec)
 {
     using namespace detail;
-    if(! is_open())
-        throw std::logic_error("nudb: not open");
+    BOOST_ASSERT(is_open());
     if(ecb_)
     {
         ec = ec_;
@@ -267,18 +258,15 @@ insert(
     error_code& ec)
 {
     using namespace detail;
-    if(! is_open())
-        throw std::logic_error("nudb: not open");
+    BOOST_ASSERT(is_open());
     if(ecb_)
     {
         ec = ec_;
         return;
     }
     // Data Record
-    if(size == 0)
-        throw std::domain_error("nudb: zero size values disallowed");
-    if(size > field<uint32_t>::max)
-        throw std::domain_error("nudb: value size too large");
+    BOOST_ASSERT(size > 0);                     // zero disallowed
+    BOOST_ASSERT(size <= field<uint32_t>::max); // too large
     auto const h =
         hash(key, s_->kh.key_size, s_->hasher);
     std::lock_guard<std::mutex> u{u_};
@@ -479,7 +467,7 @@ split(
         auto const n = bucket_index(e.hash, buckets, modulus);
         (void)n1;
         (void)n2;
-        assert(n==n1 || n==n2);
+        BOOST_ASSERT(n==n1 || n==n2);
         if(n == n2)
         {
             b2.insert(e.offset, e.size, e.hash);
@@ -513,7 +501,7 @@ split(
                 auto const e = tmp[i];
                 auto const n = bucket_index(
                     e.hash, buckets, modulus);
-                assert(n==n1 || n==n2);
+                BOOST_ASSERT(n==n1 || n==n2);
                 if(n == n2)
                 {
                     maybe_spill(b2, w, ec);

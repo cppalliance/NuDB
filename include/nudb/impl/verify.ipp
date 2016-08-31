@@ -291,7 +291,10 @@ verify_fast(
 
     // Counts unverified keys per bucket
     if(kh.buckets > std::numeric_limits<nbuck_t>::max())
-        throw std::domain_error("buckets exceeds limit");
+    {
+        ec = error::too_many_buckets;
+        return;
+    }
     std::unique_ptr<nkey_t[]> nkeys(
         new nkey_t[kh.buckets]);
 

@@ -73,6 +73,8 @@ enum class error
     no_key_file,
         
 
+    /// Too many buckets in key file
+    too_many_buckets,
 
     /// Not a data file
     not_data_file,

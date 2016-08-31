@@ -37,6 +37,8 @@ public:
         check("nudb", error::short_read);
         check("nudb", error::log_file_exists);
         check("nudb", error::no_key_file);
+
+        check("nudb", error::too_many_buckets);
         check("nudb", error::not_data_file);
         check("nudb", error::not_key_file);
         check("nudb", error::not_log_file);

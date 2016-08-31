@@ -108,30 +108,33 @@ private:
     std::size_t logWriteSize_;
 
 public:
+    /// Default constructor
     basic_store() = default;
+
+    /// Copy constructor (disallowed)
     basic_store(basic_store const&) = delete;
+
+    /// Copy assignment (disallowed)
     basic_store& operator=(basic_store const&) = delete;
 
     /** Destroy the database.
 
         Files are closed, memory is freed, and data that has not been
         committed is discarded. To ensure that all inserted data is
-        written, it is necessary to call close() before destroying the
-        basic_store.
+        written, it is necessary to call @ref close before destroying
+        the @ref basic_store.
 
-        This function catches all exceptions thrown by callees, so it
-        will be necessary to call close() before destroying the basic_store
-        if callers want to catch exceptions.
-
-        Throws:
-            None
+        This function ignores errors returned by @ref close; to receive
+        those errors it is necessary to call @ref close before the
+        @ref basic_store is destroyed.
     */
     ~basic_store();
 
     /** Returns `true` if the database is open.
 
         Thread safety:
-
+            Undefined behavior if called concurrently with
+            @ref open or @ref close.
     */
     bool
     is_open() const
@@ -144,9 +147,11 @@ public:
         Preconditions:
             The database must be open.
 
-        @return The data file path.
+        Thread safety:
+            Undefined behavior if called concurrently with
+            @ref open or @ref close.
 
-        @throws std::logic_error if the database is not open.
+        @return The data file path.
     */
     path_type const&
     dat_path() const;
@@ -156,9 +161,11 @@ public:
         Preconditions:
             The database must be open.
 
-        @return The key file path.
+        Thread safety:
+            Undefined behavior if called concurrently with
+            @ref open or @ref close.
 
-        @throws std::logic_error if the database is not open.
+        @return The key file path.
     */
     path_type const&
     key_path() const;
@@ -168,9 +175,11 @@ public:
         Preconditions:
             The database must be open.
 
-        @return The log file path.
+        Thread safety:
+            Undefined behavior if called concurrently with
+            @ref open or @ref close.
 
-        @throws std::logic_error if the database is not open.
+        @return The log file path.
     */
     path_type const&
     log_path() const;
@@ -180,9 +189,11 @@ public:
         Preconditions:
             The database must be open.
 
-        @return The appnum.
+        Thread safety:
+            Undefined behavior if called concurrently with
+            @ref open or @ref close.
 
-        @throws std::logic_error if the database is not open.
+        @return The appnum.
     */
     std::uint64_t
     appnum() const;
@@ -192,9 +203,11 @@ public:
         Preconditions:
             The database must be open.
 
-        @return The size of keys in the database.
+        Thread safety:
+            Undefined behavior if called concurrently with
+            @ref open or @ref close.
 
-        @throws std::logic_error if the database is not open.
+        @return The size of keys in the database.
     */
     std::size_t
     key_size() const;
@@ -203,6 +216,10 @@ public:
 
         Preconditions:
             The database must be open.
+
+        Thread safety:
+            Undefined behavior if called concurrently with
+            @ref open or @ref close.
 
         @return The size of blocks in the key file.
 
@@ -228,6 +245,13 @@ public:
         log file paths is opened. If a log file is present, the
         recovery mechanism is invoked to restore database integrity
         before the function returns.
+
+        Preconditions:
+            The database must be not be open.
+
+        Thread safety:
+            Undefined behavior if called concurrently with
+            @ref fetch or @ref insert.
 
         @param dat_path The path to the data file.
 
@@ -262,6 +286,12 @@ public:
         If any other errors occur, `ec` is set to the
         corresponding error.
 
+        Preconditions:
+            The database must be open.
+
+        Thread safety:
+            May be used concurrently with @ref fetch
+
         @note If the implementation encounters an error while
         committing data to the database, this function will
         immediately return with `ec` set to the error which
@@ -281,8 +311,6 @@ public:
         until the callback returns, ownership is not transferred.
 
         @param ec Set to the error, if any occurred.
-
-        @throws `std::logic_error` if the database is not open.
     */
     template<class Callback>
     void
@@ -294,6 +322,12 @@ public:
         pair into the database. If the key already exists,
         `ec` is set to @ref error::key_exists. If an error
         occurs, `ec` is set to the corresponding error.
+
+        Preconditions:
+            The database must be open.
+
+        Thread safety:
+            May be used concurrently with @ref fetch
 
         @note If the implementation encounters an error while
         committing data to the database, this function will
@@ -307,12 +341,11 @@ public:
 
         @param data A buffer holding the value to be inserted.
 
-        @param bytes The size of the buffer holding the value data.
+        @param bytes The size of the buffer holding the value
+        data. This value must be greater than 0 and no more
+        than 0xffffffff.
 
         @param ec Set to the error, if any occurred.
-
-        @throws `std::logic_error` if the database is not open,
-        `std::domain_error` if the size is out of the allowable range.
     */
     void
     insert(void const* key, void const* data,

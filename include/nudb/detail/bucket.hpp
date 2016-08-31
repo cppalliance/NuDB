@@ -13,7 +13,7 @@
 #include <nudb/detail/bulkio.hpp>
 #include <nudb/detail/field.hpp>
 #include <nudb/detail/format.hpp>
-#include <cassert>
+#include <boost/assert.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -27,7 +27,7 @@ inline
 nbuck_t
 bucket_index(nhash_t h, nbuck_t buckets, std::uint64_t modulus)
 {
-    assert(modulus <= 0x100000000ULL);
+    BOOST_ASSERT(modulus <= 0x100000000ULL);
     auto n = h % modulus;
     if(n >= buckets)
         n -= modulus / 2;

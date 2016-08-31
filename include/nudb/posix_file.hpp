@@ -10,7 +10,6 @@
 
 #include <nudb/file.hpp>
 #include <nudb/error.hpp>
-#include <cassert>
 #include <cerrno>
 #include <cstring>
 #include <string>

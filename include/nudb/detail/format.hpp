@@ -14,6 +14,7 @@
 #include <nudb/detail/endian.hpp>
 #include <nudb/detail/field.hpp>
 #include <nudb/detail/stream.hpp>
+#include <boost/assert.hpp>
 #include <algorithm>
 #include <array>
 #include <limits>
@@ -212,7 +213,7 @@ bucket_capacity(nsize_t block_size)
         return 0;
     auto const n =
         (block_size - size) / entry_size;
-    assert(n <= std::numeric_limits<nkey_t>::max());
+    BOOST_ASSERT(n <= std::numeric_limits<nkey_t>::max());
     return static_cast<nkey_t>(std::min<std::size_t>(
         std::numeric_limits<nkey_t>::max(), n));
 }
@@ -393,7 +394,10 @@ write(File& f, key_file_header const& kh, error_code& ec)
     buffer buf;
     buf.reserve(kh.block_size);
     if(kh.block_size < key_file_header::size)
-        throw std::logic_error("nudb: block size too small");
+    {
+        ec = error::invalid_block_size;
+        return;
+    }
     std::fill(buf.get(), buf.get() + buf.size(), 0);
     ostream os{buf.get(), buf.size()};
     write(os, kh);

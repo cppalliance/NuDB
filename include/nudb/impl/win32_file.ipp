@@ -8,6 +8,8 @@
 #ifndef NUDB_IMPL_WIN32_FILE_IPP
 #define NUDB_IMPL_WIN32_FILE_IPP
 
+#include <boost/assert.hpp>
+
 namespace nudb {
 
 inline
@@ -55,7 +57,7 @@ void
 win32_file::
 create(file_mode mode, path_type const& path, error_code& ec)
 {
-    assert(! is_open());
+    BOOST_ASSERT(! is_open());
     auto const f = flags(mode);
     hf_ = ::CreateFileA(path.c_str(),
         f.first,
@@ -73,7 +75,7 @@ void
 win32_file::
 open(file_mode mode, path_type const& path, error_code& ec)
 {
-    assert(! is_open());
+    BOOST_ASSERT(! is_open());
     auto const f = flags(mode);
     hf_ = ::CreateFileA(path.c_str(),
         f.first,
@@ -102,7 +104,7 @@ std::uint64_t
 win32_file::
 size(error_code& ec) const
 {
-    assert(is_open());
+    BOOST_ASSERT(is_open());
     LARGE_INTEGER fileSize;
     if(! ::GetFileSizeEx(hf_, &fileSize))
     {

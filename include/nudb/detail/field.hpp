@@ -9,7 +9,7 @@
 #define NUDB_FIELD_HPP
 
 #include <nudb/detail/stream.hpp>
-#include <cassert>
+#include <boost/assert.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
@@ -171,7 +171,7 @@ read_size48(istream& is, std::size_t& u)
 {
     std::uint64_t v;
     read<uint48_t>(is, v);
-    assert(v <= std::numeric_limits<std::uint32_t>::max());
+    BOOST_ASSERT(v <= std::numeric_limits<std::uint32_t>::max());
     u = static_cast<std::uint32_t>(v);
 }
 
@@ -182,7 +182,7 @@ template<class T, class U, typename std::enable_if<
 void
 write(ostream& os, U u)
 {
-    assert(u <= field<T>::max);
+    BOOST_ASSERT(u <= field<T>::max);
     std::uint8_t* p = os.data(field<T>::size);
     *p = static_cast<std::uint8_t>(u);
 }
@@ -192,7 +192,7 @@ template<class T, class U, typename std::enable_if<
 void
 write(ostream& os, U u)
 {
-    assert(u <= field<T>::max);
+    BOOST_ASSERT(u <= field<T>::max);
     auto const t = static_cast<T>(u);
     std::uint8_t* p = os.data(field<T>::size);
     *p++ = (t>> 8)&0xff;
@@ -204,7 +204,7 @@ template<class T, class U, typename std::enable_if<
 void
 write(ostream& os, U u)
 {
-    assert(u <= field<T>::max);
+    BOOST_ASSERT(u <= field<T>::max);
     auto const t = static_cast<std::uint32_t>(u);
     std::uint8_t* p = os.data(field<T>::size);
     *p++ = (t>>16)&0xff;
@@ -217,7 +217,7 @@ template<class T, class U, typename std::enable_if<
 void
 write(ostream& os, U u)
 {
-    assert(u <= field<T>::max);
+    BOOST_ASSERT(u <= field<T>::max);
     auto const t = static_cast<T>(u);
     std::uint8_t* p = os.data(field<T>::size);
     *p++ = (t>>24)&0xff;
@@ -231,7 +231,7 @@ template<class T, class U, typename std::enable_if<
 void
 write(ostream& os, U u)
 {
-    assert(u <= field<T>::max);
+    BOOST_ASSERT(u <= field<T>::max);
     auto const t = static_cast<std::uint64_t>(u);
     std::uint8_t* p = os.data(field<T>::size);
     *p++ = (t>>40)&0xff;
