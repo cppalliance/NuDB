@@ -7,6 +7,7 @@
 
 // Test that header file is self-contained
 #include <nudb/error.hpp>
+
 #include <beast/unit_test/suite.hpp>
 
 namespace nudb {
@@ -77,5 +78,6 @@ public:
 
 BEAST_DEFINE_TESTSUITE(error, test, nudb);
 
+} // test
 } // nudb
-} // beast
+

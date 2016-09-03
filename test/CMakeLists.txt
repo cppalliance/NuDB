@@ -12,6 +12,7 @@ add_executable(test-all
     ${BEAST_INCLUDES}
     ../extras/beast/extras/beast/unit_test/main.cpp
     basic_store.cpp
+    buffer.cpp
     callgrind_test.cpp
     concepts.cpp
     create.cpp
