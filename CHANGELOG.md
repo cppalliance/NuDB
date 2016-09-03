@@ -1,5 +1,6 @@
 1.0.0-b5
 
+* fail_file also fails on reads
 * Fix bug in rekey where an error code wasn't checked
 
 ---

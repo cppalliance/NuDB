@@ -98,7 +98,6 @@ public:
         verify_info info;
         verify<xxhasher>(info, ts.dp, ts.kp,
             0, no_progress{}, ec);
-        ts.erase();
         if(ec)
         {
             log << info;
@@ -137,7 +136,11 @@ public:
                 fail_counter c{n};
                 do_work(ts, N, c, ec);
                 if(! ec)
+                {
+                    ts.close(ec);
+                    ts.erase();
                     break;
+                }
                 if(! BEAST_EXPECTS(ec ==
                         test::test_error::failure, ec.message()))
                     return;
@@ -164,10 +167,9 @@ public:
     run() override
     {
         test_ok();
-        test_recover(4096, 0.55f, 0);
-        test_recover(4096, 0.55f, 10);
-        test_recover(4096, 0.55f, 100);
-        test_recover(4096, 0.55f, 1000);
+        test_recover(128, 0.55f, 0);
+        test_recover(128, 0.55f, 10);
+        test_recover(128, 0.55f, 100);
     }
 };
 
@@ -177,8 +179,8 @@ public:
     void
     run() override
     {
-        test_recover(4096, 0.90f, 10000);
-        test_recover(4096, 0.90f, 100000);
+        test_recover(256, 0.55f, 1000);
+        test_recover(256, 0.90f, 10000);
     }
 };
 

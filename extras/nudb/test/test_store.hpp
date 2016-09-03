@@ -8,6 +8,7 @@
 #ifndef NUDB_TEST_TEST_STORE_HPP
 #define NUDB_TEST_TEST_STORE_HPP
 
+#include <nudb/util.hpp>
 #include <nudb/test/temp_dir.hpp>
 #include <nudb/test/xor_shift_engine.hpp>
 #include <nudb/create.hpp>
@@ -388,15 +389,6 @@ template<class = void>
 std::ostream&
 operator<<(std::ostream& os, verify_info const& info)
 {
-    auto const fhex =
-        [](std::uint64_t v)
-        {
-            std::string s{"0x0000000000000000"};
-            auto it = s.end();
-            for(it = s.end(); v; v >>= 8)
-                *--it = "0123456789abcdef"[v & 0xf];
-            return s;
-        };
     os <<
         "avg_fetch:       " << std::fixed << std::setprecision(3) << info.avg_fetch << "\n" <<
         "waste:           " << std::fixed << std::setprecision(3) << info.waste * 100 << "%" << "\n" <<
