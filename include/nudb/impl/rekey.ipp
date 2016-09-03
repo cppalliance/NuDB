@@ -196,6 +196,8 @@ rekey(
                 is = r.prepare(
                     dh.key_size +           // Key
                     size, ec);              // Data
+                if(ec)
+                    return;
                 std::uint8_t const* const key =
                     is.data(dh.key_size);
                 auto const h = hash<Hasher>(

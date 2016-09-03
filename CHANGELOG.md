@@ -1,3 +1,9 @@
+1.0.0-b5
+
+* Fix bug in rekey where an error code wasn't checked
+
+---
+
 1.0.0-b4
 
 * Improved test coverage
