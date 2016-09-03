@@ -22,22 +22,25 @@ namespace nudb {
     During the iteration, a contiguous block of the key file is
     rendered in memory, then flushed to disk when the iteration is
     complete. The size of this memory buffer is controlled by the
-    bufferSize parameter, larger is better. The algorithm works
-    the fastest when bufferSize is large enough to hold the entire
+    `bufferSize` parameter, larger is better. The algorithm works
+    the fastest when `bufferSize` is large enough to hold the entire
     key file in memory; only a single iteration of the data file
     is needed in this case.
 
-    During a rekey, spill records may be appended to the data
+    During the rekey, spill records may be appended to the data
     file. If the rekey operation is abnormally terminated, this
     would normally result in a corrupted data file. To prevent this,
     the function creates a log file using the specified path so
-    that the database can be fixed in a subsequent call to recover.
+    that the database can be fixed in a subsequent call to
+    @ref recover.
 
     @note If a log file is already present, this function will
-    fail with @ref error::need_recover.
+    fail with @ref error::log_file_exists.
+
+    @par Template Parameters
 
     @tparam Hasher The hash function to use. This type must
-    meet the requirements of @b HashFunction. The hash function
+    meet the requirements of @b Hasher. The hash function
     must be the same as that used to create the database, or
     else an error is returned.
 
@@ -56,7 +59,7 @@ namespace nudb {
     may be read in a single I/O cycle, and device dependent.
     The return value of @ref block_size returns a suitable
     value for the volume of a given path.
-    
+
     @param loadFactor A number between zero and one
     representing the average bucket occupancy (number of
     items). A value of 0.5 is perfect. Lower numbers
@@ -79,7 +82,7 @@ namespace nudb {
     );
     @endcode
 
-    @param args Optional parameters passed to File constructors.
+    @param args Optional arguments passed to @b File constructors.
 */
 template<
     class Hasher,

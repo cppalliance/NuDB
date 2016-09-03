@@ -126,6 +126,16 @@ database is created.
 
 [endsect]
 
+[section:types Type Requirements]
+[include types/File.qbk]
+[include types/Hasher.qbk]
+[include types/Progress.qbk]
+[endsect]
+
+[section:quickref Quick Reference]
+[xinclude quickref.xml]
+[endsect]
+
 [include reference.qbk]
 
 [section:idx Index]

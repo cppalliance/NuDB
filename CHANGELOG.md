@@ -5,6 +5,8 @@
 * Increase coverage
 * Add buffer unit test
 * Add is_File concept and checks
+* Update documentation
+* Add example program
 
 ---
 

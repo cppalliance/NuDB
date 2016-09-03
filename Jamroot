@@ -88,5 +88,6 @@ project nudb
   ;
 
 build-project bench ;
+build-project examples ;
 build-project test ;
 build-project tools ;

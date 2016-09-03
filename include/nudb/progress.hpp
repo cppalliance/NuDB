@@ -12,7 +12,7 @@ namespace nudb {
 
 /** Progress function that does nothing.
 
-    This type meets the requirements of Progress,
+    This type meets the requirements of @b Progress,
     and does nothing when invoked.
 */
 struct
@@ -20,6 +20,7 @@ no_progress
 {
     no_progress() = default;
 
+    /// Called to indicate progress
     void
     operator()(std::uint64_t, std::uint64_t) const noexcept
     {

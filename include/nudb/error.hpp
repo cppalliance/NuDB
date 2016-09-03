@@ -13,13 +13,70 @@
 
 namespace nudb {
 
+/// The type of system-specific error code returned by the implementation
+#if GENERATING_DOCS
+class error_code{};
+
+#else
 using boost::system::error_code;
+
+#endif
+
+/// The type of cross-platform error code used by the implementation
+#if GENERATING_DOCS
+class error_condition{};
+
+#else
 using boost::system::error_condition;
+
+#endif
+
+/// The type of system-specific exception used when throwing
+#if GENERATING_DOCS
+class system_error{};
+
+#else
 using boost::system::system_error;
+
+#endif
+
+/// Returns the  category used for system-specific error codes
+#if GENERATING_DOCS
+error_category const&
+system_category();
+
+#else
 using boost::system::system_category;
+
+#endif
+
+/// Returns the category used for cross-platform error codes
+#if GENERATING_DOCS
+error_category const&
+generic_category();
+
+#else
 using boost::system::generic_category;
+
+#endif
+
+/// The base class used for error categories
+#if GENERATING_DOCS
+class error_category{};
+
+#else
 using boost::system::error_category;
+
+#endif
+
+/// The set of constants used for cross-platform error codes
+#if GENERATING_DOCS
+enum errc{};
+
+#else
 namespace errc = boost::system::errc;
+
+#endif
 
 /// Database error codes.
 enum class error
@@ -177,7 +234,11 @@ enum class error
 error_category const&
 nudb_category();
 
-/// Returns a database error code.
+/** Returns a database error code.
+
+    This function is used by the implementation to convert
+    @ref error values into @ref error_code objects.
+*/
 inline
 error_code
 make_error_code(error ev)

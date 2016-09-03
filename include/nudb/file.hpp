@@ -13,25 +13,39 @@
 
 namespace nudb {
 
+/// The type used to hold paths to files
 using path_type = std::string;
 
-/** Returns the best guess at the volume's block size. */
+/** Returns the best guess at the volume's block size.
+
+    @param path A path to a file on the device. The file does
+    not need to exist.
+*/
 inline
 std::size_t
-block_size(path_type const&)
+block_size(path_type const& path)
 {
-    // A reasonable default for almost all SSD systems
+    // A reasonable default for many SSD devices
     return 4096;
 }
 
-// Commonly used types
+/** File create and open modes.
 
+    These are used by @ref native_file.
+*/
 enum class file_mode
 {
-    scan,         // read sequential
-    read,         // read random
-    append,       // read random, write append
-    write         // read random, write random
+    /// Open the file for sequential reads
+    scan,
+
+    /// Open the file for random reads
+    read,
+
+    /// Open the file for random reads and appending writes
+    append,
+
+    /// Open the file for random reads and writes
+    write
 };
 
 } // nudb

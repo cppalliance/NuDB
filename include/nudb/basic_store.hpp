@@ -22,11 +22,28 @@
 
 namespace nudb {
 
-/** A simple key/value database
+/** A high performance, insert-only key/value database for SSDs.
 
-    @tparam Hasher The hash function to use on key
+    To create a database first call the @ref create
+    free function. Then construct a @ref basic_store and
+    call @ref open on it:
 
-    @tparam File The type of File object to use.
+    @code
+        error_code ec;
+        create<xxhasher>(
+            "db.dat", "db.key", "db.log",
+                1, make_salt(), 8, 4096, 0.5f, ec);
+        basic_store<xxhasher, native_file> db;
+        db.open("db.dat", "db.key", "db.log", ec);
+    @endcode
+
+    @par Template Parameters
+
+    @tparam Hasher The hash function to use. This type
+    must meet the requirements of @b Hasher.
+
+    @tparam File The type of File object to use. This type
+    must meet the requirements of @b File.
 */
 template<class Hasher, class File>
 class basic_store
@@ -108,7 +125,10 @@ private:
     std::size_t logWriteSize_;
 
 public:
-    /// Default constructor
+    /** Default constructor.
+
+        A default constructed database is initially closed.
+    */
     basic_store() = default;
 
     /// Copy constructor (disallowed)
@@ -132,9 +152,10 @@ public:
 
     /** Returns `true` if the database is open.
 
-        Thread safety:
-            Undefined behavior if called concurrently with
-            @ref open or @ref close.
+        @par Thread safety
+
+        Safe to call concurrently with any function
+        except @ref open or @ref close.
     */
     bool
     is_open() const
@@ -144,12 +165,14 @@ public:
 
     /** Return the path to the data file.
 
-        Preconditions:
-            The database must be open.
+        @par Requirements
+            
+        The database must be open.
 
-        Thread safety:
-            Undefined behavior if called concurrently with
-            @ref open or @ref close.
+        @par Thread safety
+            
+        Safe to call concurrently with any function
+        except @ref open or @ref close.
 
         @return The data file path.
     */
@@ -158,12 +181,14 @@ public:
 
     /** Return the path to the key file.
 
-        Preconditions:
-            The database must be open.
+        @par Requirements
 
-        Thread safety:
-            Undefined behavior if called concurrently with
-            @ref open or @ref close.
+        The database must be open.
+
+        @par Thread safety
+
+        Safe to call concurrently with any function
+        except @ref open or @ref close.
 
         @return The key file path.
     */
@@ -172,12 +197,14 @@ public:
 
     /** Return the path to the log file.
 
-        Preconditions:
-            The database must be open.
+        @par Requirements
 
-        Thread safety:
-            Undefined behavior if called concurrently with
-            @ref open or @ref close.
+        The database must be open.
+
+        @par Thread safety
+
+        Safe to call concurrently with any function
+        except @ref open or @ref close.
 
         @return The log file path.
     */
@@ -186,12 +213,19 @@ public:
 
     /** Return the appnum associated with the database.
 
-        Preconditions:
-            The database must be open.
+        This is an unsigned 64-bit integer associated with the
+        database and defined by the application. It is set
+        once when the database is created in a call to
+        @ref create.
 
-        Thread safety:
-            Undefined behavior if called concurrently with
-            @ref open or @ref close.
+        @par Requirements
+
+        The database must be open.
+
+        @par Thread safety
+
+        Safe to call concurrently with any function
+        except @ref open or @ref close.
 
         @return The appnum.
     */
@@ -200,12 +234,18 @@ public:
 
     /** Return the key size associated with the database.
 
-        Preconditions:
-            The database must be open.
+        The key size is defined by the application when the
+        database is created in a call to @ref create. The
+        key size cannot be changed on an existing database.
 
-        Thread safety:
-            Undefined behavior if called concurrently with
-            @ref open or @ref close.
+        @par Requirements
+
+        The database must be open.
+
+        @par Thread safety
+
+        Safe to call concurrently with any function
+        except @ref open or @ref close.
 
         @return The size of keys in the database.
     */
@@ -214,16 +254,23 @@ public:
 
     /** Return the block size associated with the database.
 
-        Preconditions:
-            The database must be open.
+        The block size is defined by the application when the
+        database is created in a call to @ref create or when a
+        key file is regenerated in a call to @ref rekey. The
+        block size cannot be changed on an existing key file.
+        Instead, a new key file may be created with a different
+        block size.
 
-        Thread safety:
-            Undefined behavior if called concurrently with
-            @ref open or @ref close.
+        @par Requirements
+
+        The database must be open.
+
+        @par Thread safety
+
+        Safe to call concurrently with any function
+        except @ref open or @ref close.
 
         @return The size of blocks in the key file.
-
-        @throws std::logic_error if the database is not open.
     */
     std::size_t
     block_size() const;
@@ -233,6 +280,16 @@ public:
         All data is committed before closing.
 
         If an error occurs, the database is still closed.
+
+        @par Requirements
+
+        The database must be open.
+
+        @par Thread safety
+
+        Not thread safe. The caller is responsible for
+        ensuring that no other member functions are
+        called concurrently.
 
         @param ec Set to the error, if any occurred.
     */
@@ -246,12 +303,15 @@ public:
         recovery mechanism is invoked to restore database integrity
         before the function returns.
 
-        Preconditions:
-            The database must be not be open.
+        @par Requirements
 
-        Thread safety:
-            Undefined behavior if called concurrently with
-            @ref fetch or @ref insert.
+        The database must be not be open.
+
+        @par Thread safety
+
+        Not thread safe. The caller is responsible for
+        ensuring that no other member functions are
+        called concurrently.
 
         @param dat_path The path to the data file.
 
@@ -265,7 +325,7 @@ public:
 
         @param ec Set to the error, if any occurred.
 
-        @param args Optional arguments passed to File constructors.
+        @param args Optional arguments passed to @b File constructors.
         
     */
     template<class... Args>
@@ -286,17 +346,24 @@ public:
         If any other errors occur, `ec` is set to the
         corresponding error.
 
-        Preconditions:
-            The database must be open.
+        @par Requirements
 
-        Thread safety:
-            May be used concurrently with @ref fetch
+        The database must be open.
+
+        @par Thread safety
+
+        Safe to call concurrently with any function except
+        @ref close.
 
         @note If the implementation encounters an error while
         committing data to the database, this function will
         immediately return with `ec` set to the error which
         occurred. All subsequent calls to @ref fetch will
         return the same error until the database is closed.
+        
+        @param key A pointer to a memory buffer of at least
+        @ref key_size() bytes, containing the key to be searched
+        for.
 
         @param callback A function which will be called with the
         value data if the fetch is successful. The equivalent
@@ -323,11 +390,14 @@ public:
         `ec` is set to @ref error::key_exists. If an error
         occurs, `ec` is set to the corresponding error.
 
-        Preconditions:
-            The database must be open.
+        @par Requirements
 
-        Thread safety:
-            May be used concurrently with @ref fetch
+        The database must be open.
+
+        @par Thread safety
+
+        Safe to call concurrently with any function except
+        @ref close.
 
         @note If the implementation encounters an error while
         committing data to the database, this function will
