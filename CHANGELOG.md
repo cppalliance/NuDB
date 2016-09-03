@@ -4,6 +4,7 @@
 * Fix bug in rekey where an error code wasn't checked
 * Increase coverage
 * Add buffer unit test
+* Add is_File concept and checks
 
 ---
 

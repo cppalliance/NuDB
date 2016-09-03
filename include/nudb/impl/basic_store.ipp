@@ -35,6 +35,8 @@ state(File&& df_, File&& kf_, File&& lf_,
     , c1(kh_.key_size, kh_.block_size)
     , kh(kh_)
 {
+    static_assert(is_File<File>::value,
+        "File requiremnts not met");
 }
 
 //------------------------------------------------------------------------------

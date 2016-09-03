@@ -39,9 +39,10 @@ verify_normal(
     Progress&& progress,
     error_code& ec)
 {
+    static_assert(is_File<File>::value,
+        "File requiremnts not met");
     static_assert(is_Hasher<Hasher>::value,
         "Hasher requirements not met");
-    // VFALCO TODO concept check for File
     static_assert(is_Progress<Progress>::value,
         "Progress requirements not met");
     info.algorithm = 0;

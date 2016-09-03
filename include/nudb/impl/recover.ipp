@@ -33,9 +33,10 @@ recover(
     error_code& ec,
     Args&&... args)
 {
+    static_assert(is_File<File>::value,
+        "File requiremnts not met");
     static_assert(is_Hasher<Hasher>::value,
         "Hasher requirements not met");
-    // VFALCO TODO is_File concept check
     using namespace detail;
 
     // Open data file
