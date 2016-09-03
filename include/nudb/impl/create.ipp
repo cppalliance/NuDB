@@ -8,6 +8,7 @@
 #ifndef NUDB_IMPL_CREATE_IPP
 #define NUDB_IMPL_CREATE_IPP
 
+#include <nudb/concepts.hpp>
 #include <nudb/native_file.hpp>
 #include <nudb/detail/bucket.hpp>
 #include <nudb/detail/format.hpp>
@@ -61,6 +62,9 @@ create(
     error_code& ec,
     Args&&... args)
 {
+    static_assert(is_File<File>::value,
+        "File requirements not met");
+
     using namespace detail;
     if(key_size < 1)
     {

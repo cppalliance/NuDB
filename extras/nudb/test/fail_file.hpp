@@ -8,6 +8,7 @@
 #ifndef NUDB_TEST_FAIL_FILE_HPP
 #define NUDB_TEST_FAIL_FILE_HPP
 
+#include <nudb/concepts.hpp>
 #include <nudb/error.hpp>
 #include <nudb/file.hpp>
 #include <atomic>
@@ -148,6 +149,9 @@ public:
 template<class File>
 class fail_file
 {
+    static_assert(is_File<File>::value,
+        "File requirements not met");
+
     File f_;
     fail_counter* c_ = nullptr;
 
