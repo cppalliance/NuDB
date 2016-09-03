@@ -82,5 +82,6 @@ file (GLOB_RECURSE NUDB_INCLUDES
 )
 
 add_subdirectory (bench)
+add_subdirectory (examples)
 add_subdirectory (test)
 add_subdirectory (tools)

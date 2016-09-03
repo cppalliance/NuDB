@@ -23,45 +23,95 @@ namespace nudb {
 /// Describes database statistics calculated by @ref verify.
 struct verify_info
 {
+    /** Indicates the verify algorithm used.
+
+        @li @b 0 Normal algorithm
+        @li @b 1 Fast algorith
+    */
     int algorithm;                      // 0 = normal, 1 = fast
-    path_type dat_path;                 // Path to data file
-    path_type key_path;                 // Path to key file
 
-    // Configured
-    std::size_t version = 0;            // API version
-    std::uint64_t uid = 0;              // UID
-    std::uint64_t appnum = 0;           // Appnum
-    nsize_t key_size = 0;               // Size of a key in bytes
-    std::uint64_t salt = 0;             // Salt
-    std::uint64_t pepper = 0;           // Pepper
-    nsize_t block_size = 0;             // Block size in bytes
-    float load_factor = 0;              // Target bucket fill fraction
+    /// The path to the data file
+    path_type dat_path;
 
-    // Calculated
-    nkey_t capacity = 0;                // Max keys per bucket
-    nbuck_t buckets = 0;                // Number of buckets
-    nsize_t bucket_size = 0;            // Size of bucket in bytes
+    /// The path to the key file
+    path_type key_path;
 
-    // Measured
-    noff_t key_file_size = 0;           // Key file size in bytes
-    noff_t dat_file_size = 0;           // Data file size in bytes
-    std::uint64_t key_count = 0;        // Keys in buckets and active spills
-    std::uint64_t value_count = 0;      // Count of values in the data file
-    std::uint64_t value_bytes = 0;      // Sum of value bytes in the data file
-    std::uint64_t spill_count = 0;      // used number of spill records
-    std::uint64_t spill_count_tot = 0;  // Number of spill records in data file
-    std::uint64_t spill_bytes = 0;      // used byte of spill records
-    std::uint64_t spill_bytes_tot = 0;  // Sum of spill record bytes in data file
+    /// The API version used to create the database
+    std::size_t version = 0;
 
-    // Performance
-    float avg_fetch = 0;                // average reads per fetch (excluding value)
-    float waste = 0;                    // fraction of data file bytes wasted (0..100)
-    float overhead = 0;                 // percent of extra bytes per byte of value
-    float actual_load = 0;              // actual bucket fill fraction
+    /// The unique identifier
+    std::uint64_t uid = 0;
 
-    // number of buckets having n spills
+    /// The application-defined constant
+    std::uint64_t appnum = 0;
+
+    /// The size of each key, in bytes
+    nsize_t key_size = 0;
+
+    /// The salt used in the key file
+    std::uint64_t salt = 0;
+
+    /// The salt fingerprint
+    std::uint64_t pepper = 0;
+
+    /// The block size used in the key file
+    nsize_t block_size = 0;
+
+    /// The target load factor used in the key file
+    float load_factor = 0;
+
+    /// The maximum number of keys each bucket can hold
+    nkey_t capacity = 0;
+
+    /// The number of buckets in the key file
+    nbuck_t buckets = 0;
+
+    /// The size of a bucket in bytes
+    nsize_t bucket_size = 0;
+
+    /// The size of the key file
+    noff_t key_file_size = 0;
+
+    /// The size of the data file
+    noff_t dat_file_size = 0;
+
+    /// The number of keys found
+    std::uint64_t key_count = 0;
+
+    /// The number of values found
+    std::uint64_t value_count = 0;
+
+    /// The total number of bytes occupied by values
+    std::uint64_t value_bytes = 0;
+
+    /// The number of spill records in use
+    std::uint64_t spill_count = 0;
+
+    /// The total number of spill records
+    std::uint64_t spill_count_tot = 0;
+
+    /// The number of bytes occupied by spill records in use
+    std::uint64_t spill_bytes = 0;
+
+    /// The number of bytes occupied by all spill records
+    std::uint64_t spill_bytes_tot = 0;
+
+    /// Average number of key file reads per fetch
+    float avg_fetch = 0;
+
+    /// The fraction of the data file that is wasted
+    float waste = 0;
+
+    /// The data amplification ratio
+    float overhead = 0;
+
+    /// The measured bucket load fraction
+    float actual_load = 0;
+
+    /// A histogram of the number of buckets having N spill records
     std::array<nbuck_t, 10> hist;
 
+    /// Default constructor
     verify_info()
     {
         hist.fill(0);
@@ -101,10 +151,17 @@ struct verify_info
     a buffer size that is too large to be of extra use, the
     fast algorithm will simply allocate what it needs.
 
+    @par Template Parameters
+
     @tparam Hasher The hash function to use. This type must
     meet the requirements of @b HashFunction. The hash function
     must be the same as that used to create the database, or
     else an error is returned.
+
+    @param info A structure which will be default constructed
+    inside this function, and filled in if the operation completes
+    successfully. If an error is indicated, the contents of this
+    variable are undefined.
 
     @param dat_path The path to the data file.
 

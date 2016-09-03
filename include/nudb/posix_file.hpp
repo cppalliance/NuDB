@@ -40,8 +40,13 @@ class posix_file
     int fd_ = -1;
 
 public:
+    /// Constructor
     posix_file() = default;
+
+    /// Copy constructor (disallowed)
     posix_file(posix_file const&) = delete;
+
+    // Copy assignment (disallowed)
     posix_file& operator=(posix_file const&) = delete;
 
     /** Destructor.
@@ -76,12 +81,14 @@ public:
 
     /** Create a new file.
 
-        After the file is created, it is opened as if by open(mode, path, ec).
+        After the file is created, it is opened as if by `open(mode, path, ec)`.
 
-        Preconditions:
-            The file must not already exist, or errc::file_exists is returned.
+        @par Requirements
 
-        @param mode The open mode.
+        The file must not already exist, or else `errc::file_exists`
+        is returned.
+
+        @param mode The open mode, which must be a valid @ref file_mode.
 
         @param path The path of the file to create.
 
@@ -92,7 +99,11 @@ public:
 
     /** Open a file.
 
-        @param mode The open mode.
+        @par Requirements
+
+        The file must not already be open.
+
+        @param mode The open mode, which must be a valid @ref file_mode.
 
         @param path The path of the file to open.
 
@@ -103,7 +114,7 @@ public:
 
     /** Remove a file from the file system.
 
-        No error is raised if the file does not exist.
+        It is not an error to attempt erasing a file that does not exist.
 
         @param path The path of the file to remove.
 
@@ -115,8 +126,9 @@ public:
 
     /** Return the size of the file.
 
-        Preconditions:
-            The file must be open.
+        @par Requirements
+
+        The file must be open.
 
         @param ec Set to the error, if any occurred.
 
@@ -127,8 +139,9 @@ public:
 
     /** Read data from a location in the file.
 
-        Preconditions:
-            The file must be open.
+        @par Requirements
+
+        The file must be open.
 
         @param offset The position in the file to read from,
         expressed as a byte offset from the beginning.
@@ -145,8 +158,9 @@ public:
 
     /** Write data to a location in the file.
 
-        Preconditions:
-            The file must be open with a write mode.
+        @par Requirements
+
+        The file must be open with a mode allowing writes.
 
         @param offset The position in the file to write from,
         expressed as a byte offset from the beginning.
@@ -163,8 +177,9 @@ public:
 
     /** Perform a low level file synchronization.
 
-        Preconditions:
-            The file must be open with a write mode.
+        @par Requirements
+
+        The file must be open with a mode allowing writes.
 
         @param ec Set to the error, if any occurred.
     */
@@ -173,8 +188,9 @@ public:
 
     /** Truncate the file at a specific size.
 
-        Preconditions:
-            The file must be open with a write mode.
+        @par Requirements
+
+        The file must be open with a mode allowing writes.
 
         @param length The new file size.
 

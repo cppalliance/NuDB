@@ -19,11 +19,12 @@
 
 namespace nudb {
 
-/** Generate a random salt.
+/** Return a random salt.
 
     This function will use the system provided random
     number device to generate a uniformly distributed
-    64-bit unsigned value suitable for use as a salt.
+    64-bit unsigned value suitable for use the salt
+    value in a call to @ref create.
 */
 template<class = void>
 std::uint64_t
@@ -39,13 +40,24 @@ make_salt();
     the function attempts to remove the files before
     returning.
 
-    @tparam Hasher The hash function to use. This type must
-    meet the requirements of @b HashFunction. The same hash
-    function must be used every time the database is opened,
-    or else an error is returned.
+    @par Example
+    @code
+        error_code ec;
+        create<xxhasher>(
+            "db.dat", "db.key", "db.log",
+                1, make_salt(), 8, 4096, 0.5f, ec);
+    @endcode
 
-    @tparam File The type of file to use. Use @ref native_file
-    unless customizing the file behavior.
+    @par Template Parameters
+
+    @tparam Hasher The hash function to use. This type must
+    meet the requirements of @b Hasher. The same hash
+    function must be used every time the database is opened,
+    or else an error is returned. The provided @ref xxhasher
+    is a suitable general purpose hash function.
+
+    @tparam File The type of file to use. Use the default of
+    @ref native_file unless customizing the file behavior.
 
     @param dat_path The path to the data file.
 
@@ -78,7 +90,7 @@ make_salt();
 
     @param ec Set to the error, if any occurred.
 
-    @param args Optional arguments passed to File constructors.
+    @param args Optional arguments passed to @b File constructors.
 */
 template<
     class Hasher,
