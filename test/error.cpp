@@ -31,13 +31,13 @@ public:
     void run() override
     {
         nudb_category().message(0);
+        nudb_category().message(99999);
         check("nudb", error::success);
         check("nudb", error::key_not_found);
         check("nudb", error::key_exists);
         check("nudb", error::short_read);
         check("nudb", error::log_file_exists);
         check("nudb", error::no_key_file);
-
         check("nudb", error::too_many_buckets);
         check("nudb", error::not_data_file);
         check("nudb", error::not_key_file);

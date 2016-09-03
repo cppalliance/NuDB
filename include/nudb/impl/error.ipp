@@ -45,8 +45,6 @@ nudb_category()
             case error::no_key_file:
                 return "no key file";
 
-
-
             case error::too_many_buckets:
                 return "too many buckets";
 

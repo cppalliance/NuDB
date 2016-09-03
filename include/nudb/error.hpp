@@ -44,8 +44,6 @@ enum class error
     */
     key_exists,
 
-
-
     /** A file read returned less data than expected.
 
         This can be caused by premature application
@@ -71,7 +69,6 @@ enum class error
         @ref rekey to complete successfully.
     */
     no_key_file,
-        
 
     /// Too many buckets in key file
     too_many_buckets,

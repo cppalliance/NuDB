@@ -2,6 +2,7 @@
 
 * fail_file also fails on reads
 * Fix bug in rekey where an error code wasn't checked
+* Increase coverage
 
 ---
 
