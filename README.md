@@ -1,5 +1,5 @@
 <img width="880" height = "80" alt = "NuDB"
-    src="https://raw.githubusercontent.com/vinniefalco/NuDB/master/doc/images/readme.png">
+    src="https://raw.githubusercontent.com/vinniefalco/NuDB/master/doc/images/readme2.png">
 
 [![Join the chat at https://gitter.im/vinniefalco/NuDB](https://badges.gitter.im/vinniefalco/NuDB.svg)](https://gitter.im/vinniefalco/NuDB?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status]
 (https://travis-ci.org/vinniefalco/NuDB.svg?branch=master)](https://travis-ci.org/vinniefalco/NuDB) [![codecov]
