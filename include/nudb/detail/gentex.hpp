@@ -8,6 +8,7 @@
 #ifndef NUDB_DETAIL_GENTEX_HPP
 #define NUDB_DETAIL_GENTEX_HPP
 
+#include <boost/assert.hpp>
 #include <condition_variable>
 #include <cstddef>
 #include <mutex>
@@ -51,8 +52,7 @@ void
 gentex_t<_>::
 start()
 {
-    std::lock_guard<
-        std::mutex> l(m_);
+    std::unique_lock<std::mutex> l{m_};
     prev_ += cur_;
     cur_ = 0;
     ++gen_;
@@ -63,8 +63,7 @@ void
 gentex_t<_>::
 finish()
 {
-    std::unique_lock<
-        std::mutex> l(m_);
+    std::unique_lock<std::mutex> l{m_};
     while(prev_ > 0)
         cond_.wait(l);
 }
@@ -75,7 +74,7 @@ gentex_t<_>::
 lock_gen()
 {
     std::lock_guard<
-        std::mutex> l(m_);
+        std::mutex> l{m_};
     ++cur_;
     return gen_;
 }
@@ -85,8 +84,7 @@ void
 gentex_t<_>::
 unlock_gen(std::size_t gen)
 {
-    std::lock_guard<
-        std::mutex> l(m_);
+    std::unique_lock<std::mutex> l{m_};
     if(gen == gen_)
     {
         --cur_;
@@ -214,14 +212,10 @@ void
 genlock<G>::
 lock()
 {
-    if(! g_)
-        throw std::system_error(std::make_error_code(
-            std::errc::operation_not_permitted),
-                "genlock: no associated mutex");
-    if(owned_)
-        throw std::system_error(std::make_error_code(
-            std::errc::resource_deadlock_would_occur),
-                "genlock: already owned");
+    // no associated gentex
+    BOOST_ASSERT(g_ != nullptr);
+    // gentex is already owned
+    BOOST_ASSERT(! owned_);
     gen_ = g_->lock_gen();
     owned_ = true;
 }
@@ -231,14 +225,10 @@ void
 genlock<G>::
 unlock()
 {
-    if(! g_)
-        throw std::system_error(std::make_error_code(
-            std::errc::operation_not_permitted),
-                "genlock: no associated mutex");
-    if(! owned_)
-        throw std::system_error(std::make_error_code(
-            std::errc::operation_not_permitted),
-                "genlock: not owned");
+    // no associated gentex
+    BOOST_ASSERT(g_ != nullptr);
+    // gentex is not owned
+    BOOST_ASSERT(owned_);
     g_->unlock_gen(gen_);
     owned_ = false;
 }
