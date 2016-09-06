@@ -7,6 +7,7 @@
 * Add is_File concept and checks
 * Update documentation
 * Add example program
+* Demote exceptions to asserts in gentex
 
 ---
 
