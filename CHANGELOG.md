@@ -8,6 +8,8 @@
 * Update documentation
 * Add example program
 * Demote exceptions to asserts in gentex
+* Improved commit process
+* Dynamic block size in custom allocator
 
 ---
 
