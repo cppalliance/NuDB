@@ -114,7 +114,7 @@ public:
 
     /** Remove a file from the file system.
 
-        It is not an error to attempt erasing a file that does not exist.
+        It is not an error to attempt to erase a file that does not exist.
 
         @param path The path of the file to remove.
 
