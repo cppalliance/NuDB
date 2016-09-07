@@ -15,21 +15,33 @@ tables have a row for each database size, and a column for each database (in
 cases where NuDB is compared against other databases). A cell in the table is
 the number of operations per second for that trial. For example, in the table
 below NuDB had 340397 Ops/Sec when fetching from an existing database with
-10,000,000 values.
+10,000,000 values. This is a summary report, and only reports samples at order
+of magnitudes of ten.
 
 A sample output:
 
+```
 insert (per second)
-        inserts          nudb       rocksdb
-        1000000     387894.04     148233.29
-        5000000     348982.15      93376.19
-       10000000     279767.88      62597.36
+    num_db_keys          nudb       rocksdb
+         100000        406598        231937
+        1000000        374330        258519
+       10000000            NA            NA
 
 fetch (per second)
-      # db keys          nudb       rocksdb
-        1000000     455249.16     164997.45
-        5000000     291651.66      40969.44
-       10000000     340397.87      21596.47
+    num_db_keys          nudb       rocksdb
+         100000        325228        697158
+        1000000        333443         34557
+       10000000        337300         20835
+```
+
+In addition to the summary report, the benchmark can collect detailed samples.
+The `--raw_out` command line options is used to specify a file to output the raw
+samples. The python 3 script `plot_bench.py` may be used to plot the result. For
+example, if bench was run as `bench --raw_out=samples.txt`, the the python
+script can be run as `python plot_bench.py -i samples.txt`. The python script
+requires the `pandas` and `seaborn` packages (anaconda python is a good way to
+install and manage python if these packages are not already
+installed: [anaconda download](https://www.continuum.io/downloads)).
 
 # Building
 
@@ -64,19 +76,19 @@ Note: Building with RocksDB is currently not supported on Windows.
 
 ## Test the build
 
-Try running the benchmark with a small database: `./bench --inserts=1000
-10000`. A report similar to sample should appear after a few seconds.
+Try running the benchmark with a small database: `./bench --num_batches=10`. A
+report similar to sample should appear after a few seconds.
 
 # Command Line Options
 
-*  `--inserts arg` : Number of values to insert. When timing fetches, the data
-   base will have this many values in it. The argument may be a list, so several
-   timing may be collected. For example, the sample output above was run with
-   `--inserts=1000000 5000000 10000000`. If `inserts` is not specified, it
-   defaults to `100000 1000000`
-*  `--fetches arg` : Number of values to fetch from the database. If `fetches`
-   is not specified, it defaults to `1000000`. Unlike `inserts`, `fetches` is
-   not a list. It takes a single value only.
+* `batch_size arg` : Number of elements to insert or fetch per batch. If not
+  specified, it defaults to 20000.
+* `num_batches arg` : Number of batches to run. If not specified, it defaults to
+  500.
+* `db_dir arg` : Directory to place the databases. If not specified, it defaults to
+  boost::filesystem::temp_directory_path (likely `/tmp` on Linux)
+* `raw_out arg` : File to record the raw measurements. This is useful for plotting. If
+  not specified the raw measurements will not be output.
 *  `--dbs arg` : Databases to run the benchmark on. Currently, only `nudb` and
    `rocksdb` are supported. Building with `rocksdb` is optional on Linux, and
    only `nudb` is supported on windows. The argument may be a list. If `dbs` is
