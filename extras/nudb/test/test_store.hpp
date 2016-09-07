@@ -172,7 +172,7 @@ resize(std::size_t size)
 template<class _>
 std::uint8_t*
 Buffer_t<_>::
-operator()(void const* data, std::size_t size) 
+operator()(void const* data, std::size_t size)
 {
     if(data == nullptr || size == 0)
         return resize(0);
@@ -191,7 +191,7 @@ struct item_type
     std::uint8_t* data;
     std::size_t size;
 };
-   
+
 /// Interface to facilitate tests
 template<class File>
 class basic_test_store
@@ -219,6 +219,12 @@ public:
     basic_test_store(std::size_t keySize,
         std::size_t blockSize, float loadFactor,
             Args&&... args);
+
+    template<class... Args>
+    basic_test_store(
+        boost::filesystem::path const& temp_dir,
+        std::size_t keySize, std::size_t blockSize, float loadFactor,
+        Args&&... args);
 
     ~basic_test_store();
 
@@ -248,31 +254,46 @@ private:
         void* dest, std::size_t size, Generator& g);
 };
 
-template<class File>
-template<class... Args>
-basic_test_store<File>::
-basic_test_store(std::size_t keySize_, std::size_t blockSize_,
-        float loadFactor_, Args&&... args)
-    : sizef_(250, 750)
-    , createf_(
-        [this, args...](error_code& ec)
-        {
-            nudb::create<Hasher, File>(
-                dp, kp, lp, appnum, salt,
+template <class File>
+template <class... Args>
+basic_test_store<File>::basic_test_store(
+    boost::filesystem::path const& temp_dir,
+        std::size_t keySize_, std::size_t blockSize_,
+            float loadFactor_, Args&&... args)
+        : td_(temp_dir)
+        , sizef_(250, 750)
+        , createf_(
+            [this, args...](error_code& ec)
+            {
+                nudb::create<Hasher, File>(
+                    dp, kp, lp, appnum, salt,
                     keySize, blockSize, loadFactor, ec,
-                        args...);
-        })
-    , openf_(
-        [this, args...](error_code& ec)
-        {
-            db.open(dp, kp, lp, ec, args...);
-        })
-    , dp(td_.file("nudb.dat"))
-    , kp(td_.file("nudb.key"))
-    , lp(td_.file("nudb.log"))
-    , keySize(keySize_)
-    , blockSize(blockSize_)
-    , loadFactor(loadFactor_)
+                    args...);
+            })
+        , openf_(
+            [this, args...](error_code& ec)
+            {
+                db.open(dp, kp, lp, ec, args...);
+            })
+        , dp(td_.file("nudb.dat"))
+        , kp(td_.file("nudb.key"))
+        , lp(td_.file("nudb.log"))
+        , keySize(keySize_)
+        , blockSize(blockSize_)
+        , loadFactor(loadFactor_)
+{
+}
+
+template <class File>
+template <class... Args>
+basic_test_store<File>::basic_test_store(std::size_t keySize_,
+    std::size_t blockSize_, float loadFactor_,
+    Args&&... args)
+    : basic_test_store(boost::filesystem::path{},
+          keySize_,
+          blockSize_,
+          loadFactor_,
+          std::forward<Args>(args)...)
 {
 }
 
