@@ -28,10 +28,12 @@ public:
     temp_dir& operator=(const temp_dir&) = delete;
 
     /// Construct a temporary directory.
-    temp_dir()
+    explicit
+    temp_dir(boost::filesystem::path dir)
     {
-        auto const dir =
-            boost::filesystem::temp_directory_path();
+        if (dir.empty())
+            dir = boost::filesystem::temp_directory_path();
+
         do
         {
             path_ =
