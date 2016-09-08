@@ -1,5 +1,5 @@
 <img width="880" height = "80" alt = "NuDB"
-    src="https://raw.githubusercontent.com/vinniefalco/NuDB/master/doc/images/readme.png">
+    src="https://raw.githubusercontent.com/vinniefalco/NuDB/master/doc/images/readme2.png">
 
 [![Join the chat at https://gitter.im/vinniefalco/NuDB](https://badges.gitter.im/vinniefalco/NuDB.svg)](https://gitter.im/vinniefalco/NuDB?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status]
 (https://travis-ci.org/vinniefalco/NuDB.svg?branch=master)](https://travis-ci.org/vinniefalco/NuDB) [![codecov]
@@ -10,8 +10,14 @@
 
 # A Key/Value Store For SSDs
 
+---
+
+## Contents
+
 - [Introduction](#introduction)
+- [Description](#description)
 - [Requirements](#requirements)
+- [Example](#example)
 - [Building](#building)
 - [Algorithm](#algorithm)
 - [Licence](#licence)
@@ -21,31 +27,93 @@
 
 ## Introduction
 
-NuDB is an append only, key/value store specifically optimized for random
-read performance on modern SSDs or equivalent high-IOPS decices. The most
+NuDB is an append-only, key/value store specifically optimized for random
+read performance on modern SSDs or equivalent high-IOPS devices. The most
 common application for NuDB is content addressible storage where a
 cryptographic digest of the data is used as the key. The read performance
 and memory usage are independent of the size of the database. These are
 some other features:
 
-* Low memory footprint.
-* Values are immutable.
-* Value sizes from 1 to 2^32 bytes (4GB).
-* All keys are the same size.
-* Performance independent of growth.
-* Optimized for concurrent fetch.
-* Key file can be rebuilt if needed.
-* Inserts are atomic and consistent.
-* Data files may be efficiently iterated.
-* Key and data files may be on different devices.
-* Hardened against algorithmic complexity attacks.
-* Header-only, no separate library to build.
+* Low memory footprint
+* Database size up to 281TB
+* All keys are the same size
+* Append-only, no update or delete
+* Value sizes from 1 to 2^32 bytes (4GB)
+* Performance independent of growth
+* Optimized for concurrent fetch
+* Key file can be rebuilt if needed
+* Inserts are atomic and consistent
+* Data file may be efficiently iterated
+* Key and data files may be on different devices
+* Hardened against algorithmic complexity attacks
+* Header-only, no separate library to build
+
+## Description
+
+This software is close to final. Interfaces are stable.
+For recent changes see the [CHANGELOG](CHANGELOG.md).
+
+NuDB has been in use for over a year on production servers
+running [rippled](https://github.com/ripple/rippled), with
+database sizes over 3 terabytes.
+
+* [Repository](https://github.com/vinniefalco/Beast)
+* [Documentation](http://vinniefalco.github.io/nudb/)
 
 ## Requirements
 
 * Boost 1.58 or higher
 * C++11 or greater
 * SSD drive, or equivalent device with high IOPS
+
+## Example
+
+This complete program creates a database, opens the database,
+inserts several key/value pairs, fetches the key/value pairs,
+closes the database, then erases the database files. Source
+code for this program is located in the examples directory.
+
+```C++
+#include <nudb/nudb.hpp>
+#include <cstddef>
+#include <cstdint>
+
+int main()
+{
+    using namespace nudb;
+    std::size_t constexpr N = 1000;
+    using key_type = std::uint32_t;
+    error_code ec;
+    auto const dat_path = "db.dat";
+    auto const key_path = "db.key";
+    auto const log_path = "db.log";
+    create<xxhasher>(
+        dat_path, key_path, log_path,
+        1,
+        make_salt(),
+        sizeof(key_type),
+        block_size("."),
+        0.5f,
+        ec);
+    store db;
+    db.open(dat_path, key_path, log_path, ec);
+    char data = 0;
+    // Insert
+    for(key_type i = 0; i < N; ++i)
+        db.insert(&i, &data, sizeof(data), ec);
+    // Fetch
+    for(key_type i = 0; i < N; ++i)
+        db.fetch(&i,
+            [&](void const* buffer, std::size_t size)
+        {
+            // do something with buffer, size
+        }, ec);
+    db.close(ec);
+    erase_file(dat_path);
+    erase_file(key_path);
+    erase_file(log_path);
+}
+```
 
 ## Building
 
@@ -74,9 +142,10 @@ git submodule init
 git submodule update
 ```
 
-For the examples and tests, NuDB provides build scripts for Boost.Build (bjam)
-and CMake. Developers using Microsoft Visual Studio can generate Visual Studio
-project files by executing these commands from the root of the repository:
+For the examples and tests, NuDB provides build scripts for Boost.Build (b2)
+and CMake. To generate build scripts using CMake, execute these commands at
+the root of the repository (project and solution files will be generated
+for Visual Studio users):
 
 ```
 cd bin
@@ -87,16 +156,19 @@ cmake ..                                    # for Linux/Mac builds, OR
 cmake -G"Visual Studio 14 2015 Win64" ..    # for 64-bit Windows builds
 ```
 
-To build with Boost.Build, it is necessary to have the bjam executable
-in your path. And bjam needs to know how to find the Boost sources. The
-easiest way to do this is make sure that the version of bjam in your path
+To build with Boost.Build, it is necessary to have the b2 executable
+in your path. And b2 needs to know how to find the Boost sources. The
+easiest way to do this is make sure that the version of b2 in your path
 is the one at the root of the Boost source tree, which is built when
 running `bootstrap.sh` (or `bootstrap.bat` on Windows).
 
-Once bjam is in your path, simply run bjam in the root of the Beast
+Once b2 is in your path, simply run b2 in the root of the Beast
 repository to automatically build the required Boost libraries if they
 are not already built, build the examples, then build and run the unit
 tests.
+
+On OSX it may be necessary to pass "toolset=clang" on the b2 command line.
+Alternatively, this may be site in site-config.jam or user-config.jam.
 
 The files in the repository are laid out thusly:
 
@@ -105,9 +177,10 @@ The files in the repository are laid out thusly:
     bench/          Holds the benchmark sources and scripts
     bin/            Holds executables and project files
     bin64/          Holds 64-bit Windows executables and project files
+    examples/       Holds example program source code
+    extras/         Additional APIs, may change
     include/        Add this to your compiler includes
         nudb/
-    extras/         Additional APIs, may change
     test/           Unit tests and benchmarks
     tools/          Holds the command line tool sources
 ```

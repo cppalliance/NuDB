@@ -79,7 +79,8 @@ public:
             ec = {};
             recover<xxhasher, native_file>(
                 ts.dp, kp2, ts.lp, ec);
-            if(ec == error::no_key_file)
+            if(ec == error::no_key_file ||
+                ec == errc::no_such_file_or_directory)
             {
                 ec = {};
                 continue;

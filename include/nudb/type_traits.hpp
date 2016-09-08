@@ -13,6 +13,8 @@
 
 namespace nudb {
 
+#if ! GENERATING_DOCS
+
 namespace detail {
 
 // Holds a full digest
@@ -47,12 +49,14 @@ using noff_t = std::uint64_t;
 /** Holds a block, key, or value size.
 
     Block size is limited to 2^16
-    
+
     Key file blocks are limited to the block size.
 
     Value sizes are limited to 2^31-1.
 */
 using nsize_t = std::size_t;
+
+#endif
 
 } // nudb
 

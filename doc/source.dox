@@ -278,7 +278,10 @@ SEARCH_INCLUDES        = YES
 INCLUDE_PATH           = ../
 INCLUDE_FILE_PATTERNS  =
 PREDEFINED             = DOXYGEN \
-                         GENERATING_DOCS
+                         GENERATING_DOCS \
+                         _MSC_VER \
+                         NUDB_POSIX_FILE=1
+
 EXPAND_AS_DEFINED      =
 SKIP_FUNCTION_MACROS   = YES
 

@@ -15,6 +15,11 @@
 
 namespace nudb {
 
+/** A Hasher that uses xxHash.
+
+    This object meets the requirements of @b Hasher. It is
+    the default hash function unless otherwise specified.
+*/
 class xxhasher
 {
     std::uint64_t seed_;

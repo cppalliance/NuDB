@@ -8,6 +8,7 @@
 #ifndef NUDB_TEST_FAIL_FILE_HPP
 #define NUDB_TEST_FAIL_FILE_HPP
 
+#include <nudb/concepts.hpp>
 #include <nudb/error.hpp>
 #include <nudb/file.hpp>
 #include <atomic>
@@ -148,6 +149,9 @@ public:
 template<class File>
 class fail_file
 {
+    static_assert(is_File<File>::value,
+        "File requirements not met");
+
     File f_;
     fail_counter* c_ = nullptr;
 
@@ -210,10 +214,7 @@ public:
 
     void
     read(std::uint64_t offset,
-        void* buffer, std::size_t bytes, error_code& ec)
-    {
-        f_.read(offset, buffer, bytes, ec);
-    }
+        void* buffer, std::size_t bytes, error_code& ec);
 
     void
     write(std::uint64_t offset,
@@ -261,6 +262,20 @@ fail_file<File>::
 fail_file(fail_counter& c)
     : c_(&c)
 {
+}
+
+template<class File>
+void
+fail_file<File>::
+read(std::uint64_t offset,
+    void* buffer, std::size_t bytes, error_code& ec)
+{
+    if(fail())
+    {
+        do_fail(ec);
+        return;
+    }
+    f_.read(offset, buffer, bytes, ec);
 }
 
 template<class File>

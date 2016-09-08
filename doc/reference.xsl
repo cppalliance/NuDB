@@ -1526,48 +1526,14 @@
 <xsl:template match="param" mode="class-detail-template">
   <xsl:text>    </xsl:text>
   <xsl:choose>
-    <xsl:when test="type = 'class AsyncStream'">
-      <xsl:text>class ``[link nudb.types.streams.AsyncStream [*AsyncStream]]``</xsl:text>
+    <xsl:when test="type = 'class File'">
+      <xsl:text>class ``[link nudb.types.File [*File]]``</xsl:text>
     </xsl:when>
-    <xsl:when test="type = 'class AsyncReadStream'">
-      <xsl:text>class ``[@http://www.boost.org/doc/libs/1_60_0/doc/html/boost_asio/reference/AsyncReadStream.html [*AsyncReadStream]]``</xsl:text>
+    <xsl:when test="type = 'class Hasher'">
+      <xsl:text>class ``[link nudb.types.Hasher [*Hasher]]``</xsl:text>
     </xsl:when>
-    <xsl:when test="type = 'class AsyncWriteStream'">
-      <xsl:text>class ``[@http://www.boost.org/doc/libs/1_60_0/doc/html/boost_asio/reference/AsyncWriteStream.html [*AsyncWriteStream]]``</xsl:text>
-    </xsl:when>
-    <xsl:when test="type = 'class Body'">
-      <xsl:text>class ``[link nudb.types.Body [*Body]]``</xsl:text>
-    </xsl:when>
-    <xsl:when test="type = 'class BufferSequence'">
-      <xsl:text>class ``[link nudb.types.BufferSequence [*BufferSequence]]``</xsl:text>
-    </xsl:when>
-    <xsl:when test="(type = 'class' or type = 'class...') and declname = 'BufferSequence'">
-      <xsl:value-of select="type"/>
-      <xsl:text> ``[link nudb.types.BufferSequence [*BufferSequence]]``</xsl:text>
-    </xsl:when>
-    <xsl:when test="declname = 'CompletionHandler' or type = 'class CompletionHandler'">
-      <xsl:text>class ``[@http://www.boost.org/doc/libs/1_60_0/doc/html/boost_asio/reference/CompletionHandler.html [*CompletionHandler]]``</xsl:text>
-    </xsl:when>
-    <xsl:when test="declname = 'ConstBufferSequence' or type = 'class ConstBufferSequence'">
-      <xsl:text>class ``[@http://www.boost.org/doc/libs/1_60_0/doc/html/boost_asio/reference/ConstBufferSequence.html [*ConstBufferSequence]]``</xsl:text>
-    </xsl:when>
-    <xsl:when test="declname = 'DynamicBuffer' or type = 'class DynamicBuffer'">
-      <xsl:text>class ``[link nudb.types.DynamicBuffer [*DynamicBuffer]]``</xsl:text>
-    </xsl:when>
-    <xsl:when test="declname = 'MutableBufferSequence' or type = 'class MutableBufferSequence'">
-      <xsl:text>class ``[@http://www.boost.org/doc/libs/1_60_0/doc/html/boost_asio/reference/MutableBufferSequence.html [*MutableBufferSequence]]``</xsl:text>
-    </xsl:when>
-    <xsl:when test="declname = 'Stream' or type = 'class Stream'">
-      <xsl:text>class ``[link nudb.types.streams.Stream [*Stream]]``</xsl:text>
-    </xsl:when>
-    <xsl:when test="type = 'class SyncStream'">
-      <xsl:text>class ``[link nudb.types.streams.SyncStream [*SyncStream]]``</xsl:text>
-    </xsl:when>
-    <xsl:when test="declname = 'SyncReadStream' or type = 'class SyncReadStream'">
-      <xsl:text>class ``[@http://www.boost.org/doc/libs/1_60_0/doc/html/boost_asio/reference/SyncReadStream.html [*SyncReadStream]]``</xsl:text>
-    </xsl:when>
-    <xsl:when test="declname = 'SyncWriteStream' or type = 'class SyncWriteStream'">
-      <xsl:text>class ``[@http://www.boost.org/doc/libs/1_60_0/doc/html/boost_asio/reference/SyncWriteStream.html [*SyncWriteStream]]``</xsl:text>
+    <xsl:when test="type = 'class Progress'">
+      <xsl:text>class ``[link nudb.types.Progress [*Progress]]``</xsl:text>
     </xsl:when>
 
     <xsl:when test="declname = 'T'">

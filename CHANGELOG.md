@@ -1,3 +1,18 @@
+1.0.0-b5
+
+* fail_file also fails on reads
+* Fix bug in rekey where an error code wasn't checked
+* Increase coverage
+* Add buffer unit test
+* Add is_File concept and checks
+* Update documentation
+* Add example program
+* Demote exceptions to asserts in gentex
+* Improved commit process
+* Dynamic block size in custom allocator
+
+---
+
 1.0.0-b4
 
 * Improved test coverage

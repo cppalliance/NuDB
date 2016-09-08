@@ -10,30 +10,41 @@
 
 #include <boost/assert.hpp>
 #include <algorithm>
+#include <chrono>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+
+#if NUDB_DEBUG_LOG
+#include <beast/unit_test/dstream.hpp>
+#endif
 
 namespace nudb {
 namespace detail {
 
 /*  Custom memory manager that allocates in large blocks.
 
-    No limit is placed on the size of an allocation but
-    allocSize should be tuned upon construction to be a
-    significant multiple of the average allocation size.
-
-    When the arena is cleared, allocated memory is placed
-    on a free list for re-use, avoiding future system calls.
+    The implementation measures the rate of allocations in
+    bytes per second and tunes the large block size to fit
+    one second's worth of allocations.
 */
 template<class = void>
 class arena_t
 {
+    using clock_type =
+        std::chrono::steady_clock;
+    
+    using time_point =
+        typename clock_type::time_point;
+
     class element;
 
-    std::size_t allocSize_;
-    element* used_ = nullptr;
-    element* free_ = nullptr;
+    char const* label_;         // diagnostic
+    std::size_t alloc_ = 0;     // block size
+    std::size_t used_ = 0;      // bytes allocated
+    element* list_ = nullptr;   // list of blocks
+    time_point when_ = clock_type::now();
 
 public:
     arena_t(arena_t const&) = delete;
@@ -42,18 +53,24 @@ public:
 
     ~arena_t();
 
+    explicit
+    arena_t(char const* label = "");
+
     arena_t(arena_t&& other);
 
-    explicit
-    arena_t(std::size_t allocSize);
+    // Set the allocation size
+    void
+    hint(std::size_t alloc)
+    {
+        alloc_ = alloc;
+    }
 
-    // Makes used blocks reusable
+    // Free all memory
     void
     clear();
 
-    // Deletes free blocks
     void
-    shrink_to_fit();
+    periodic_activity();
 
     std::uint8_t*
     alloc(std::size_t n);
@@ -62,10 +79,6 @@ public:
     friend
     void
     swap(arena_t<U>& lhs, arena_t<U>& rhs);
-
-private:
-    void
-    dealloc(element*& list);
 };
 
 //------------------------------------------------------------------------------
@@ -73,17 +86,21 @@ private:
 template<class _>
 class arena_t<_>::element
 {
-private:
     std::size_t const capacity_;
     std::size_t used_ = 0;
+    element* next_;
 
 public:
-    element* next = nullptr;
-
-    explicit
-    element(std::size_t allocSize)
-        : capacity_(allocSize - sizeof(*this))
+    element(std::size_t capacity, element* next)
+        : capacity_(capacity)
+        , next_(next)
     {
+    }
+
+    element*
+    next() const
+    {
+        return next_;
     }
 
     void
@@ -126,30 +143,31 @@ alloc(std::size_t n)
 
 template<class _>
 arena_t<_>::
+arena_t(char const* label)
+    : label_(label)
+{
+}
+
+template<class _>
+arena_t<_>::
 ~arena_t()
 {
-    dealloc(used_);
-    dealloc(free_);
+    clear();
 }
 
 template<class _>
 arena_t<_>::
 arena_t(arena_t&& other)
-    : allocSize_(other.allocSize_)
+    : label_(other.label_)
+    , alloc_(other.alloc_)
     , used_(other.used_)
-    , free_(other.free_)
+    , list_(other.list_)
+    , when_(other.when_)
 {
-    other.used_ = nullptr;
-    other.free_ = nullptr;
-}
-
-template<class _>
-arena_t<_>::
-arena_t(std::size_t allocSize)
-    : allocSize_(allocSize)
-{
-    if(allocSize <= sizeof(element))
-        throw std::domain_error("arena: bad alloc size");
+    other.used_ = 0;
+    other.list_ = nullptr;
+    other.when_ = clock_type::now();
+    other.alloc_ = 0;
 }
 
 template<class _>
@@ -157,22 +175,80 @@ void
 arena_t<_>::
 clear()
 {
-    while(used_)
+    used_ = 0;
+    while(list_)
     {
-        auto const e = used_;
-        used_ = used_->next;
-        e->clear();
-        e->next = free_;
-        free_ = e;
+        auto const e = list_;
+        list_ = list_->next();
+        e->~element();
+        delete[] reinterpret_cast<std::uint8_t*>(e);
     }
 }
 
 template<class _>
 void
 arena_t<_>::
-shrink_to_fit()
+periodic_activity()
 {
-    dealloc(free_);
+    using namespace std::chrono;
+    auto const now = clock_type::now();
+    auto const elapsed = now - when_;
+    if(elapsed < milliseconds{500})
+        return;
+    when_ = now;
+    auto const rate = static_cast<std::size_t>(std::ceil(
+        used_ / duration_cast<duration<float>>(elapsed).count()));
+#if NUDB_DEBUG_LOG
+    beast::unit_test::dstream dout{std::cout};
+    auto const size =
+        [](element* e)
+        {
+            std::size_t n = 0;
+            while(e)
+            {
+                ++n;
+                e = e->next();
+            }
+            return n;
+        };
+#endif
+    if(rate >= alloc_ * 2)
+    {
+        // adjust up
+        alloc_ = std::max(rate, alloc_ * 2);
+    #if NUDB_DEBUG_LOG
+        dout << label_ << ": "
+            "rate=" << rate <<
+            ", alloc=" << alloc_ << " UP"
+            ", nused=" << used_ <<
+            ", used=" << size(list_) <<
+            "\n";
+    #endif
+    }
+    else if(rate <= alloc_ / 2)
+    {
+        // adjust down
+        alloc_ /= 2;
+    #if NUDB_DEBUG_LOG
+        dout << label_ << ": "
+            "rate=" << rate <<
+            ", alloc=" << alloc_ << " DOWN"
+            ", nused=" << used_ <<
+            ", used=" << size(list_) <<
+            "\n";
+    #endif
+    }
+    else
+    {
+    #if NUDB_DEBUG_LOG
+        dout << label_ << ": "
+            "rate=" << rate <<
+            ", alloc=" << alloc_ <<
+            ", nused=" << used_ <<
+            ", used=" << size(list_) <<
+            "\n";
+    #endif
+    }
 }
 
 template<class _>
@@ -183,24 +259,22 @@ alloc(std::size_t n)
     // Undefined behavior: Zero byte allocations
     BOOST_ASSERT(n != 0);
     n = 8 *((n + 7) / 8);
-    if(used_ && used_->remain() >= n)
-        return used_->alloc(n);
-    if(free_ && free_->remain() >= n)
+    std::uint8_t* p;
+    if(list_)
     {
-        auto const e = free_;
-        free_ = free_->next;
-        e->next = used_;
-        used_ = e;
-        return used_->alloc(n);
+        p = list_->alloc(n);
+        if(p)
+        {
+            used_ += n;
+            return p;
+        }
     }
-    auto const size = std::max(
-        allocSize_, sizeof(element) + n);
+    auto const size = std::max(alloc_, n);
     auto const e = reinterpret_cast<element*>(
-        new std::uint8_t[size]);
-    ::new(e) element(size);
-    e->next = used_;
-    used_ = e;
-    return used_->alloc(n);
+        new std::uint8_t[sizeof(element) + size]);
+    list_ = ::new(e) element{size, list_};
+    used_ += n;
+    return list_->alloc(n);
 }
 
 template<class _>
@@ -208,22 +282,9 @@ void
 swap(arena_t<_>& lhs, arena_t<_>& rhs)
 {
     using std::swap;
-    swap(lhs.allocSize_, rhs.allocSize_);
     swap(lhs.used_, rhs.used_);
-    swap(lhs.free_, rhs.free_);
-}
-
-template<class _>
-void
-arena_t<_>::dealloc(element*& list)
-{
-    while(list)
-    {
-        auto const e = list;
-        list = list->next;
-        e->~element();
-        delete[] reinterpret_cast<std::uint8_t*>(e);
-    }
+    swap(lhs.list_, rhs.list_);
+    // don't swap alloc_ or when_
 }
 
 using arena = arena_t<>;

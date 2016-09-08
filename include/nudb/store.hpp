@@ -16,8 +16,8 @@ namespace nudb {
 
 /** A key/value database.
 
-    The @ref Hasher is xxhasher, which works very well for
-    almost all cases. The @ref File is `native_file` which
+    The @b Hasher used is is @ref xxhasher, which works very
+    well for almost all cases. The @b File is @ref native_file which
     works on Windows and POSIX platforms.
 */
 using store = basic_store<xxhasher, native_file>;

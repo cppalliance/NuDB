@@ -42,7 +42,8 @@ public:
         other.size_ = 0;
     }
 
-    buffer& operator=(buffer&& other)
+    buffer&
+    operator=(buffer&& other)
     {
         size_ = other.size_;
         buf_ = std::move(other.buf_);

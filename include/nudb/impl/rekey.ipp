@@ -37,6 +37,8 @@ rekey(
     Progress&& progress,
     Args&&... args)
 {
+    static_assert(is_File<File>::value,
+        "File requirements not met");
     static_assert(is_Hasher<Hasher>::value,
         "Hasher requirements not met");
     static_assert(is_Progress<Progress>::value,
@@ -196,6 +198,8 @@ rekey(
                 is = r.prepare(
                     dh.key_size +           // Key
                     size, ec);              // Data
+                if(ec)
+                    return;
                 std::uint8_t const* const key =
                     is.data(dh.key_size);
                 auto const h = hash<Hasher>(
