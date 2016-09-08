@@ -442,7 +442,7 @@ main(int argc, char** argv)
     result_dict ops_per_sec[db_last][op_last];
     // Reserve up front to database that run later don't have less memory
     for (int i = 0; i < db_last; ++i)
-        for (int j = 0; i < db_last; ++i)
+        for (int j = 0; j < op_last; ++j)
             ops_per_sec[i][j].reserve(num_batches);
 
     std::ofstream raw_out_stream;
@@ -479,7 +479,7 @@ main(int argc, char** argv)
     auto const col_w = 14;
     auto const iter_w = 15;
 
-    for(int op_idx=0;op_idx<op_last;++op_idx)
+    for (int op_idx = 0; op_idx < op_last; ++op_idx)
     {
         auto const& t = op_names[op_idx];
         dout << '\n' << t << " (per second)\n";
@@ -499,12 +499,7 @@ main(int argc, char** argv)
                         r = std::max(r, ops_per_sec[i][j].rbegin()->first); // no `back()`
             return r;
         }();
-        auto const min_sample = [&ops_per_sec]{
-            for (auto i = 0; i < db_last; ++i)
-                if (!ops_per_sec[i][op_fetch].empty())
-                    return ops_per_sec[i][op_fetch].begin()->first;  // no `front()`
-            return static_cast<std::uint64_t>(0);
-        }();
+        auto const min_sample = batch_size;
 
         auto write_val = [&](
             result_dict const& dict, std::uint64_t key) {
