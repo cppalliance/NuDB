@@ -162,9 +162,9 @@ public:
         }
         if(sleep)
         {
-            // Trigger a shrink_to_fit
+            // Make sure we run periodic activity
             std::this_thread::sleep_for(
-                std::chrono::milliseconds{2000});
+                std::chrono::milliseconds{3000});
         }
         ts.close(ec);
         if(! BEAST_EXPECTS(! ec, ec.message()))
@@ -219,6 +219,15 @@ public:
             if(! BEAST_EXPECTS(! ec, ec.message()))
                 return;
         }
+        ts.close(ec);
+        if(! BEAST_EXPECTS(! ec, ec.message()))
+            return;
+        verify_info info;
+        verify<xxhasher>(info, ts.dp, ts.kp,
+            64 * 1024 * 1024 , no_progress{}, ec);
+        if(! BEAST_EXPECTS(! ec, ec.message()))
+            return;
+        log << info;
     }
 
     void
@@ -238,3 +247,4 @@ BEAST_DEFINE_TESTSUITE(basic_store, test, nudb);
 
 } // test
 } // nudb
+

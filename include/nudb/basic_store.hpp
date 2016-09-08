@@ -55,6 +55,9 @@ private:
     using clock_type =
         std::chrono::steady_clock;
 
+    using time_point =
+        typename clock_type::time_point;
+
     struct state
     {
         File df;
@@ -66,13 +69,12 @@ private:
         Hasher hasher;
         detail::pool p0;
         detail::pool p1;
-        detail::cache c0;
         detail::cache c1;
         detail::key_file_header kh;
 
-        // pool commit high water mark
-        std::size_t pool_thresh = 1;
-
+        std::size_t rate = 0;
+        time_point when = clock_type::now();
+        
         state(state const&) = delete;
         state& operator=(state const&) = delete;
 
@@ -100,15 +102,8 @@ private:
     std::mutex u_;                  // serializes insert()
     detail::gentex g_;
     boost::shared_mutex m_;
-    std::thread thread_;
-    std::condition_variable_any cond_;
-
-    // These allow insert to block, preventing the pool
-    // from exceeding a limit. Currently the limit is
-    // baked in, and can only be reached during sustained
-    // insertions, such as while importing.
-    std::size_t commit_limit_ = 1UL * 1024 * 1024 * 1024;
-    std::condition_variable_any cond_limit_;
+    std::thread t_;
+    std::condition_variable_any cv_;
 
     error_code ec_;
     std::atomic<bool> ecb_;         // `true` when ec_ set

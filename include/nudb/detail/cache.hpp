@@ -112,7 +112,7 @@ public:
     clear();
 
     void
-    shrink_to_fit();
+    reserve(std::size_t n);
 
     void
     periodic_activity();
@@ -159,18 +159,19 @@ cache_t(nsize_t key_size,
 template<class _>
 void
 cache_t<_>::
-clear()
+reserve(std::size_t n)
 {
-    arena_.clear();
-    map_.clear();
+    arena_.hint(n * block_size_);
+    map_.reserve(n);
 }
 
 template<class _>
 void
 cache_t<_>::
-shrink_to_fit()
+clear()
 {
-    arena_.shrink_to_fit();
+    arena_.clear();
+    map_.clear();
 }
 
 template<class _>
@@ -189,8 +190,8 @@ find(nbuck_t n) ->
 {
     auto const iter = map_.find(n);
     if(iter == map_.end())
-        return iterator(map_.end(), transform(*this));
-    return iterator(iter, transform(*this));
+        return iterator{map_.end(), transform(*this)};
+    return iterator{iter, transform(*this)};
 }
 
 template<class _>
@@ -200,7 +201,7 @@ create(nbuck_t n)
 {
     auto const p = arena_.alloc(block_size_);
     map_.emplace(n, p);
-    return bucket(block_size_, p, detail::empty);
+    return bucket{block_size_, p, detail::empty};
 }
 
 template<class _>
@@ -210,10 +211,10 @@ insert(nbuck_t n, bucket const& b) ->
     iterator
 {
     void* const p = arena_.alloc(b.block_size());
-    ostream os(p, b.block_size());
+    ostream os{p, b.block_size()};
     b.write(os);
     auto const result = map_.emplace(n, p);
-    return iterator(result.first, transform(*this));
+    return iterator{result.first, transform(*this)};
 }
 
 template<class U>
