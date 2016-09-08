@@ -87,9 +87,6 @@ public:
     clear();
 
     void
-    shrink_to_fit();
-
-    void
     periodic_activity();
 
     iterator
@@ -185,14 +182,6 @@ clear()
     arena_.clear();
     data_size_ = 0;
     map_.clear();
-}
-
-template<class _>
-void
-pool_t<_>::
-shrink_to_fit()
-{
-    arena_.shrink_to_fit();
 }
 
 template<class _>
