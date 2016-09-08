@@ -196,16 +196,45 @@ public:
     }
 
     void
+    test_bulk_insert(std::size_t N, std::size_t keySize,
+        std::size_t blockSize, float loadFactor)
+    {
+        testcase <<
+            "bulk_insert N=" << N << ", "
+            "keySize=" << keySize << ", "
+            "blockSize=" << blockSize;
+        error_code ec;
+        test_store ts{keySize, blockSize, loadFactor};
+        ts.create(ec);
+        if(! BEAST_EXPECTS(! ec, ec.message()))
+            return;
+        ts.open(ec);
+        if(! BEAST_EXPECTS(! ec, ec.message()))
+            return;
+        // Insert
+        for(std::size_t n = 0; n < N; ++n)
+        {
+            auto const item = ts[n];
+            ts.db.insert(item.key, item.data, item.size, ec);
+            if(! BEAST_EXPECTS(! ec, ec.message()))
+                return;
+        }
+    }
+
+    void
     run() override
     {
+#if 1
         test_members();
         test_insert_fetch();
+#else
+        // bulk-insert performance test
+        test_bulk_insert(10000000, 8, 4096, 0.5f);
+#endif
     }
 };
 
 BEAST_DEFINE_TESTSUITE(basic_store, test, nudb);
 
 } // test
-
 } // nudb
-
