@@ -17,7 +17,6 @@
 #include <utility>
 #include <vector>
 #include <unordered_map>
-#include <boost/container/flat_map.hpp>
 
 namespace nudb {
 namespace detail {
@@ -32,19 +31,8 @@ public:
     using value_type = std::pair<nbuck_t, bucket>;
 
 private:
-    enum
-    {
-        // The arena's alloc size will be this
-        // multiple of the block size.
-        factor = 64
-    };
-
-#if 0
-    using map_type = std::unordered_map<
-        nbuck_t, void*>;
-#else
-    using map_type = boost::container::flat_map<nbuck_t, void*>;
-#endif
+    using map_type =
+        std::unordered_map<nbuck_t, void*>;
 
     struct transform
     {
@@ -73,8 +61,8 @@ private:
         }
     };
 
-    nsize_t key_size_;
-    nsize_t block_size_;
+    nsize_t key_size_ = 0;
+    nsize_t block_size_ = 0;
     arena arena_;
     map_type map_;
 
@@ -87,11 +75,20 @@ public:
     cache_t& operator=(cache_t&&) = delete;
     cache_t& operator=(cache_t const&) = delete;
 
-    cache_t();
+    // Constructs a cache that will never have inserts
+    cache_t() = default;
+    
     cache_t(cache_t&& other);
 
     explicit
-    cache_t(nsize_t key_size, nsize_t block_size);
+    cache_t(nsize_t key_size,
+        nsize_t block_size, char const* label);
+
+    std::size_t
+    size() const
+    {
+        return map_.size();
+    }
 
     iterator
     begin()
@@ -117,6 +114,9 @@ public:
     void
     shrink_to_fit();
 
+    void
+    periodic_activity();
+
     iterator
     find(nbuck_t n);
 
@@ -136,16 +136,6 @@ public:
     swap(cache_t<U>& lhs, cache_t<U>& rhs);
 };
 
-// Constructs a cache that will never have inserts
-template<class _>
-cache_t<_>::
-cache_t()
-    : key_size_(0)
-    , block_size_(0)
-    , arena_(32) // arbitrary small number
-{
-}
-
 template<class _>
 cache_t<_>::
 cache_t(cache_t&& other)
@@ -158,10 +148,11 @@ cache_t(cache_t&& other)
 
 template<class _>
 cache_t<_>::
-cache_t(nsize_t key_size, nsize_t block_size)
+cache_t(nsize_t key_size,
+        nsize_t block_size, char const* label)
     : key_size_(key_size)
     , block_size_(block_size)
-    , arena_(block_size * factor)
+    , arena_(label)
 {
 }
 
@@ -180,6 +171,14 @@ cache_t<_>::
 shrink_to_fit()
 {
     arena_.shrink_to_fit();
+}
+
+template<class _>
+void
+cache_t<_>::
+periodic_activity()
+{
+    arena_.periodic_activity();
 }
 
 template<class _>

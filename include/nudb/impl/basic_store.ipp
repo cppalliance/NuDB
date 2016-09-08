@@ -20,8 +20,7 @@ basic_store<Hasher, File>::state::
 state(File&& df_, File&& kf_, File&& lf_,
     path_type const& dp_, path_type const& kp_,
         path_type const& lp_,
-            detail::key_file_header const& kh_,
-                std::size_t arenaBlockSize)
+            detail::key_file_header const& kh_)
     : df(std::move(df_))
     , kf(std::move(kf_))
     , lf(std::move(lf_))
@@ -29,14 +28,14 @@ state(File&& df_, File&& kf_, File&& lf_,
     , kp(kp_)
     , lp(lp_)
     , hasher(kh_.salt)
-    , p0(kh_.key_size, arenaBlockSize)
-    , p1(kh_.key_size, arenaBlockSize)
-    , c0(kh_.key_size, kh_.block_size)
-    , c1(kh_.key_size, kh_.block_size)
+    , p0(kh_.key_size, "p0")
+    , p1(kh_.key_size, "p1")
+    , c0(kh_.key_size, kh_.block_size, "c0")
+    , c1(kh_.key_size, kh_.block_size, "c1")
     , kh(kh_)
 {
     static_assert(is_File<File>::value,
-        "File requiremnts not met");
+        "File requirements not met");
 }
 
 //------------------------------------------------------------------------------
@@ -115,7 +114,6 @@ open(
     path_type const& dat_path,
     path_type const& key_path,
     path_type const& log_path,
-    std::size_t arenaBlockSize,
     error_code& ec,
     Args&&... args)
 {
@@ -162,7 +160,7 @@ open(
         return;
     boost::optional<state> s;
     s.emplace(std::move(df), std::move(kf), std::move(lf),
-        dat_path, key_path, log_path, kh, arenaBlockSize);
+        dat_path, key_path, log_path, kh);
     thresh_ = std::max<std::size_t>(65536UL,
         kh.load_factor * kh.capacity);
     frac_ = thresh_ / 2;
@@ -402,7 +400,7 @@ basic_store<Hasher, File>::
 exists(
     detail::nhash_t h,
     void const* key,
-    shared_lock_type* lock,
+    detail::shared_lock_type* lock,
     detail::bucket b,
     error_code& ec)
 {
@@ -554,27 +552,25 @@ load(
 template<class Hasher, class File>
 void
 basic_store<Hasher, File>::
-commit(error_code& ec)
+commit(detail::unique_lock_type& m, error_code& ec)
 {
     using namespace detail;
+    BOOST_ASSERT(m.owns_lock());
     buffer buf1{s_->kh.block_size};
     buffer buf2{s_->kh.block_size};
     bucket tmp{s_->kh.block_size, buf1.get()};
     // Empty cache put in place temporarily
     // so we can reuse the memory from s_->c1
     cache c1;
-    {
-        unique_lock_type m{m_};
-        if(s_->p1.empty())
-            return;
-        if(s_->p1.data_size() >= commit_limit_)
-            cond_limit_.notify_all();
-        swap(s_->c1, c1);
-        swap(s_->p0, s_->p1);
-        s_->pool_thresh = std::max(
-            s_->pool_thresh, s_->p0.data_size());
-        m.unlock();
-    }
+    if(s_->p1.empty())
+        return;
+    if(s_->p1.data_size() >= commit_limit_)
+        cond_limit_.notify_all();
+    swap(s_->c1, c1);
+    swap(s_->p0, s_->p1);
+    s_->pool_thresh = std::max(
+        s_->pool_thresh, s_->p0.data_size());
+    m.unlock();
     // Prepare rollback information
     log_file_header lh;
     lh.version = currentVersion;            // Version
@@ -665,14 +661,13 @@ commit(error_code& ec)
     // Give readers a view of the new buckets.
     // This might be slightly better than the old
     // view since there could be fewer spills.
-    {
-        unique_lock_type m{m_};
-        swap(c1, s_->c1);
-        s_->p0.clear();
-        buckets_ = buckets;
-        modulus_ = modulus;
-        g_.start();
-    }
+    m.lock();
+    swap(c1, s_->c1);
+    s_->p0.clear();
+    buckets_ = buckets;
+    modulus_ = modulus;
+    g_.start();
+    m.unlock();
     // Write clean buckets to log file
     {
         auto const size = s_->lf.size(ec);
@@ -724,11 +719,8 @@ commit(error_code& ec)
     // Cache is no longer needed, all fetches will go straight
     // to disk again. Do this after the sync, otherwise readers
     // might get blocked longer due to the extra I/O.
-    // VFALCO is this correct?
-    {
-        unique_lock_type m(m_);
-        s_->c1.clear();
-    }
+    m.lock();
+    s_->c1.clear();
 }
 
 template<class Hasher, class File>
@@ -736,6 +728,8 @@ void
 basic_store<Hasher, File>::
 run()
 {
+    using namespace detail;
+    using namespace std::chrono;
     auto const pred =
         [this]()
         {
@@ -756,8 +750,7 @@ run()
                 ! cond_.wait_for(m, seconds{1}, pred);
             if(! open_)
                 break;
-            m.unlock();
-            commit(ec_);
+            commit(m, ec_);
             if(ec_)
             {
                 ecb_.store(true);
@@ -767,19 +760,24 @@ run()
             // we get a spare moment.
             if(timeout)
             {
-                m.lock();
                 s_->pool_thresh =
                     std::max<std::size_t>(
                         1, s_->pool_thresh / 2);
-                s_->p1.shrink_to_fit();
-                s_->p0.shrink_to_fit();
-                s_->c1.shrink_to_fit();
-                s_->c0.shrink_to_fit();
-                m.unlock();
             }
+            s_->p1.periodic_activity();
+            s_->p0.periodic_activity();
+            s_->c1.periodic_activity();
+            s_->c0.periodic_activity();
+            s_->p1.shrink_to_fit();
+            s_->p0.shrink_to_fit();
+            s_->c1.shrink_to_fit();
+            s_->c0.shrink_to_fit();
         }
     }
-    commit(ec_);
+    {
+        unique_lock_type m{m_};
+        commit(m, ec_);
+    }
     if(ec_)
     {
         ecb_.store(true);

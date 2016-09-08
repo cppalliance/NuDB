@@ -12,10 +12,9 @@
 #include <nudb/type_traits.hpp>
 #include <nudb/detail/cache.hpp>
 #include <nudb/detail/gentex.hpp>
+#include <nudb/detail/mutex.hpp>
 #include <nudb/detail/pool.hpp>
 #include <boost/optional.hpp>
-#include <boost/thread/lock_types.hpp>
-#include <boost/thread/shared_mutex.hpp>
 #include <chrono>
 #include <mutex>
 #include <thread>
@@ -56,12 +55,6 @@ private:
     using clock_type =
         std::chrono::steady_clock;
 
-    using shared_lock_type =
-        boost::shared_lock<boost::shared_mutex>;
-
-    using unique_lock_type =
-        boost::unique_lock<boost::shared_mutex>;
-
     struct state
     {
         File df;
@@ -89,8 +82,7 @@ private:
         state(File&& df_, File&& kf_, File&& lf_,
             path_type const& dp_, path_type const& kp_,
                 path_type const& lp_,
-                    detail::key_file_header const& kh_,
-                        std::size_t arenaBlockSize);
+                    detail::key_file_header const& kh_);
     };
 
     bool open_ = false;
@@ -319,10 +311,6 @@ public:
 
         @param log_path The path to the log file.
 
-        @param arenaBlockSize A hint to the size of the blocks
-        used to allocate memory for buffering insertions. A reasonable
-        value is one thousand times the size of the average value.
-
         @param ec Set to the error, if any occurred.
 
         @param args Optional arguments passed to @b File constructors.
@@ -334,7 +322,6 @@ public:
         path_type const& dat_path,
         path_type const& key_path,
         path_type const& log_path,
-        std::size_t arenaBlockSize,
         error_code& ec,
         Args&&... args);
 
@@ -429,7 +416,7 @@ private:
 
     bool
     exists(detail::nhash_t h, void const* key,
-        shared_lock_type* lock, detail::bucket b, error_code& ec);
+        detail::shared_lock_type* lock, detail::bucket b, error_code& ec);
 
     void
     split(detail::bucket& b1, detail::bucket& b2,
@@ -442,7 +429,7 @@ private:
         detail::cache& c0, void* buf, error_code& ec);
 
     void
-    commit(error_code& ec);
+    commit(detail::unique_lock_type& m, error_code& ec);
 
     void
     run();

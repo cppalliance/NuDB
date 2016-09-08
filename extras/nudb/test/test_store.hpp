@@ -265,8 +265,7 @@ basic_test_store(std::size_t keySize_, std::size_t blockSize_,
     , openf_(
         [this, args...](error_code& ec)
         {
-            db.open(dp, kp, lp,
-                16 * 1024 * 1024, ec, args...);
+            db.open(dp, kp, lp, ec, args...);
         })
     , dp(td_.file("nudb.dat"))
     , kp(td_.file("nudb.key"))

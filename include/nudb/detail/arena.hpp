@@ -10,9 +10,18 @@
 
 #include <boost/assert.hpp>
 #include <algorithm>
+#include <chrono>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+
+#ifndef NUDB_DEBUG_LOG
+#define NUDB_DEBUG_LOG 0
+#endif
+#if NUDB_DEBUG_LOG
+#include <beast/unit_test/dstream.hpp>
+#endif
 
 namespace nudb {
 namespace detail {
@@ -29,11 +38,18 @@ namespace detail {
 template<class = void>
 class arena_t
 {
+    using clock_type = std::chrono::steady_clock;
+    using time_point = typename clock_type::time_point;
+
+    //using clock_type = 
     class element;
 
-    std::size_t allocSize_;
+    char const* label_;
+    std::size_t alloc_ = 0;
+    std::size_t nused_ = 0;
     element* used_ = nullptr;
     element* free_ = nullptr;
+    time_point when_ = clock_type::now();
 
 public:
     arena_t(arena_t const&) = delete;
@@ -42,18 +58,20 @@ public:
 
     ~arena_t();
 
+    arena_t(char const* label = "");
+
     arena_t(arena_t&& other);
 
-    explicit
-    arena_t(std::size_t allocSize);
-
-    // Makes used blocks reusable
+    // Deallocates all logical allocations
     void
     clear();
 
     // Deletes free blocks
     void
     shrink_to_fit();
+
+    void
+    periodic_activity();
 
     std::uint8_t*
     alloc(std::size_t n);
@@ -73,7 +91,6 @@ private:
 template<class _>
 class arena_t<_>::element
 {
-private:
     std::size_t const capacity_;
     std::size_t used_ = 0;
 
@@ -82,7 +99,7 @@ public:
 
     explicit
     element(std::size_t allocSize)
-        : capacity_(allocSize - sizeof(*this))
+        : capacity_(allocSize)
     {
     }
 
@@ -126,6 +143,13 @@ alloc(std::size_t n)
 
 template<class _>
 arena_t<_>::
+arena_t(char const* label)
+    : label_(label)
+{
+}
+
+template<class _>
+arena_t<_>::
 ~arena_t()
 {
     dealloc(used_);
@@ -135,21 +159,18 @@ arena_t<_>::
 template<class _>
 arena_t<_>::
 arena_t(arena_t&& other)
-    : allocSize_(other.allocSize_)
+    : label_(other.label_)
+    , alloc_(other.alloc_)
+    , nused_(other.nused_)
     , used_(other.used_)
     , free_(other.free_)
+    , when_(other.when_)
 {
+    other.nused_ = 0;
     other.used_ = nullptr;
     other.free_ = nullptr;
-}
-
-template<class _>
-arena_t<_>::
-arena_t(std::size_t allocSize)
-    : allocSize_(allocSize)
-{
-    if(allocSize <= sizeof(element))
-        throw std::domain_error("arena: bad alloc size");
+    other.when_ = clock_type::now();
+    other.alloc_ = 0;
 }
 
 template<class _>
@@ -157,13 +178,22 @@ void
 arena_t<_>::
 clear()
 {
+    nused_ = 0;
     while(used_)
     {
         auto const e = used_;
         used_ = used_->next;
         e->clear();
-        e->next = free_;
-        free_ = e;
+        if(e->remain() == alloc_)
+        {
+            e->next = free_;
+            free_ = e;
+        }
+        else
+        {
+            e->~element();
+            delete[] reinterpret_cast<std::uint8_t*>(e);
+        }
     }
 }
 
@@ -173,6 +203,98 @@ arena_t<_>::
 shrink_to_fit()
 {
     dealloc(free_);
+#if NUDB_DEBUG_LOG
+#if 0
+    auto const size =
+        [](element* e)
+        {
+            std::size_t n = 0;
+            while(e)
+            {
+                ++n;
+                e = e->next;
+            }
+            return n;
+        };
+    beast::unit_test::dstream dout{std::cout};
+    dout << label_ << " shrink_to_fit: "
+        "alloc=" << alloc_ <<
+        ", nused=" << nused_ <<
+        ", used=" << size(used_) <<
+        "\n";
+#endif
+#endif
+}
+
+template<class _>
+void
+arena_t<_>::
+periodic_activity()
+{
+    using namespace std::chrono;
+    auto const now = clock_type::now();
+    auto const elapsed = now - when_;
+    if(elapsed < seconds{1})
+        return;
+    when_ = now;
+    auto const rate = static_cast<std::size_t>(std::ceil(
+        nused_ / duration_cast<duration<float>>(elapsed).count()));
+#if NUDB_DEBUG_LOG
+    beast::unit_test::dstream dout{std::cout};
+    auto const size =
+        [](element* e)
+        {
+            std::size_t n = 0;
+            while(e)
+            {
+                ++n;
+                e = e->next;
+            }
+            return n;
+        };
+#endif
+    if(rate >= alloc_ * 2)
+    {
+        // adjust up
+        alloc_ = std::max(rate, alloc_ * 2);
+        dealloc(free_);
+#if NUDB_DEBUG_LOG
+    dout << label_ << ": "
+        "rate=" << rate <<
+        ", alloc=" << alloc_ << " UP"
+        ", nused=" << nused_ <<
+        ", used=" << size(used_) <<
+        ", free=" << size(free_) <<
+        "\n";
+#endif
+    }
+    else if(rate <= alloc_ / 2)
+    {
+        // adjust down
+        alloc_ /= 2;
+        dealloc(free_);
+#if NUDB_DEBUG_LOG
+    dout << label_ << ": "
+        "rate=" << rate <<
+        ", alloc=" << alloc_ << " DOWN"
+        ", nused=" << nused_ <<
+        ", used=" << size(used_) <<
+        ", free=" << size(free_) <<
+        "\n";
+#endif
+    }
+    else
+    {
+#if NUDB_DEBUG_LOG
+    dout << label_ << ": "
+        "rate=" << rate <<
+        ", alloc=" << alloc_ <<
+        ", nused=" << nused_ <<
+        ", used=" << size(used_) <<
+        ", free=" << size(free_) <<
+        "\n";
+#endif
+    }
 }
 
 template<class _>
@@ -184,22 +306,26 @@ alloc(std::size_t n)
     BOOST_ASSERT(n != 0);
     n = 8 *((n + 7) / 8);
     if(used_ && used_->remain() >= n)
+    {
+        nused_ += n;
         return used_->alloc(n);
+    }
     if(free_ && free_->remain() >= n)
     {
         auto const e = free_;
         free_ = free_->next;
         e->next = used_;
         used_ = e;
+        nused_ += n;
         return used_->alloc(n);
     }
-    auto const size = std::max(
-        allocSize_, sizeof(element) + n);
+    auto const size = std::max(alloc_, n);
     auto const e = reinterpret_cast<element*>(
-        new std::uint8_t[size]);
-    ::new(e) element(size);
+        new std::uint8_t[sizeof(element) + size]);
+    ::new(e) element{size};
     e->next = used_;
     used_ = e;
+    nused_ += n;
     return used_->alloc(n);
 }
 
@@ -208,9 +334,9 @@ void
 swap(arena_t<_>& lhs, arena_t<_>& rhs)
 {
     using std::swap;
-    swap(lhs.allocSize_, rhs.allocSize_);
+    swap(lhs.nused_, rhs.nused_);
     swap(lhs.used_, rhs.used_);
-    swap(lhs.free_, rhs.free_);
+    // don't swap alloc_, free_, or when_
 }
 
 template<class _>

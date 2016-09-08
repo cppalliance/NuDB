@@ -58,7 +58,7 @@ public:
         if(ec)
             return;
         basic_store<xxhasher, fail_file<native_file>> db;
-        db.open(ts.dp, ts.kp, ts.lp, 16 * 1024 * 1024, ec, c);
+        db.open(ts.dp, ts.kp, ts.lp, ec, c);
         if(ec)
             return;
         if(! BEAST_EXPECT(db.appnum() == ts.appnum))
