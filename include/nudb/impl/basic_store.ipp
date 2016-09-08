@@ -11,7 +11,16 @@
 #include <nudb/concepts.hpp>
 #include <nudb/recover.hpp>
 #include <boost/assert.hpp>
+#include <cmath>
 #include <memory>
+
+#ifndef NUDB_DEBUG_LOG
+#define NUDB_DEBUG_LOG 0
+#endif
+#if NUDB_DEBUG_LOG
+#include <beast/unit_test/dstream.hpp>
+#include <iostream>
+#endif
 
 namespace nudb {
 
@@ -30,7 +39,6 @@ state(File&& df_, File&& kf_, File&& lf_,
     , hasher(kh_.salt)
     , p0(kh_.key_size, "p0")
     , p1(kh_.key_size, "p1")
-    , c0(kh_.key_size, kh_.block_size, "c0")
     , c1(kh_.key_size, kh_.block_size, "c1")
     , kh(kh_)
 {
@@ -176,7 +184,7 @@ open(
     logWriteSize_ = 32 * nudb::block_size(log_path);
     s_.emplace(std::move(*s));
     open_ = true;
-    thread_ = std::thread(&basic_store::run, this);
+    t_ = std::thread(&basic_store::run, this);
 }
 
 template<class Hasher, class File>
@@ -187,8 +195,8 @@ close(error_code& ec)
     if(open_)
     {
         open_ = false;
-        cond_.notify_all();
-        thread_.join();
+        cv_.notify_all();
+        t_.join();
         if(ecb_)
         {
             ec = ec_;
@@ -258,6 +266,7 @@ insert(
     error_code& ec)
 {
     using namespace detail;
+    using namespace std::chrono;
     BOOST_ASSERT(is_open());
     if(ecb_)
     {
@@ -318,23 +327,18 @@ insert(
     // Perform insert
     unique_lock_type m{m_};
     s_->p1.insert(h, key, data, size);
-    // Did we go over the commit limit?
-    if(commit_limit_ > 0 &&
-        s_->p1.data_size() >= commit_limit_)
-    {
-        // Yes, start a new commit
-        cond_.notify_all();
-        // Wait for pool to shrink
-        cond_limit_.wait(m,
-            [this]()
-            {
-                return s_->p1.data_size() < commit_limit_;
-            });
-    }
-    auto const notify = s_->p1.data_size() >= s_->pool_thresh;
+    auto const now = clock_type::now();
+    auto const elapsed = duration_cast<duration<float>>(
+        now > s_->when ? now - s_->when : clock_type::duration{1});
+    auto const work = s_->p1.data_size() +
+        3 * s_->p1.size() * s_->kh.block_size;
+    auto const rate = static_cast<std::size_t>(
+        std::ceil(work / elapsed.count()));
+    auto const sleep =
+        s_->rate && rate > s_->rate;
     m.unlock();
-    if(notify)
-        cond_.notify_all();
+    if(sleep)
+        std::this_thread::sleep_for(milliseconds{25});
 }
 
 // Fetch key in loaded bucket b or its spills.
@@ -552,25 +556,27 @@ load(
 template<class Hasher, class File>
 void
 basic_store<Hasher, File>::
-commit(detail::unique_lock_type& m, error_code& ec)
+commit(detail::unique_lock_type& m,
+    std::size_t& work, error_code& ec)
 {
     using namespace detail;
     BOOST_ASSERT(m.owns_lock());
+    BOOST_ASSERT(! s_->p1.empty());
+    swap(s_->p0, s_->p1);
+    m.unlock();
+    work = s_->p0.data_size();
+    cache c0(s_->kh.key_size, s_->kh.block_size, "c0");
+    cache c1(s_->kh.key_size, s_->kh.block_size, "c1");
+    // 0.63212 ~= 1 - 1/e
+    {
+        auto const size = static_cast<std::size_t>(
+            std::ceil(0.63212 * s_->p0.size()));
+        c0.reserve(size);
+        c1.reserve(size);
+    }
     buffer buf1{s_->kh.block_size};
     buffer buf2{s_->kh.block_size};
     bucket tmp{s_->kh.block_size, buf1.get()};
-    // Empty cache put in place temporarily
-    // so we can reuse the memory from s_->c1
-    cache c1;
-    if(s_->p1.empty())
-        return;
-    if(s_->p1.data_size() >= commit_limit_)
-        cond_limit_.notify_all();
-    swap(s_->c1, c1);
-    swap(s_->p0, s_->p1);
-    s_->pool_thresh = std::max(
-        s_->pool_thresh, s_->p0.data_size());
-    m.unlock();
     // Prepare rollback information
     log_file_header lh;
     lh.version = currentVersion;            // Version
@@ -631,7 +637,7 @@ commit(detail::unique_lock_type& m, error_code& ec)
                     modulus *= 2;
                 auto const n1 = buckets - (modulus / 2);
                 auto const n2 = buckets++;
-                auto b1 = load(n1, c1, s_->c0, buf2.get(), ec);
+                auto b1 = load(n1, c1, c0, buf2.get(), ec);
                 if(ec)
                     return;
                 auto b2 = c1.create(n2);
@@ -645,7 +651,7 @@ commit(detail::unique_lock_type& m, error_code& ec)
             // Insert
             auto const n = bucket_index(
                 e.first.hash, buckets, modulus);
-            auto b = load(n, c1, s_->c0, buf2.get(), ec);
+            auto b = load(n, c1, c0, buf2.get(), ec);
             if(ec)
                 return;
             // This can amplify writes if it spills.
@@ -658,6 +664,7 @@ commit(detail::unique_lock_type& m, error_code& ec)
         if(ec)
             return;
     }
+    work += s_->kh.block_size * (2 * c0.size() + c1.size());
     // Give readers a view of the new buckets.
     // This might be slightly better than the old
     // view since there could be fewer spills.
@@ -674,7 +681,7 @@ commit(detail::unique_lock_type& m, error_code& ec)
         if(ec)
             return;
         bulk_writer<File> w{s_->lf, size, logWriteSize_};
-        for(auto const e : s_->c0)
+        for(auto const e : c0)
         {
             // Log Record
             auto os = w.prepare(
@@ -686,7 +693,7 @@ commit(detail::unique_lock_type& m, error_code& ec)
             write<std::uint64_t>(os, e.first);  // Index
             e.second.write(os);                 // Bucket
         }
-        s_->c0.clear();
+        c0.clear();
         w.flush(ec);
         if(ec)
             return;
@@ -728,55 +735,51 @@ void
 basic_store<Hasher, File>::
 run()
 {
-    using namespace detail;
     using namespace std::chrono;
-    auto const pred =
-        [this]()
-        {
-            return
-                ! open_ ||
-                s_->p1.data_size() >=
-                    s_->pool_thresh ||
-                s_->p1.data_size() >=
-                    commit_limit_;
-        };
-    while(open_)
+    using namespace detail;
+
+#if NUDB_DEBUG_LOG
+    beast::unit_test::dstream dout{std::cout};
+#endif
+    for(;;)
     {
-        for(;;)
+        unique_lock_type m{m_};
+        if(! s_->p1.empty())
         {
-            using std::chrono::seconds;
-            unique_lock_type m{m_};
-            auto const timeout =
-                ! cond_.wait_for(m, seconds{1}, pred);
-            if(! open_)
-                break;
-            commit(m, ec_);
+            std::size_t work;
+            commit(m, work, ec_);
             if(ec_)
             {
                 ecb_.store(true);
                 return;
             }
-            // Reclaim some memory if
-            // we get a spare moment.
-            if(timeout)
-            {
-                s_->pool_thresh =
-                    std::max<std::size_t>(
-                        1, s_->pool_thresh / 2);
-            }
-            s_->p1.periodic_activity();
-            s_->p0.periodic_activity();
-            s_->c1.periodic_activity();
-            s_->c0.periodic_activity();
-            s_->p1.shrink_to_fit();
-            s_->p0.shrink_to_fit();
-            s_->c1.shrink_to_fit();
-            s_->c0.shrink_to_fit();
+            BOOST_ASSERT(m.owns_lock());
+            auto const now = clock_type::now();
+            auto const elapsed = duration_cast<duration<float>>(
+                now > s_->when ? now - s_->when : clock_type::duration{1});
+            s_->rate = static_cast<std::size_t>(
+                std::ceil(work / elapsed.count()));
+        #if NUDB_DEBUG_LOG
+            dout <<
+                "work=" << work <<
+                ", time=" << elapsed.count() <<
+                ", rate=" << s_->rate <<
+                "\n";
+        #endif
         }
+        s_->p1.periodic_activity();
+
+        cv_.wait_until(m, s_->when + seconds{1},
+            [this]{ return ! open_; });
+        if(! open_)
+            break;
+        s_->when = clock_type::now();
     }
     {
         unique_lock_type m{m_};
-        commit(m, ec_);
+        std::size_t work;
+        if(! s_->p1.empty())
+            commit(m, work, ec_);
     }
     if(ec_)
     {
