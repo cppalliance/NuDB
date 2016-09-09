@@ -233,7 +233,7 @@ public:
     void
     run() override
     {
-#if 1
+#if 0
         test_members();
         test_insert_fetch();
 #else

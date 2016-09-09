@@ -19,6 +19,7 @@
 #endif
 #if NUDB_DEBUG_LOG
 #include <beast/unit_test/dstream.hpp>
+#include <iostream>
 #endif
 
 namespace nudb {
@@ -326,7 +327,7 @@ insert(
     // Perform insert
     unique_lock_type m{m_};
     s_->p1.insert(h, key, data, size);
-#if 0
+#if 1
     auto const now = clock_type::now();
     auto const elapsed = duration_cast<duration<float>>(
         now > s_->when ? now - s_->when : clock_type::duration{1});
@@ -555,7 +556,8 @@ load(
 template<class Hasher, class File>
 void
 basic_store<Hasher, File>::
-commit(detail::unique_lock_type& m, error_code& ec)
+commit(detail::unique_lock_type& m,
+    std::size_t& work, error_code& ec)
 {
     using namespace detail;
     BOOST_ASSERT(m.owns_lock());
@@ -563,6 +565,7 @@ commit(detail::unique_lock_type& m, error_code& ec)
         return;
     swap(s_->p0, s_->p1);
     m.unlock();
+    work = s_->p0.data_size();
     cache c0(s_->kh.key_size, s_->kh.block_size, "c0");
     cache c1(s_->kh.key_size, s_->kh.block_size, "c1");
     // 0.63212 ~= 1 - 1/e
@@ -662,6 +665,7 @@ commit(detail::unique_lock_type& m, error_code& ec)
         if(ec)
             return;
     }
+    work += s_->kh.block_size * (c0.size() + c1.size());
     // Give readers a view of the new buckets.
     // This might be slightly better than the old
     // view since there could be fewer spills.
@@ -743,10 +747,8 @@ run()
         unique_lock_type m{m_};
         if(! s_->p1.empty())
         {
-            auto const work =
-                s_->p1.data_size() +
-                2 * s_->c1.size() * s_->kh.block_size;
-            commit(m, ec_);
+            std::size_t work;
+            commit(m, work, ec_);
             if(ec_)
             {
                 ecb_.store(true);
@@ -775,7 +777,8 @@ run()
     }
     {
         unique_lock_type m{m_};
-        commit(m, ec_);
+        std::size_t work;
+        commit(m, work, ec_);
     }
     if(ec_)
     {
