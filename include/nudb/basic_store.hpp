@@ -424,7 +424,8 @@ private:
         detail::cache& c0, void* buf, error_code& ec);
 
     void
-    commit(detail::unique_lock_type& m, error_code& ec);
+    commit(detail::unique_lock_type& m,
+        std::size_t& work, error_code& ec);
 
     void
     run();

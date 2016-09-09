@@ -18,6 +18,7 @@
 
 #if NUDB_DEBUG_LOG
 #include <beast/unit_test/dstream.hpp>
+#include <iostream>
 #endif
 
 namespace nudb {
