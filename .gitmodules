@@ -4,3 +4,6 @@
 [submodule "extras/rocksdb"]
 	path = extras/rocksdb
 	url = https://github.com/facebook/rocksdb.git
+[submodule "doc/docca"]
+	path = doc/docca
+	url = https://github.com/vinniefalco/docca.git

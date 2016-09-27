@@ -15,8 +15,6 @@ using boostbook ;
 using quickbook ;
 using doxygen ;
 
-xml bb : master.qbk ;
-
 path-constant out : . ;
 
 install stylesheets
@@ -47,14 +45,22 @@ install callouts
 
 explicit callout ;
 
-boostbook doc
+xml doc
     :
-        bb
+        main.qbk
+    :
+        <location>temp
+        <include>$(broot)/tools/boostbook/dtd
+    ;
+
+boostbook boostdoc
+    :
+        doc
     :
         <xsl:param>chapter.autolabel=0
         <xsl:param>boost.image.src=images/logo.png
         <xsl:param>boost.image.alt="NuDB Logo"
-        <xsl:param>boost.image.w=1600
+        <xsl:param>boost.image.w=1270
         <xsl:param>boost.image.h=80
         <xsl:param>boost.root=$(broot)
         <xsl:param>chapter.autolabel=0
@@ -63,6 +69,7 @@ boostbook doc
         <xsl:param>generate.section.toc.level=1         # Control depth of TOC generation in sections
         <xsl:param>toc.max.depth=2                      # How many levels should be created for each TOC?
         <xsl:param>toc.section.depth=2                  # How deep should recursive sections appear in the TOC?
+        <xsl:param>generate.toc="chapter nop section nop"
     :
         <location>temp
         <dependency>stylesheets

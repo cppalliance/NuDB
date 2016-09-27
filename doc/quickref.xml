@@ -25,54 +25,55 @@
         <entry valign="top">
           <bridgehead renderas="sect3">Classes</bridgehead>
           <simplelist type="vert" columns="1">
-            <member><link linkend="nudb.ref.basic_store">basic_store</link></member>
-            <member><link linkend="nudb.ref.native_file">native_file</link></member>
-            <member><link linkend="nudb.ref.no_progress">no_progress</link></member>
-            <member><link linkend="nudb.ref.posix_file">posix_file</link></member>
-            <member><link linkend="nudb.ref.store">store</link></member>
-            <member><link linkend="nudb.ref.win32_file">win32_file</link></member>
-            <member><link linkend="nudb.ref.xxhasher">xxhasher</link></member>
+            <member><link linkend="nudb.ref.nudb__basic_store">basic_store</link></member>
+            <member><link linkend="nudb.ref.nudb__native_file">native_file</link></member>
+            <member><link linkend="nudb.ref.nudb__no_progress">no_progress</link></member>
+            <member><link linkend="nudb.ref.nudb__posix_file">posix_file</link></member>
+            <member><link linkend="nudb.ref.nudb__store">store</link></member>
+            <member><link linkend="nudb.ref.nudb__win32_file">win32_file</link></member>
+            <member><link linkend="nudb.ref.nudb__xxhasher">xxhasher</link></member>
           </simplelist>
           <bridgehead renderas="sect3">Constants</bridgehead>
           <simplelist type="vert" columns="1">
-            <member><link linkend="nudb.ref.errc">errc</link></member>
-            <member><link linkend="nudb.ref.error">error</link></member>
-            <member><link linkend="nudb.ref.file_mode">file_mode</link></member>
+            <member><link linkend="nudb.ref.nudb__errc">errc</link></member>
+            <member><link linkend="nudb.ref.nudb__error">error</link></member>
+            <member><link linkend="nudb.ref.nudb__file_mode">file_mode</link></member>
           </simplelist>
         </entry>
         <entry valign="top">
           <bridgehead renderas="sect3">Functions</bridgehead>
           <simplelist type="vert" columns="1">
-            <member><link linkend="nudb.ref.block_size">block_size</link></member>
-            <member><link linkend="nudb.ref.erase_file">erase_file</link></member>
-            <member><link linkend="nudb.ref.make_error_code">make_error_code</link></member>
-            <member><link linkend="nudb.ref.recover">recover</link></member>
-            <member><link linkend="nudb.ref.rekey">rekey</link></member>
-            <member><link linkend="nudb.ref.verify">verify</link></member>
-            <member><link linkend="nudb.ref.visit">visit</link></member>
+            <member><link linkend="nudb.ref.nudb__block_size">block_size</link></member>
+            <member><link linkend="nudb.ref.nudb__create">create</link></member>
+            <member><link linkend="nudb.ref.nudb__erase_file">erase_file</link></member>
+            <member><link linkend="nudb.ref.nudb__make_error_code">make_error_code</link></member>
+            <member><link linkend="nudb.ref.nudb__recover">recover</link></member>
+            <member><link linkend="nudb.ref.nudb__rekey">rekey</link></member>
+            <member><link linkend="nudb.ref.nudb__verify">verify</link></member>
+            <member><link linkend="nudb.ref.nudb__visit">visit</link></member>
           </simplelist>
           <bridgehead renderas="sect3">Type Traits</bridgehead>
           <simplelist type="vert" columns="1">
-           <member><link linkend="nudb.ref.is_File">is_File</link></member>
-           <member><link linkend="nudb.ref.is_Hasher">is_Hasher</link></member>
-           <member><link linkend="nudb.ref.is_Progress">is_Progress</link></member>
+           <member><link linkend="nudb.ref.nudb__is_File">is_File</link></member>
+           <member><link linkend="nudb.ref.nudb__is_Hasher">is_Hasher</link></member>
+           <member><link linkend="nudb.ref.nudb__is_Progress">is_Progress</link></member>
           </simplelist>
         </entry>
         <entry valign="top">
           <bridgehead renderas="sect3">Types</bridgehead>
           <simplelist type="vert" columns="1">
-            <member><link linkend="nudb.ref.error_category">error_category</link></member>
-            <member><link linkend="nudb.ref.error_code">error_code</link></member>
-            <member><link linkend="nudb.ref.error_condition">error_condition</link></member>
-            <member><link linkend="nudb.ref.path_type">path_type</link></member>
-            <member><link linkend="nudb.ref.system_error">system_error</link></member>
-            <member><link linkend="nudb.ref.verify_info">verify_info</link></member>
+            <member><link linkend="nudb.ref.nudb__error_category">error_category</link></member>
+            <member><link linkend="nudb.ref.nudb__error_code">error_code</link></member>
+            <member><link linkend="nudb.ref.nudb__error_condition">error_condition</link></member>
+            <member><link linkend="nudb.ref.nudb__path_type">path_type</link></member>
+            <member><link linkend="nudb.ref.nudb__system_error">system_error</link></member>
+            <member><link linkend="nudb.ref.nudb__verify_info">verify_info</link></member>
           </simplelist>
           <bridgehead renderas="sect3">Concepts</bridgehead>
           <simplelist type="vert" columns="1">
-            <member><link linkend="nudb.types.File">File</link></member>
-            <member><link linkend="nudb.types.Progress">Progress</link></member>
-            <member><link linkend="nudb.types.Hasher">Hasher</link></member>
+            <member><link linkend="nudb.ref.File">File</link></member>
+            <member><link linkend="nudb.ref.Progress">Progress</link></member>
+            <member><link linkend="nudb.ref.Hasher">Hasher</link></member>
           </simplelist>
         </entry>
       </row>

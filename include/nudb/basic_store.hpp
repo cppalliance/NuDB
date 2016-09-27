@@ -36,8 +36,6 @@ namespace nudb {
         db.open("db.dat", "db.key", "db.log", ec);
     @endcode
 
-    @par Template Parameters
-
     @tparam Hasher The hash function to use. This type
     must meet the requirements of @b Hasher.
 
@@ -74,7 +72,7 @@ private:
 
         std::size_t rate = 0;
         time_point when = clock_type::now();
-        
+
         state(state const&) = delete;
         state& operator=(state const&) = delete;
 
@@ -153,11 +151,11 @@ public:
     /** Return the path to the data file.
 
         @par Requirements
-            
+
         The database must be open.
 
         @par Thread safety
-            
+
         Safe to call concurrently with any function
         except @ref open or @ref close.
 
@@ -309,7 +307,7 @@ public:
         @param ec Set to the error, if any occurred.
 
         @param args Optional arguments passed to @b File constructors.
-        
+
     */
     template<class... Args>
     void
@@ -342,7 +340,7 @@ public:
         immediately return with `ec` set to the error which
         occurred. All subsequent calls to @ref fetch will
         return the same error until the database is closed.
-        
+
         @param key A pointer to a memory buffer of at least
         @ref key_size() bytes, containing the key to be searched
         for.

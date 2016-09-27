@@ -9,7 +9,7 @@
 
 A [@Hasher] implements a hash algorithm. This is used to compute the small
 digests NuDB needs to effectively implement a hash table. NuDB provides
-the default implementation [link nudb.ref.xxhasher xxhasher], which is
+the default implementation [link nudb.ref.nudb__xxhasher xxhasher], which is
 suitable for most use cases. For advanced applications, a user supplied
 hash function may be supplied which must meet these requirements.
 

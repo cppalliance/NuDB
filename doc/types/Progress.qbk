@@ -8,8 +8,8 @@
 [section:Progress Progress]
 
 A [*Progress] object provides feedback to callers on the progress of
-long running operations such as calls to [link nudb.ref.verify verify] or
-[link nudb.ref.rekey rekey] which can take days or weeks for database that
+long running operations such as calls to [link nudb.ref.nudb__verify verify] or
+[link nudb.ref.nudb__rekey rekey] which can take days or weeks for database that
 measure in the terabytes. These objects are used by passing them as parameters
 to the appropriate functions, where the will be called periodically with
 numbers that indicate the amount of work completed, versus the total amount

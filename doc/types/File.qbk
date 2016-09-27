@@ -9,9 +9,9 @@
 
 The [*File] concept abstracts access to files in the underlying file system.
 Two implementations are provided, one for the Win32 API and the other for
-POSIX compliant systems. The [link nudb.ref.native_file native_file] type
-alias is automatically set to either [link nudb.ref.win32_file win32_file]
-or [link nudb.ref.posix_file posix_file] as appropriate.
+POSIX compliant systems. The [link nudb.ref.nudb__native_file native_file] type
+alias is automatically set to either [link nudb.ref.nudb__win32_file win32_file]
+or [link nudb.ref.nudb__posix_file posix_file] as appropriate.
 
 To support interfaces other than Win32 or POSIX, callers may provide their
 own [*File] type that meets these requirements. The unit test code also provides
@@ -23,11 +23,11 @@ In the table below:
 * `X` denotes a [*File] type
 * `a` and `b` denote values of type `X`
 * `c` denotes a (possibly const) value of type `X`
-* `m` denotes a value of type [link nudb.ref.file_mode file_mode]
-* `f` denotes a value of type [link nudb.ref.path_type path_type]
+* `m` denotes a value of type [link nudb.ref.nudb__file_mode file_mode]
+* `f` denotes a value of type [link nudb.ref.nudb__path_type path_type]
 * `q` denotes a value of type `void*`
 * `p` denotes a value of type `void const*`
-* `ec` denotes a value of type [link nudb.ref.error_code error_code]
+* `ec` denotes a value of type [link nudb.ref.nudb__error_code error_code]
 
 
 * `o` denotes a value of type `std::uint64_t`
@@ -95,7 +95,7 @@ In the table below:
     [
         Returns the size of the file in bytes. This value is also equal to
         lowest byte offset for which a read will always return a
-        [link nudb.ref.error short_read] error. Undefined
+        [link nudb.ref.nudb__error short_read] error. Undefined
         behavior if `a` does not refer to an open file.
     ]
 ]

@@ -23,7 +23,36 @@
 [template indexterm1[term1] '''<indexterm><primary>'''[term1]'''</primary></indexterm>''']
 [template indexterm2[term1 term2] '''<indexterm><primary>'''[term1]'''</primary><secondary>'''[term2]'''</secondary></indexterm>''']
 
-[section Overview]
+[variablelist
+  [[
+    [link nudb.overview Overview]
+  ][
+    An overview of features, requirements, and credits, plus
+    rationale and design information.
+  ]]
+  [[
+    [link nudb.example Example]
+  ][
+    An example that illustrates the use of NuDB.
+  ]]
+  [[
+    [link nudb.usage Usage]
+  ][
+    An explanation of operations on the database.
+  ]]
+  [[
+    [link nudb.ref Reference]
+  ][
+    Detailed class and function reference.
+  ]]
+  [[
+    [link nudb.index Index]
+  ][
+    Book-style text index of the documentation.
+  ]]
+]
+
+[section:overview Overview]
 
 NuDB is an append only, key/value store specifically optimized for random
 read performance on modern SSDs or equivalent high-IOPS decices. The most
@@ -117,7 +146,9 @@ database is created.
 
 [endsect]
 
-[section Example]
+
+
+[section:example Example]
 
 This complete program creates a database, opens the database, inserts several
 key/value pairs, fetches the key/value pairs, closes the database, then erases
@@ -169,7 +200,9 @@ int main()
 
 [endsect]
 
-[section Usage]
+
+
+[section:usage Usage]
 
 [heading Files]
 
@@ -182,7 +215,7 @@ of a failure.
 
 [heading Create/Open]
 
-The [link nudb.ref.create create] function creates a new data file and key
+The [link nudb.ref.nudb__create create] function creates a new data file and key
 file for a database with the specified parameters. The caller specifies
 the hash function to use as a template argument, the file paths,
 and the database constants:
@@ -229,7 +262,7 @@ file.
 The block size indicates the size of buckets in the key file. The best choice
 for the block size is the natural sector size of the device. For most SSDs
 in production today this is 4096, or less often 8192 or 16384. The function
-[link nudb.ref.block_size block_size] returns the best guess of the block
+[link nudb.ref.nudb__block_size block_size] returns the best guess of the block
 size used by the device mounted at the specified path.
 
 The load factor determines the target bucket occupancy fraction. There is
@@ -237,11 +270,11 @@ almost never a need to specify anything other than the recommended value of
 0.5, which strikes the perfect balance of space-efficiency and fast lookup.
 
 An open database is represented by objects of type
-[link nudb.ref.basic_store basic_store], templated on the hasher. The type
-alias [link nudb.ref.store store] represents a database using
-[link nudb.ref.xxhasher xxhasher], the default hash function. To open
+[link nudb.ref.nudb__basic_store basic_store], templated on the hasher. The type
+alias [link nudb.ref.nudb__store store] represents a database using
+[link nudb.ref.nudb__xxhasher xxhasher], the default hash function. To open
 a database, declare a database object and then call the
-[link nudb.ref.basic_store.open open] member function:
+[link nudb.ref.nudb__basic_store.open open] member function:
 
 ```
 store db;
@@ -263,7 +296,7 @@ db.insert(key, data, bytes, ec);
 ```
 
 If the key already exists, the error is set to
-[link nudb.ref.error.key_exists error::key_exists]. All keys in a NuDB
+[link nudb.ref.nudb__error.key_exists error::key_exists]. All keys in a NuDB
 database must be unique. Multiple threads can call insert at the same time.
 Internally however, insertions are serialized to present a consistent view
 of the database to callers.
@@ -298,19 +331,12 @@ nudb help
 
 [endsect]
 
-
-[section:types Type Requirements]
+[section:ref Reference]
+[xinclude quickref.xml]
 [include types/File.qbk]
 [include types/Hasher.qbk]
 [include types/Progress.qbk]
-[endsect]
-
-[section:quickref Quick Reference]
-[xinclude quickref.xml]
-[endsect]
-
 [include reference.qbk]
-
-[section:idx Index]
-[xinclude index.xml]
 [endsect]
+
+[xinclude index.xml]
