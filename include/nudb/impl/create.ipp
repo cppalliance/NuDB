@@ -88,6 +88,9 @@ create(
         ec = error::invalid_block_size;
         return;
     }
+    bool edf = false;
+    bool ekf = false;
+    bool elf = false;
     {
         File df(args...);
         File kf(args...);
@@ -95,12 +98,15 @@ create(
         df.create(file_mode::append, dat_path, ec);
         if(ec)
             goto fail;
+        edf = true;
         kf.create(file_mode::append, key_path, ec);
         if(ec)
             goto fail;
+        ekf = true;
         lf.create(file_mode::append, log_path, ec);
         if(ec)
             goto fail;
+        elf = true;
         dat_file_header dh;
         dh.version = currentVersion;
         dh.uid = make_uid();
@@ -144,9 +150,12 @@ create(
         return;
     }
 fail:
-    erase_file(dat_path);
-    erase_file(key_path);
-    erase_file(log_path);
+    if(edf)
+        erase_file(dat_path);
+    if(ekf)
+        erase_file(key_path);
+    if(elf)
+        erase_file(log_path);
 }
 
 } // nudb

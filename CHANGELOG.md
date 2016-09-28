@@ -1,3 +1,9 @@
+1.0.0-b6
+
+* Fix incorrect file deletion in create()
+
+---
+
 1.0.0-b5
 
 * fail_file also fails on reads
