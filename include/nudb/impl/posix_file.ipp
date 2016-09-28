@@ -60,18 +60,7 @@ create(file_mode mode, path_type const& path, error_code& ec)
 {
     auto const result = flags(mode);
     BOOST_ASSERT(! is_open());
-    fd_ = ::open(path.c_str(), result.first);
-    if(fd_ != -1)
-    {
-        ::close(fd_);
-        fd_ = -1;
-        ec = error_code{errc::file_exists, generic_category()};
-        return ;
-    }
-    int errnum = errno;
-    if(errnum != ENOENT)
-        return err(errnum, ec);
-    fd_ = ::open(path.c_str(), result.first | O_CREAT, 0644);
+    fd_ = ::open(path.c_str(), result.first | O_CREAT | O_EXCL, 0644);
     if(fd_ == -1)
         return last_err(ec);
 #ifndef __APPLE__
