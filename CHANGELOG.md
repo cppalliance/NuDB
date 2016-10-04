@@ -1,3 +1,10 @@
+1.0.0-b7
+
+* Fix doc typos
+* Improve file creation on POSIX
+
+---
+
 1.0.0-b6
 
 * Fix incorrect file deletion in create()
