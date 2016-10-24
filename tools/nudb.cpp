@@ -166,7 +166,7 @@ public:
             "        file is present.  Running commands on an unrecovered database\n"
             "        may result in lost or corrupted data.\n"
             "\n"
-            "    rekey <dat-path] <key-path> <log-path> --count=<items> --buffer=<bytes>\n"
+            "    rekey <dat-path> <key-path> <log-path> --count=<items> --buffer=<bytes>\n"
             "\n"
             "        Generate the key file for a data file.  The buffer  option is\n"
             "        required,  larger  buffers process faster.  A buffer equal to\n"
