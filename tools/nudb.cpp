@@ -119,12 +119,16 @@ public:
                             "Set the buffer size in bytes (larger is faster).")
            ("dat,d",       po::value<std::string>(),
                             "Path to data file.")
-           ("key,k",       po::value<std::string>(),
+           ("keyfile,kf",  po::value<std::string>(),
                             "Path to key file.")
+           ("key,k",       po::value<std::string>(),
+                            "Key of the inserted data.")
            ("log,l",       po::value<std::string>(),
                             "Path to log file.")
            ("count,n",     po::value<std::uint64_t>(),
                             "The number of items in the data file.")
+           ("value,v",     po::value<std::string>(),
+                            "The data to be inserted.")
            ("command",     "Command to run.")
             ;
     }
@@ -163,6 +167,7 @@ public:
             "    insert <dat-path> <key-path> <log-path> --key=<hex-key> --value=<hex-value>\n"
             "\n"
             "        Inserts a hex encoded key/value pair into the database.\n"
+            "        Make sure your keys have the correct size.\n"
             "\n"
             "    recover <dat-path> <key-path> <log-path>\n"
             "\n"
@@ -226,7 +231,7 @@ public:
             po::positional_options_description pod;
             pod.add("command", 1);
             pod.add("dat", 1);
-            pod.add("key", 1);
+            pod.add("keyfile", 1);
             pod.add("log", 1);
 
             po::variables_map vm;
@@ -278,12 +283,12 @@ private:
     int
     do_info(boost::program_options::variables_map const& vm)
     {
-        if(! vm.count("dat") && ! vm.count("key") && ! vm.count("log"))
+        if(! vm.count("dat") && ! vm.count("keyfile") && ! vm.count("log"))
             return error("No files specified");
         if(vm.count("dat"))
             do_info(vm["dat"].as<std::string>());
-        if(vm.count("key"))
-            do_info(vm["key"].as<std::string>());
+        if(vm.count("keyfile"))
+            do_info(vm["keyfile"].as<std::string>());
         if(vm.count("log"))
             do_info(vm["log"].as<std::string>());
         return EXIT_SUCCESS;
@@ -366,7 +371,7 @@ private:
     {
         if(! vm.count("dat"))
             return error("Missing data file path");
-        if(! vm.count("key"))
+        if(! vm.count("keyfile"))
             return error("Missing key file path");
         if(! vm.count("log"))
             return error("Missing log file path");
@@ -375,16 +380,54 @@ private:
         if(! vm.count("value"))
             return error("Missing value");
 
+        auto const dp = vm["dat"].as<std::string>();
+        auto const kp = vm["keyfile"].as<std::string>();
+        auto const lp = vm["log"].as<std::string>();
+
+        // key/values are still strings here
+        auto const keystring = vm["key"].as<std::string>();
+        auto const valuestring = vm["value"].as<std::string>();
+        // Parse hex string in a byte array
+        // See: https://stackoverflow.com/a/30606613
+        // This requires the string to contain an even number of digits!
+        std::vector<char> key;
+        for (unsigned int i = 0; i < keystring.length(); i += 2) {
+            std::string byteString = keystring.substr(i, 2);
+            char byte = (char) strtol(byteString.c_str(), NULL, 16);
+            key.push_back(byte);
+        }
+        std::vector<char> value;
+        for (unsigned int i = 0; i < valuestring.length(); i += 2) {
+            std::string byteString = valuestring.substr(i, 2);
+            char byte = (char) strtol(byteString.c_str(), NULL, 16);
+            value.push_back(byte);
+        }
+
         // taken from example code:
         error_code ec;
         store db;
         db.open(
             vm["dat"].as<std::string>(),
-            vm["key"].as<std::string>(),
+            vm["keyfile"].as<std::string>(),
             vm["log"].as<std::string>(),
             ec);
+        if(ec)
+        {
+            std::cerr << "insert: " << ec.message() << "\n";
+            db.close(ec);
+            return EXIT_FAILURE;
+        }
 
         // insert happens here somehow
+
+        db.insert(&key, &value, sizeof(value), ec);
+
+        if(ec)
+        {
+            std::cerr << "insert: " << ec.message() << "\n";
+            db.close(ec);
+            return EXIT_FAILURE;
+        }
 
         db.close(ec);
 
@@ -399,12 +442,12 @@ private:
     int
     do_recover(boost::program_options::variables_map const& vm)
     {
-        if(! vm.count("dat") || ! vm.count("key") || ! vm.count("log"))
+        if(! vm.count("dat") || ! vm.count("keyfile") || ! vm.count("log"))
             return error("Missing file specifications");
         error_code ec;
         recover<xxhasher>(
             vm["dat"].as<std::string>(),
-            vm["key"].as<std::string>(),
+            vm["keyfile"].as<std::string>(),
             vm["log"].as<std::string>(),
             ec);
         if(ec)
@@ -420,7 +463,7 @@ private:
     {
         if(! vm.count("dat"))
             return error("Missing data file path");
-        if(! vm.count("key"))
+        if(! vm.count("keyfile"))
             return error("Missing key file path");
         if(! vm.count("log"))
             return error("Missing log file path");
@@ -429,7 +472,7 @@ private:
         if(! vm.count("buffer"))
             return error("Missing buffer size");
         auto const dp = vm["dat"].as<std::string>();
-        auto const kp = vm["key"].as<std::string>();
+        auto const kp = vm["keyfile"].as<std::string>();
         auto const lp = vm["log"].as<std::string>();
         auto const itemCount = vm["count"].as<std::size_t>();
         auto const bufferSize = vm["buffer"].as<std::size_t>();
@@ -451,16 +494,16 @@ private:
     {
         if(! vm.count("dat"))
             return error("Missing data file path");
-        if(! vm.count("key"))
+        if(! vm.count("keyfile"))
             return error("Missing key file path");
 
         auto const bufferSize = vm.count("buffer") ?
             vm["buffer"].as<std::size_t>() : 0;
         auto const dp = vm["dat"].as<std::string>();
-        auto const kp = vm.count("key") ?
-            vm["key"].as<std::string>() : std::string{};
+        auto const kp = vm.count("keyfile") ?
+            vm["keyfile"].as<std::string>() : std::string{};
 
-        if(! vm.count("key"))
+        if(! vm.count("keyfile"))
         {
             // todo
             std::cerr << "unimplemented: dat-only verify\n";
