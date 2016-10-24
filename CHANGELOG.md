@@ -1,6 +1,7 @@
 1.0.2
 
 * Better CMakeLists.txt for finding Boost
+* Fix typo in nudb tool
 * Remove error::success (API Change)
 
 ---
