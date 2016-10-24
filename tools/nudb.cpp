@@ -160,6 +160,10 @@ public:
             "\n"
             "        Show metadata and header information for database files.\n"
             "\n"
+            "    insert <dat-path> <key-path> <log-path> --key=<hex-key> --value=<hex-value>\n"
+            "\n"
+            "        Inserts a hex encoded key/value pair into the database.\n"
+            "\n"
             "    recover <dat-path> <key-path> <log-path>\n"
             "\n"
             "        Perform a database recovery. A recovery is necessary if a log\n"
@@ -246,6 +250,9 @@ public:
 
             if(cmd == "info")
                 return do_info(vm);
+
+            if(cmd == "insert")
+                return do_insert(vm);
 
             if(cmd == "recover")
                 return do_recover(vm);
@@ -352,6 +359,41 @@ private:
         }
 
         std::cout << "File " << path << " has unknown type '" << ts << "'.\n";
+    }
+
+    int
+    do_insert(boost::program_options::variables_map const& vm)
+    {
+        if(! vm.count("dat"))
+            return error("Missing data file path");
+        if(! vm.count("key"))
+            return error("Missing key file path");
+        if(! vm.count("log"))
+            return error("Missing log file path");
+        if(! vm.count("key"))
+            return error("Missing key");
+        if(! vm.count("value"))
+            return error("Missing value");
+
+        // taken from example code:
+        error_code ec;
+        store db;
+        db.open(
+            vm["dat"].as<std::string>(),
+            vm["key"].as<std::string>(),
+            vm["log"].as<std::string>(),
+            ec);
+
+        // insert happens here somehow
+
+        db.close(ec);
+
+        if(ec)
+        {
+            std::cerr << "insert: " << ec.message() << "\n";
+            return EXIT_FAILURE;
+        }
+        return EXIT_SUCCESS;
     }
 
     int
