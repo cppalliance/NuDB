@@ -1,3 +1,10 @@
+1.0.0
+
+* First Official Release!
+* Fix badge markdown in README.md
+
+---
+
 1.0.0-b7
 
 * Fix doc typos
