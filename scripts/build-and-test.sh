@@ -42,18 +42,18 @@ if [[ ${TRAVIS_BRANCH} == master || ${TRAVIS_BRANCH} == develop ]]; then
     MAIN_BRANCH=1
 fi
 
-num_jobs=1
-if [[ $(uname) == Darwin ]]; then
-  num_jobs=$(sysctl -n hw.physicalcpu)
-elif [[ $(uname -s) == Linux ]]; then
-  # CircleCI returns 32 phys procs, but 2 virt proc
-  num_proc_units=$(nproc)
-  # Physical cores
-  num_jobs=$(lscpu -p | grep -v '^#' | sort -u -t, -k 2,4 | wc -l)
-  if ((${num_proc_units} < ${num_jobs})); then
-      num_jobs=${num_proc_units}
-  fi
-fi
+num_jobs=2
+#if [[ $(uname) == Darwin ]]; then
+#  num_jobs=$(sysctl -n hw.physicalcpu)
+#elif [[ $(uname -s) == Linux ]]; then
+#  # CircleCI returns 32 phys procs, but 2 virt proc
+#  num_proc_units=$(nproc)
+#  # Physical cores
+#  num_jobs=$(lscpu -p | grep -v '^#' | sort -u -t, -k 2,4 | wc -l)
+#  if ((${num_proc_units} < ${num_jobs})); then
+#      num_jobs=${num_proc_units}
+#  fi
+#fi
 
 echo "using toolset: ${CC}"
 echo "using variant: ${VARIANT}"

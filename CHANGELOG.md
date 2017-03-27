@@ -1,3 +1,9 @@
+1.0.1
+
+* Travis: Limit the number of jobs
+
+---
+
 1.0.0
 
 * First Official Release!
