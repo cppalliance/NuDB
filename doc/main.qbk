@@ -23,73 +23,65 @@
 [template indexterm1[term1] '''<indexterm><primary>'''[term1]'''</primary></indexterm>''']
 [template indexterm2[term1 term2] '''<indexterm><primary>'''[term1]'''</primary><secondary>'''[term2]'''</secondary></indexterm>''']
 
-[variablelist
-  [[
-    [link nudb.overview Overview]
-  ][
-    An overview of features, requirements, and credits, plus
-    rationale and design information.
-  ]]
-  [[
-    [link nudb.example Example]
-  ][
-    An example that illustrates the use of NuDB.
-  ]]
-  [[
-    [link nudb.usage Usage]
-  ][
-    An explanation of operations on the database.
-  ]]
-  [[
-    [link nudb.ref Reference]
-  ][
-    Detailed class and function reference.
-  ]]
-  [[
-    [link nudb.index Index]
-  ][
-    Book-style text index of the documentation.
-  ]]
-]
-
-[section:overview Overview]
+[section:introduction Introduction]
 
 NuDB is an append only, key/value store specifically optimized for random
 read performance on modern SSDs or equivalent high-IOPS devices. The most
 common application for NuDB is content addressible storage where a
 cryptographic digest of the data is used as the key. The read performance
-and memory usage are independent of the size of the database. These are
-some other features:
+and memory usage are independent of the size of the database.
 
-[heading History]
+[heading Example]
 
-The first versions of rippled, the application behind the Ripple consensus
-network, used SQLite as their back end for unstructured data. The
-performance quickly became a limiting factor.
+This complete program creates a database, opens the database, inserts several
+key/value pairs, fetches the key/value pairs, closes the database, then erases
+the database files. Source code for this program is located in the examples
+directory.
 
-Then rippled then went through a series of back ends including LMDB, LevelDB, and
-RocksDB. Each of these databases performed well at first, but as the data
-size increased, memory usage increased and performance dropped off drastically.
+[import ../examples/example.cpp]
+[main]
 
-The problem is caching. Each of these databases relies on some O(n) data
-structure, such as a Bloom filter, to improve their performance. These work
-well until the structures no longer fit in memory. In addition, many virtual
-machines are memory constrained.
+[endsect]
 
-To address this issue, the developers performed a thought experiment -- if
-you assume the data size is so large that no O(n) caching is effective, what
-is the best read performance you could expect? They reached the following
-conclusions:
+[section:api User API]
 
-1) Writes should not block reads.
-2) Reads should be limited only by the SSD's IOPS limit.
-3) A read for a non-present key should require one IOP.
-4) A read for a present key whose data can be read in a single IOP should
-only require two IOPs, one to figure out where it is and one to read it in.
+[section:type_requirements Type Requirements]
+[include types/File.qbk]
+[include types/Hasher.qbk]
+[include types/Progress.qbk]
+[endsect]
 
-NuDB is designed to come as close to this ideal as possible.
+[section:types Types]
 
-[heading Design]
+[section verify_info]
+[@./nudb_reference/nudb__verify_info.html `verify_info`]
+[endsect]
+[include store.qbk]
+
+[endsect:types]
+
+[section:functions Functions]
+    functions
+        store
+            create
+                native_file
+                posix_file
+                win32_file
+                xxhasher
+            recover
+            rekey
+            verify
+                verify_info
+            visit
+        misc
+            block_size
+            erase_file
+            make_salt
+[endsect:functions]
+
+[endsect:api]
+
+[section:design Design and Implementation]
 
 NuDB uses three files to hold the data and indexes. The data file is append
 only and contains sufficient information to rebuild the index. The index
@@ -120,21 +112,21 @@ Iteration can be performed on the data file directly. Since it is append
 only, there is no risk of other operations corrupting an iteration in
 progress.
 
-[heading Performance]
-
-Writes do not block reads. Read rates are typically around 90% of the SSD's
+Writes do not block reads. Read rates are typically around 90% of the SSD\'s
 IOPS limit. An average fetch for a non-present key typically requires fewer
 than 1.01 IOPs. An average fetch for a present key requires fewer than 1.01
 IOPs plus however many IOPs it takes to read the data.
 
-[heading Applications]
+[endsect]
+
+[section:applications Applications]
 
 Content addressable storage associates data with its cryptographic digest.
 This type of storage is commonly used in decentralized blockchain applications.
 
 Often these applications require following hash chains -- where one object
 contains the hash of another object that ultimately leads to the object
-desired. NuDB's low latency and high speed are particularly advantageous
+desired. NuDB\'s low latency and high speed are particularly advantageous
 in these kinds of applications.
 
 NuDB is append only and does not support a delete operation. To support
@@ -146,61 +138,38 @@ database is created.
 
 [endsect]
 
+[section:history History]
 
+The first versions of rippled, the application behind the Ripple consensus
+network, used SQLite as their back end for unstructured data. The
+performance quickly became a limiting factor.
 
-[section:example Example]
+Then rippled then went through a series of back ends including LMDB, LevelDB, and
+RocksDB. Each of these databases performed well at first, but as the data
+size increased, memory usage increased and performance dropped off drastically.
 
-This complete program creates a database, opens the database, inserts several
-key/value pairs, fetches the key/value pairs, closes the database, then erases
-the database files. Source code for this program is located in the examples
-directory.
+The problem is caching. Each of these databases relies on some O(n) data
+structure, such as a Bloom filter, to improve their performance. These work
+well until the structures no longer fit in memory. In addition, many virtual
+machines are memory constrained.
 
-```
-#include <nudb/nudb.hpp>
-#include <cstddef>
-#include <cstdint>
+To address this issue, the developers performed a thought experiment -- if
+you assume the data size is so large that no O(n) caching is effective, what
+is the best read performance you could expect? They reached the following
+conclusions:
 
-int main()
-{
-    using namespace nudb;
-    std::size_t constexpr N = 1000;
-    using key_type = std::uint32_t;
-    error_code ec;
-    auto const dat_path = "db.dat";
-    auto const key_path = "db.key";
-    auto const log_path = "db.log";
-    create<xxhasher>(
-        dat_path, key_path, log_path,
-        1,
-        make_salt(),
-        sizeof(key_type),
-        block_size("."),
-        0.5f,
-        ec);
-    store db;
-    db.open(dat_path, key_path, log_path,
-        16 * 1024 * 1024, ec);
-    char data = 0;
-    // Insert
-    for(key_type i = 0; i < N; ++i)
-        db.insert(&i, &data, sizeof(data), ec);
-    // Fetch
-    for(key_type i = 0; i < N; ++i)
-        db.fetch(&i,
-            [&](void const* buffer, std::size_t size)
-        {
-            // do something with buffer, size
-        }, ec);
-    db.close(ec);
-    erase_file(dat_path);
-    erase_file(key_path);
-    erase_file(log_path);
-}
-```
+1) Writes should not block reads.
+2) Reads should be limited only by the SSD\'s IOPS limit.
+3) A read for a non-present key should require one IOP.
+4) A read for a present key whose data can be read in a single IOP should
+only require two IOPs, one to figure out where it is and one to read it in.
+
+NuDB is designed to come as close to this ideal as possible.
 
 [endsect]
 
 
+[/
 
 [section:usage Usage]
 
@@ -318,6 +287,8 @@ The callback can decide how to store this information, if at all.
 
 [endsect]
 
+]
+
 [section Command Line Tool]
 
 To allow administration, NuDB comes with the "nudb" command line tool,
@@ -330,6 +301,7 @@ nudb help
 ```
 
 [endsect]
+[/
 
 [section:ref Reference]
 [xinclude quickref.xml]
@@ -338,5 +310,6 @@ nudb help
 [include types/Progress.qbk]
 [include reference.qbk]
 [endsect]
+]
 
 [xinclude index.xml]

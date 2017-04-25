@@ -64,12 +64,43 @@ boostbook boostdoc
         <xsl:param>boost.image.h=80
         <xsl:param>boost.root=$(broot)
         <xsl:param>chapter.autolabel=0
-        <xsl:param>chunk.first.sections=1               # Chunk the first top-level section?
-        <xsl:param>chunk.section.depth=8                # Depth to which sections should be chunked
-        <xsl:param>generate.section.toc.level=1         # Control depth of TOC generation in sections
-        <xsl:param>toc.max.depth=2                      # How many levels should be created for each TOC?
-        <xsl:param>toc.section.depth=2                  # How deep should recursive sections appear in the TOC?
-        <xsl:param>generate.toc="chapter nop section nop"
+        <xsl:param>chunk.first.sections=1     	# Chunk the first top-level section?
+        <xsl:param>chunk.section.depth=8        # Depth to which sections should be chunked
+        <xsl:param>generate.section.toc.level=1 # Control depth of TOC generation in sections
+        <xsl:param>toc.max.depth=3              # How many levels should be created for each TOC?
+        <xsl:param>toc.section.depth=4          # How deep should recursive sections appear in the TOC?
+        # <xsl:param>generate.toc="chapter nop section nop"
+    :
+        <location>temp
+        <dependency>stylesheets
+        <dependency>images
+    ;
+
+xml refdoc
+    :
+        helper.qbk
+    :
+        <location>temp
+        <include>$(broot)/tools/boostbook/dtd
+    ;
+
+boostbook boostdocx
+    :
+        refdoc
+    :
+        <xsl:param>chapter.autolabel=0
+        <xsl:param>boost.image.src=images/logo.png
+        <xsl:param>boost.image.alt="NuDB Logo"
+        <xsl:param>boost.image.w=1270
+        <xsl:param>boost.image.h=80
+        <xsl:param>boost.root=$(broot)
+        <xsl:param>chapter.autolabel=0
+        <xsl:param>chunk.first.sections=1     	# Chunk the first top-level section?
+        <xsl:param>chunk.section.depth=8        # Depth to which sections should be chunked
+        <xsl:param>generate.section.toc.level=1 # Control depth of TOC generation in sections
+        <xsl:param>toc.max.depth=3              # How many levels should be created for each TOC?
+        <xsl:param>toc.section.depth=3          # How deep should recursive sections appear in the TOC?
+        # <xsl:param>generate.toc="chapter nop section nop"
     :
         <location>temp
         <dependency>stylesheets

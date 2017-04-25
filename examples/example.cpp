@@ -4,43 +4,55 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
-
+//[ main
 #include <nudb/nudb.hpp>
 #include <cstddef>
 #include <cstdint>
 
 int main()
 {
-    using namespace nudb;
-    std::size_t constexpr N = 1000;
-    using key_type = std::uint32_t;
-    error_code ec;
-    auto const dat_path = "db.dat";
-    auto const key_path = "db.key";
-    auto const log_path = "db.log";
-    create<xxhasher>(
-        dat_path, key_path, log_path,
-        1,
-        make_salt(),
+    //using namespace nudb;
+    nudb::error_code ec;
+
+    char const * const dat_path = "db.dat";
+    char const * const key_path = "db.key";
+    char const * const auto const log_path = "db.log";
+
+    // given names of data, key and log files
+    // create a new database
+    nudb::create<xxhasher>(
+        dat_path, key_path, log_path,   // path names
+        1,                              // application number
+        make_salt(),                    // randome seed
         sizeof(key_type),
         block_size("."),
-        0.5f,
-        ec);
-    store db;
+        0.5f,                           // load factor
+        ec                              // reference to return code
+    );
+
+    nudb::store db;
     db.open(dat_path, key_path, log_path, ec);
+
     char data = 0;
-    // Insert
-    for(key_type i = 0; i < N; ++i)
+    // Insert 1000 blocks
+    const std::size_t N = 1000;
+    for(size_t i = 0; i < N; ++i)
         db.insert(&i, &data, sizeof(data), ec);
+
     // Fetch
-    for(key_type i = 0; i < N; ++i)
-        db.fetch(&i,
-            [&](void const* buffer, std::size_t size)
-        {
-            // do something with buffer, size
-        }, ec);
+    for(size_t i = 0; i < N; ++i)
+        db.fetch(
+            &i,
+            [&](void const* buffer, std::size_t size){
+                // do something with buffer, size
+            },
+            ec
+        );
+
     db.close(ec);
-    erase_file(dat_path);
-    erase_file(key_path);
-    erase_file(log_path);
+
+    nudb::erase_file(dat_path);
+    nudb::erase_file(key_path);
+    nudb::erase_file(log_path);
 }
+//]
