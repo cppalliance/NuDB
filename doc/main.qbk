@@ -23,6 +23,42 @@
 [template indexterm1[term1] '''<indexterm><primary>'''[term1]'''</primary></indexterm>''']
 [template indexterm2[term1 term2] '''<indexterm><primary>'''[term1]'''</primary><secondary>'''[term2]'''</secondary></indexterm>''']
 
+[variablelist
+  [[
+    [link nudb.introduction Introduction]
+  ][
+  ]]
+  [[
+    [link nudb.type_requirements Type Requirements]
+  ][
+  ]]
+  [[
+    [link nudb.types Types]
+  ][
+  ]]
+  [[
+    [link nudb.design Design and Implementation]
+  ][
+  ]]
+  [[
+    [link nudb.applications Applications]
+  ][
+  ]]
+  [[
+    [link nudb.history History]
+  ][
+  ]]
+  [[
+    [link nudb.nudb Command Line Tool]
+  ][
+  ]]
+  [[
+    [link nudb.index Index]
+  ][
+    Book-style text index of the documentation.
+  ]]
+]
+
 [section:introduction Introduction]
 
 NuDB is an append only, key/value store specifically optimized for random
@@ -43,8 +79,6 @@ directory.
 
 [endsect]
 
-[section:api User API]
-
 [section:type_requirements Type Requirements]
 [include types/File.qbk]
 [include types/Hasher.qbk]
@@ -56,9 +90,10 @@ directory.
 [section verify_info]
 [@./nudb_reference/nudb__verify_info.html `verify_info`]
 [endsect]
+
 [include store.qbk]
 
-[endsect:types]
+[endsect][/ types]
 
 [section:functions Functions]
     functions
@@ -77,9 +112,26 @@ directory.
             block_size
             erase_file
             make_salt
-[endsect:functions]
+[endsect][/ functions]
 
-[endsect:api]
+[section:applications Applications]
+
+Content addressable storage associates data with its cryptographic digest.
+This type of storage is commonly used in decentralized blockchain applications.
+
+Often these applications require following hash chains -- where one object
+contains the hash of another object that ultimately leads to the object
+desired. NuDB\'s low latency and high speed are particularly advantageous
+in these kinds of applications.
+
+NuDB is append only and does not support a delete operation. To support
+retaining limited historical information, NuDB is often used in a dual
+database configuration. One database is older and is read only, the other
+is newer and is read/write. Periodically, the older database is discarded and
+the newer database becomes the new read only database and a new read/write
+database is created.
+
+[endsect]
 
 [section:design Design and Implementation]
 
@@ -116,25 +168,6 @@ Writes do not block reads. Read rates are typically around 90% of the SSD\'s
 IOPS limit. An average fetch for a non-present key typically requires fewer
 than 1.01 IOPs. An average fetch for a present key requires fewer than 1.01
 IOPs plus however many IOPs it takes to read the data.
-
-[endsect]
-
-[section:applications Applications]
-
-Content addressable storage associates data with its cryptographic digest.
-This type of storage is commonly used in decentralized blockchain applications.
-
-Often these applications require following hash chains -- where one object
-contains the hash of another object that ultimately leads to the object
-desired. NuDB\'s low latency and high speed are particularly advantageous
-in these kinds of applications.
-
-NuDB is append only and does not support a delete operation. To support
-retaining limited historical information, NuDB is often used in a dual
-database configuration. One database is older and is read only, the other
-is newer and is read/write. Periodically, the older database is discarded and
-the newer database becomes the new read only database and a new read/write
-database is created.
 
 [endsect]
 
@@ -289,7 +322,7 @@ The callback can decide how to store this information, if at all.
 
 ]
 
-[section Command Line Tool]
+[section:nudb Command Line Tool]
 
 To allow administration, NuDB comes with the "nudb" command line tool,
 which may be built using b2 or CMake. Files for the tool are located in
@@ -301,15 +334,9 @@ nudb help
 ```
 
 [endsect]
-[/
 
 [section:ref Reference]
-[xinclude quickref.xml]
-[include types/File.qbk]
-[include types/Hasher.qbk]
-[include types/Progress.qbk]
 [include reference.qbk]
 [endsect]
-]
 
 [xinclude index.xml]
