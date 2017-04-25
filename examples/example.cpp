@@ -5,18 +5,18 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 //[ main
+#include <boost/system/error_code.hpp>
 #include <nudb/nudb.hpp>
 #include <cstddef>
 #include <cstdint>
 
 int main()
 {
-    //using namespace nudb;
-    nudb::error_code ec;
+    boost::system::error_code ec;
 
     char const * const dat_path = "db.dat";
     char const * const key_path = "db.key";
-    char const * const auto const log_path = "db.log";
+    char const * const log_path = "db.log";
 
     // given names of data, key and log files
     // create a new database
@@ -29,6 +29,8 @@ int main()
         0.5f,                           // load factor
         ec                              // reference to return code
     );
+
+
 
     nudb::store db;
     db.open(dat_path, key_path, log_path, ec);
