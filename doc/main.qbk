@@ -80,19 +80,14 @@ directory.
 [endsect]
 
 [section:type_requirements Type Requirements]
-[include types/File.qbk]
-[include types/Hasher.qbk]
-[include types/Progress.qbk]
+[include type_requirements/File.qbk]
+[include type_requirements/Hasher.qbk]
+[include type_requirements/Progress.qbk]
 [endsect]
 
 [section:types Types]
-
-[section verify_info]
-[@./nudb_reference/nudb__verify_info.html `verify_info`]
-[endsect]
-
-[include store.qbk]
-
+[include types/verify_info.qbk]
+[include types/store.qbk]
 [endsect][/ types]
 
 [section:functions Functions]
