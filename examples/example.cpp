@@ -28,6 +28,7 @@ int main()
 {
     boost::system::error_code ec;
 
+    // (1) Files
     const nudb::path_type dat_path = "db.dat";
     const nudb::path_type key_path = "db.key";
     const nudb::path_type log_path = "db.log";
@@ -36,7 +37,7 @@ int main()
     using key_type = std::uint32_t;
 
     // given names of data, key and log files
-    // create a new database
+    // (2) Create a new database
     nudb::create<nudb::xxhasher>(
         dat_path,           // path name of data file
         key_path,           // path name of key file
@@ -53,6 +54,7 @@ int main()
         return 1;
     }
 
+    // (3) Open an existing database
     nudb::store db;
     db.open(dat_path, key_path, log_path, ec);
     if(! is_success(ec)){
@@ -60,13 +62,13 @@ int main()
         return 1;
     }
 
-    // insert 1000 blocks
-    const std::size_t N = 1000;
-    // each 1 byte long contaiing a zero value
+    // data is one byte long containing a zero value
     const char data = 0;
-    for(size_t i = 0; i < N; ++i){
+    // for each key value from 0 to 999
+    for(key_type k = 0; k < 1000; ++k){
         // each with a key valued 0 to 1000
-        db.insert(&i, &data, sizeof(data), ec);
+        // (4) Insert a key/value pair
+        db.insert(&k, &data, sizeof(data), ec);
         if(! is_success(ec)){
             std::cerr << "insertion failed:" << ec.message() << std::endl;
             return 1;
@@ -74,9 +76,8 @@ int main()
     }
 
     // Fetch each block back in order
-    for(size_t i = 0; i < N; ++i){
-        // given it's index
-        key_type k;
+    for(key_type k = 0; k < 1000; ++k){
+        // (5) Fetch a value given it's key
         db.fetch(
             &k,
             [&](void const* buffer, std::size_t size){
@@ -93,12 +94,14 @@ int main()
         }
     }
 
+    // (6) Terminate access to the database
     db.close(ec);
     if(! is_success(ec)){
         std::cerr << "close failed:" << ec.message() << std::endl;
         return 1;
     }
 
+    // (7) Delete the databasae
     nudb::erase_file(dat_path);
     nudb::erase_file(key_path);
     nudb::erase_file(log_path);

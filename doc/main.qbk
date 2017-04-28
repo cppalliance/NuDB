@@ -77,6 +77,70 @@ directory.
 [import ../examples/example.cpp]
 [main]
 
+[variablelist Notes
+[
+    [(1) Files]
+    [
+    A database is represented by three files: the data file, the key file,
+    and the log file. Each file has a distinct header in a well known format.
+    The data file holds all of the key/value pairs and is serially iterable. The
+    key file holds a hash table indexing all of the contents in the data file.
+    The log file holds information used to roll the database back in the event
+    of a failure.
+    ]
+]
+[
+    [(2) Create a new database]
+    [
+    The `create` function creates a new data file and key
+    file for a database with the specified parameters. The caller specifies
+    the hash function to use as a template argument, the file paths,
+    and the database constants.
+    ]
+]
+[
+    [(3) Open an existing database]
+    [
+    The `open` function prepares a database for
+    insertion and/or reading.
+    ]
+]
+[
+    [(4) Insert a key/value pair]
+    [
+    Once a database is open, it becomes possible to insert new key/value pairs.
+    If the key already exists, the error is set to
+    [link nudb.ref.nudb__error.key_exists error::key_exists]. All keys in a NuDB
+    database must be unique. Multiple threads can call insert at the same time.
+    Internally however, insertions are serialized to present a consistent view
+    of the database to callers.
+    ]
+]
+[
+    [(5) Fetch a value given it's key]
+    [
+    The fetch function takes a callback object as a parameter which is
+    invoked when the value is retrieved.
+    ]
+]
+[
+    [(6) Terminate access to the database]
+    [
+    All resources used by the database
+    structures are freed.
+    ]
+]
+[
+    [(7) Delete the database]
+    [
+    To delete the database, delete the triplet of files which define it.
+    ]
+]
+]
+
+Any NuDB function may return `error_code` values from different sources.
+So error_codes should be checked against both lists of error codes used.
+
 [endsect]
 
 [section:type_requirements Type Requirements]
@@ -168,10 +232,10 @@ you assume the data size is so large that no O(n) caching is effective, what
 is the best read performance you could expect? They reached the following
 conclusions:
 
-1) Writes should not block reads.
-2) Reads should be limited only by the SSD\'s IOPS limit.
-3) A read for a non-present key should require one IOP.
-4) A read for a present key whose data can be read in a single IOP should
+# Writes should not block reads.
+# Reads should be limited only by the SSD\'s IOPS limit.
+# A read for a non-present key should require one IOP.
+# A read for a present key whose data can be read in a single IOP should
 only require two IOPs, one to figure out where it is and one to read it in.
 
 NuDB is designed to come as close to this ideal as possible.

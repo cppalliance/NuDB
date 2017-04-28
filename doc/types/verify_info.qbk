@@ -7,8 +7,8 @@
 Describes database statistics calculated by [link nudb.ref.nudb__verify `verify`].
 
 [heading Notation]
-* `V` a [*verify_info] type
-* `v` a [*verify_info] type
+* `V` a [link nudb.ref.nudb__verify `verify`] type
+* `v` a and instance of type [link nudb.ref.nudb__verify `verify`]
 
 [heading Valid Expressions - Member Functions]
 [table Valid Expressions
@@ -84,7 +84,7 @@ Describes database statistics calculated by [link nudb.ref.nudb__verify `verify`
     ]
   ]
   [
-    [[link nudb.ref.nudb__verify_info.hist ~hist~]]
+    [[link nudb.ref.nudb__verify_info.hist `v.hist`]]
     [std::array< std::size_t, 10 >]
     [
       A histogram of the number of buckets having N spill records. 
@@ -219,5 +219,8 @@ Describes database statistics calculated by [link nudb.ref.nudb__verify `verify`
 ]
 [heading Header]
 [@../../include/nudb/verify.hpp `#include <nudb/verify.hpp>`]
+
+[heading See Also]
+[[link nudb.ref.nudb__verify verify]]
 
 [endsect]

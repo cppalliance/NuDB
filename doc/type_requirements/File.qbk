@@ -175,10 +175,10 @@ to exercise all failure paths in the implementation.
 * [link nudb.ref.nudb__erase_file erase_file]
 
 [heading Models]
-
-Two implementations are provided, one for the Win32 API and the other for
-POSIX compliant systems. The [link nudb.ref.nudb__native_file native_file] type
-alias is automatically set to either [link nudb.ref.nudb__win32_file win32_file]
-or [link nudb.ref.nudb__posix_file posix_file] as appropriate.
+* [link nudb.ref.nudb__posix_file posix_file]
+* [link nudb.ref.nudb__win32_file win32_file]
+* [link nudb.ref.nudb__native_file native_file]
+[br]
+native file is just an alias which selects one of the previous two depending on the operating system on which the code is compiled.
 
 [endsect]

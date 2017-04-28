@@ -7,7 +7,7 @@
 
 [section:Progress Progress]
 
-A [*Progress] object provides feedback to callers on the progress of
+An instance of type [*Progress] feedback to callers on the progress of
 long running operations such as calls to [link nudb.ref.nudb__verify verify] or
 [link nudb.ref.nudb__rekey rekey] which can take days or weeks for databases that
 measure in the terabytes. These objects are used by passing them as parameters
@@ -15,26 +15,38 @@ to the appropriate functions, where the will be called periodically with
 numbers that indicate the amount of work completed, versus the total amount
 of work required.
 
-In the table below:
+[heading Notation]
+* `P` is a progress class
+* `p` is an instance of type `P`
+* `n` is a value of type `std::uint64_t` representng numerator of the fraction of work done.
+* `d` is a value of type `std::uint64_t` representng denominator of the fraction of work done.
 
-* `X` denotes a progress class
-* `a` denotes a value of type `X`
-* `p` and `q` denote values of type `std::uint64_t`
+[heading Valid Expressions]
 
-[table Progress requirements
+[table
 [[operation] [type] [semantics, pre/post-conditions]]
 [
-    [`a(p, q)`]
+    [`P()`]
+    []
+    [Default constructor]
+]
+[
+    [`p(n, d)`]
     [ ]
     [
         Indicates to the progress object that work has been performed and
-        intermediate results calculated. `p` represents the amount of work
-        completed from the beginning of the operation. `q` represents the
+        intermediate results calculated. `n` represents the amount of work
+        completed from the beginning of the operation. `d` represents the
         total amount of work required. The fraction of completed work is
-        therefore `p/q`, with zero representing no work complete, and one
-        represents all work complete. `p` and `q` are unitless.
+        therefore `n/d`, with zero representing no work complete, and one
+        represents all work complete.
     ]
 ]
 ]
+
+[heading Models]
+* [link nudb.ref.nudb__no_progress no_progress]
+[br]
+This is a default implementation which does nothing.
 
 [endsect]
