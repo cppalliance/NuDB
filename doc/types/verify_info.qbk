@@ -1,0 +1,223 @@
+[/
+    Copyright (c) 2013-2016 Vinnie Falco (vinnie dot falco at gmail dot com)
+    Distributed under the Boost Software License, Version 1.0. (See accompanying
+    file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+]
+[section:nudb__verify_info verify_info]
+Describes database statistics calculated by [link nudb.ref.nudb__verify `verify`].
+
+[heading Notation]
+* `V` a [*verify_info] type
+* `v` a [*verify_info] type
+
+[heading Valid Expressions - Member Functions]
+[table Valid Expressions
+[[Operation] [Return Type] [Description]]
+  [
+    [[link nudb.ref.nudb__verify_info.actual_load `v.actual_load`]]
+    [float]
+    [
+      The measured bucket load fraction.
+    ]
+  ]
+  [
+    [[link nudb.ref.nudb__verify_info.algorithm `v.algorithm`]]
+    [int]
+    [
+      Returns 0 for normal algorithm and 1 for fast algorithm
+    ]
+  ]
+  [
+    [[link nudb.ref.nudb__verify_info.appnum `v.appnum`]]
+    [std::uint64_t]
+    [
+      The application-defined constant. 
+    ]
+  ]
+  [
+    [[link nudb.ref.nudb__verify_info.avg_fetch `v.avg_fetch`]]
+    [float]
+    [
+      Average number of key file reads per fetch. 
+    ]
+  ]
+  [
+    [[link nudb.ref.nudb__verify_info.block_size `v.block_size`]]
+    [std::size_t]
+    [
+      The block size used in the key file. 
+    ]
+  ]
+  [
+    [[link nudb.ref.nudb__verify_info.bucket_size `v.bucket_size`]]
+    [std::size_t]
+    [
+      The size of a bucket in bytes. 
+    ]
+  ]
+  [
+    [[link nudb.ref.nudb__verify_info.buckets `v.buckets`]]
+    [std::size_t]
+    [
+      The number of buckets in the key file. 
+    ]
+  ]
+  [
+    [[link nudb.ref.nudb__verify_info.capacity `v.capacity`]]
+    [std::size_t]
+    [
+      The maximum number of keys each bucket can hold. 
+    ]
+  ]
+  [
+    [[link nudb.ref.nudb__verify_info.dat_file_size `v.dat_file_size`]]
+    [std::size_t]
+    [
+      The size of the data file. 
+    ]
+  ]
+  [
+    [[link nudb.ref.nudb__verify_info.dat_path `v.dat_path`]]
+    [path_type]
+    [
+      The path to the data file. 
+    ]
+  ]
+  [
+    [[link nudb.ref.nudb__verify_info.hist ~hist~]]
+    [std::array< std::size_t, 10 >]
+    [
+      A histogram of the number of buckets having N spill records. 
+    ]
+  ]
+  [
+    [[link nudb.ref.nudb__verify_info.key_count `v.key_count`]]
+    [std::uint64_t]
+    [
+      The number of keys found. 
+    ]
+  ]
+  [
+    [[link nudb.ref.nudb__verify_info.key_file_size `v.key_file_size`]]
+    [std::size_t]
+    [
+      The size of the key file. 
+    ]
+  ]
+  [
+    [[link nudb.ref.nudb__verify_info.key_path `v.key_path`]]
+    [path_type]
+    [
+      The path to the key file. 
+    ]
+  ]
+  [
+    [[link nudb.ref.nudb__verify_info.key_size `v.key_size`]]
+    [std::size_t]
+    [
+      The size of each key, in bytes. 
+    ]
+  ]
+  [
+    [[link nudb.ref.nudb__verify_info.load_factor `v.load_factor`]]
+    [float]
+    [
+      The target load factor used in the key file. 
+    ]
+  ]
+  [
+    [[link nudb.ref.nudb__verify_info.overhead `v.overhead`]]
+    [float]
+    [
+      The data amplification ratio. 
+    ]
+  ]
+  [
+    [[link nudb.ref.nudb__verify_info.pepper `v.pepper`]]
+    [std::uint64_t]
+    [
+      The salt fingerprint. 
+    ]
+  ]
+  [
+    [[link nudb.ref.nudb__verify_info.salt `v.salt`]]
+    [std::uint64_t]
+    [
+      The salt used in the key file. 
+    ]
+  ]
+  [
+    [[link nudb.ref.nudb__verify_info.spill_bytes `v.spill_bytes`]]
+    [std::uint64_t]
+    [
+      The number of bytes occupied by spill records in use. 
+    ]
+  ]
+  [
+    [[link nudb.ref.nudb__verify_info.spill_bytes_tot `v.spill_bytes_tot`]]
+    [std::uint64_t]
+    [
+      The number of bytes occupied by all spill records. 
+    ]
+  ]
+  [
+    [[link nudb.ref.nudb__verify_info.spill_count `v.spill_count`]]
+    [std::uint64_t]
+    [
+      The number of spill records in use. 
+    ]
+  ]
+  [
+    [[link nudb.ref.nudb__verify_info.spill_count_tot `v.spill_count_tot`]]
+    [std::uint64_t]
+    [
+      The total number of spill records. 
+    ]
+  ]
+  [
+    [[link nudb.ref.nudb__verify_info.uid `v.uid`]]
+    [std::uint64_t]
+    [
+      The unique identifier. 
+    ]
+  ]
+  [
+    [[link nudb.ref.nudb__verify_info.value_bytes `v.value_bytes`]]
+    [std::uint64_t]
+    [
+      The total number of bytes occupied by values. 
+    ]
+  ]
+  [
+    [[link nudb.ref.nudb__verify_info.value_count `v.value_count`]]
+    [std::uint64_t]
+    [
+      The number of values found. 
+    ]
+  ]
+  [
+    [[link nudb.ref.nudb__verify_info.version `v.version`]]
+    [std::size_t]
+    [
+      The API version used to create the database. 
+    ]
+  ]
+  [
+    [[link nudb.ref.nudb__verify_info.waste `v.waste`]]
+    [std::size_t]
+    [
+      The fraction of the data file that is wasted. 
+    ]
+  ]
+  [
+    [[link nudb.ref.nudb__verify_info.verify_info `verify_info()`]]
+    [std::size_t]
+    [
+      Default constructor.
+    ]
+  ]
+]
+[heading Header]
+[@../../include/nudb/verify.hpp `#include <nudb/verify.hpp>`]
+
+[endsect]

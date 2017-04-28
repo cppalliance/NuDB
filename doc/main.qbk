@@ -86,28 +86,10 @@ directory.
 [endsect]
 
 [section:types Types]
+[include types/error_code.qbk]
 [include types/verify_info.qbk]
 [include types/store.qbk]
 [endsect][/ types]
-
-[section:functions Functions]
-    functions
-        store
-            create
-                native_file
-                posix_file
-                win32_file
-                xxhasher
-            recover
-            rekey
-            verify
-                verify_info
-            visit
-        misc
-            block_size
-            erase_file
-            make_salt
-[endsect][/ functions]
 
 [section:applications Applications]
 
