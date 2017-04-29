@@ -1,0 +1,307 @@
+Goal
+====
+Build user documentation for the NuDB library which would permit
+use of the library in the most expedient and effective way.  Such
+documentation would communicate everything one needs to use the library
+and nothing that one doesn't need to know.  
+
+The function and usage of the library is quite straight forward. I believe
+we should be able to craft documentation which permits a user who
+needs such a facility can incorporate this library into his own code
+within 10 minutes of reviewing the manual.
+
+More thoughts on this subject are available here:
+
+https://www.youtube.com/watch?v=ACeNgqBKL7E
+
+Scope
+=====
+Typically, one codes the library then embarks on the (now extremely
+tedious) task of writing user documentation for it. One (of several)
+problems with this approach is that when trying to write the document
+one discovers that he wishes he had something differently.  Sometimes
+it turns out that the changing the code is easier than writing the 
+document corresponding to the current code - and the loop begins.  In
+this case I couldn't do this.  So I have not made any changes to the
+underlying code other than the main example used in the exposition.
+
+The starting point for my work is a current version which uses tools
+bjam, boostbook, quickbook, doxygen. I'm quite familiar with bjam which
+after 15 years is still not understandable to me. I'm quite familiar with
+boostbook and xml generally. I didn't have any prior experience with
+which is basically a boost book editing facility with some weird quirks.
+I have not familiarity with doxygen.  But having seen doxygen produced
+documentation, doxygen explanations and configuration files, I have the
+view that it could be made to work (maybe) to my expectations but only
+after a lot of customization/configuration which I don't have enough
+time to invest in.  This presents a quandry.  I didn't want to muck
+with the source code - but the doxygen information is intertwined with
+it.  I wanted to respect your desire to stick with the current document
+build tool chain - but I wasn't crazy about some aspects of the doxygen
+documentation.  In the end I think I found a good compromise.  Class
+and template definitions are generated from raw quickbook.  Function
+definitions use the doxygen generated presentation.  These later are
+mostly correct in any case.
+
+To summarize - I limited scope so that I didn't touch the original
+source code or the Doxygen comments in it.  I made new quickbook
+files for classes and templates.  The toolchain is basically the same.
+
+Templates vs Classes
+====================
+Documentation of functions is commonly done by adding explanatory/sematic
+information to the function prototype.
+
+Documentation of classes is commonly done by listing member variables
+and functions and attaching explanatory/semantic information.
+
+The above is the basis of the doxygen tool which can work well in this
+context - even though the documentation is basically nothing more than
+comments in the header.
+
+The documentation of templates is a recurring source of problems.  At
+seems at first that approaching it in the same way as a class is productive.
+But it turns out not to be.  Since the types are now variables with 
+an attached list of "requirements" (or "concepts"), there is not "class"
+until a template is instantiated.  Worse, a specialization might be 
+implemented in a totally different way.  Basically one cannot really
+describe a template in terms of it's implementation, but only in 
+terms of the "valid expressions" it's expected to compile without
+error.  This is described in several obscure places. One is the
+C++ Standard 17.4.1.3 "Requirements".  Another is 
+https://www.sgi.com/tech/stl/
+
+In accordance with the above, I've documented the templates using
+the "valid expressions" approach in quickbook.  This has worked to
+my satisfaction.  Function calls which are required to be supported
+by the template point to the current doxygen documentation for the
+function member.  It's a compromise, but I think a reasonable one
+under the circumstances.  It results in clear explanation of how
+one is to use the templates.
+
+In a break from tradition, I documented classes also using the
+"valid expression" approach.  It's not strictly required to do this -
+the traditional method does work - but I like the consistence with
+documentation templates.  It also has an advantage of separating the 
+the user api from the class implementation.  For example: If I say
+that the type (class X) supports the operation x == x, the user knows
+all he needs to know.  The implementor has the freedom to change the
+implementation from a member bool operator==(const X & rhs) const to 
+free function bool operator(const X & lhs, const X & rhs) without
+changing the documentation.  This is not the common way to do this
+but I believe that reading it will support the advantages I cite.
+
+I also excluded private variables from the documentation. I don't
+think it helps the user can add significant confusion. Less is more.
+If this creates a problem for the user, then one should consider making them
+public.  More likely this will suggest adjustments to the library api.
+Note that the documentation links directly to the header file where
+the implementation can be investigated if necessary.  Also, the
+doxygen text for private variables/functions is still generated but
+it's not linked to from the top level entry into the documetation.
+
+Library Changes
+===============
+It's inevitable when one does something like this that it occurs
+that if X had been done differently, the job would have been easier.
+Hindsight is 20/20.  So here is a list of things might want to
+consider.  It's sort of stream of consciousness.  I haven't 
+weighed the practicality of any of these suggestions.
+Some are likely no brainers are others would be too
+far out of scope. But it's all up to you of course.
+
+a) path_type is a string.  But different OSs have different conventions
+for path separators '/' vs '\'.  Consider using std::path from standard 
+file system library <filesystem> http://en.cppreference.com/w/cpp/header/filesystem . 
+Also there is boost::file_system. Either will be more robust and you'll 
+get the documentation for free
+
+b) you could use:
+using path_type = char const * const;
+since you're not manipulating the path = just passing it as a function
+argument.  This would accept strings, string &, "asdfasdf", etc. and
+use only what you need.  Personally I almost never user "auto" as it
+eliminates the "free" type checking that often helps me catch dumb
+but otherwise hard to find errors.
+
+c) error_code - is a lot more complex than meets the eye.  After a surprising
+amount of effort I feel that I managed to explain your usage of it in
+a way that is helpful. I only explained that part of it which is
+useful to a user of your library and linked to the various 
+explanations of different parts of it.  At first I thought it would
+better just to not use it but make your own "something simpler".  But
+as figured it out and wrote the explanation I'm not comfortable
+with using.  You might want to use the std:: version since it's 
+identical to the boost one and would eliminate one dependency.
+
+There's one big problem here though. Your library function return an
+error_code which might contain a value from the standard library
+or might contain a value from your own list of database errors.  This
+is confusing.  I've explained this and I think it's OK but it was
+surprising to me.  At first I though you should "cover" all the
+system errors with your own but I've soured on this.  Another possibility
+would be to just add an "is_success(error_code)" to the library
+which would address the main possible source of confusion.
+
+d) progress.  Progress(n, d) is a callback which takes to integer
+arguments n and d so that the fraction of work done would be calculated 
+as n/d.  But since n is (almost always) < d, the result will always
+be zero - probably not what is expected.
+
+e) Observations on the File concept.
+
+It looks to me that File has an almost identical interface as std::basic_filebuf.  
+This is already implemented as part of the standard library for the particular OS 
+on which the system is running.  If you dropped File and used std::basic_filebuf 
+you would shorten your code and shorten the documentation required and be 
+guaranteed portability to any conforming C++ environment.  So this would 
+eliminate native_file, posix_file and win32_file.  BUT it would likely require
+some modification of the basic_store implementation - though presumably not much.
+
+The File concept describes the type requirements on the File template parameter 
+for the create function.  That's the only place it's used. I'm not totally convinced 
+that the function create needs this template parameter.  If it doesn't we don't 
+need a File concept.
+
+f) consider consolidating store and basic_store in to just store with default template parameters:
+
+template<
+	class Hasher = xxhasher, 
+	class File = native_file
+>
+class store {
+...
+
+Then just use store<H, F> and store rather than basic_store and store.
+That is, by defining default template parameters you'd get what you 
+want while eliminating some layers.
+
+g) consider eliminating templates File, Hasher, Progress and Callback
+and replacing them with just pointer to a function implementation.
+I'm a great fan of templates and their usage isn't wrong here. It's
+just that this library doesn't seem to benefit from the usage of them.
+Many programmers (justifiable) shy away from templates as one more thing
+to learn.  Eliminating templates in favor of simpler function pointers
+along with a few default implementations might make your library 
+more attractive to a wider audience.
+
+h) I didn't address issues like the semantics sync operation, guarantees
+etc. This is something that you'll have to arm wrestle with others.  I
+believe it is likely addressable - but I haven't done so.
+
+i) In elimination implementation details from the documentation, I might
+have excised something that users actually need.  It's hard to tell.  But
+adding any new "valid express" is quite simple so I don't see it as
+an issue now.
+
+
+//////////////////////////////////////////////
+// end of useful information
+
+Notes on error_code
+===================
+You don't have to read this. It's just the notes I kept while trying to
+figure out how error_code is intended to be used.  I added them here 
+because I hate to throw out stuff I wrote.
+
+f) system_error, error_condition, error_code etc.
+
+These are defined in boost::system_error and now std::system_error.  It is not really obvious how they are intended to be used.  The best explanation I've found is here
+
+http://blog.think-async.com/2010/04/system-error-support-in-c0x-part-1.html
+
+Just the fact that this explanation is 4 parts long serves as a warning that this might be a lot more complex than first meets the eye.  
+
+In trying to figure out how the user of the NuDB library is expected to make use of this information, I've concluded that there is more work to be done here.
+
+Here is a comparison of what I see in the code and what I expect to see given the boost::system or std::system_error libraries.
+
+i) These libraries define a couple of different types:
+
+1) error_code - a class which wraps a non-portable code from the OS. It's not portable and shouldn't be seen by code which uses this library.  Includes functions to retrieve message string and the "message category"
+2) error_condition - an integer code for errors which is meant to be particular to the app and is meant to be portable across OS's.
+3) category - translates the non portable error_code to a portable error_condition.
+
+In the context of NuDB these would be:
+
+1) error_code - one list for posix and one list for win32
+2) error_condition - one list for NuDB
+
+So you need 2 (or more) lists of error codes.  But the good news is that they are already available!
+
+boost::system::windows_error::windows_error_code // provides list of error codes for windows
+boost::system::cygwin_error::cygwin_error // provides list of error codes for cygwin
+boost::system::linux_error::linux_errno // provides list of error codes for linux
+
+These are what should be returned by the functions which are defined by the File concept.  Specifically posix file and win32_file.  This doesn't have to be documented here since they are documented as part of boost and are really only used by the library implementation. Users will never directly call any of the functions which are part of the File interface. If you want a section labeled something like "Creating your own File implementation" these can be described in that section.  Somehow I don't think we'll want to go there.
+
+FYI - the headers
+
+the system library contains the concept of "error_condition".  These are meant to be portable counterparts
+of the non-portable error codes described about.  If users were going to access functions described in File, those functions would probably better be changed to return portable error_condition rather than non-portable error_codes.  Both the boost and std libraries provide a standard lists of portable error conditions related to file operations.
+
+boost::system::errc // provides standard list of values inspired by posix used to make error_CONDITIONS
+std::errc // provides standard list of values inspired by posix used to make error_CONDITIONS
+
+Note - this whole thing is very confusing and not well explained anywhere.  I'm guessing it's not more widely used for this reason.  There is a youtube video https://www.youtube.com/watch?v=28A7bl2DjvY starting at 1:02.  I didn't have the patience for it so I mostly relied on http://blog.think-async.com/2010/04/system-error-support-in-c0x-part-1.html and 
+
+Note that these are a disjoint set from those returned by the nudb::basic_store. I would not expect any of the above values to be returned for any function defined by basic_store.hpp and http://en.cppreference.com/w/cpp/error/error_category and related pages.
+
+After a lot more effort than I expected, I managed to figure all this out. I think there is some work to do here.
+
+a) you've created the structures along the lines of <system_error> in a way which seems correct for me. It's a little confusing, but I don't think that's your fault.  It's they way they made it. (clever implicit conversions and ideas like that are not helpful). You've created all this to support the error conditions related to calling the NuDB database type functions.  So far so good.
+
+in error.hpp you've created nudb::error_code which mirrors boost::sytem::error_code.  I don't 
+
+BUT - you've created classes modeling the File concept e.g. win32_file.hpp.  Your function 
+
+inline
+void
+win32_file::
+create(file_mode mode, path_type const& path, error_code& ec)
+{
+    BOOST_ASSERT(! is_open());
+    auto const f = flags(mode);
+    hf_ = ::CreateFileA(path.c_str(),
+        f.first,
+        0,
+        NULL,
+        CREATE_NEW,
+        f.second,
+        NULL);
+    if(hf_ == INVALID_HANDLE_VALUE)
+        return last_err(ec);
+}
+
+returns an std::error_code which is constructed from a windows error code. This might be OK.  BUT the caller of win32_file::create might be basic::store::open(... error_code &ec).
+This function will just pass on the error code it received from win32_file::create.  So the caller of basic_store::open can't really know what he is might get back.
+
+So the example would look like:
+
+#include <nudb/error.hpp>
+
+boost::system::error_code ec;
+nudb::store db;
+db.open(dat_path, key_path, log_path, ec);
+
+if(ec == nudb::error::no_key_file)
+	// do something.
+if(ec == std::errc::io_error)
+	// do something else.
+if(ec != success)
+	throw boost::sytem::system_error(ec);
+
+So it's hard to prepare for what kind of error we might get.
+
+There are a couple of options
+
+a) leave it as it is.  It works, but it's too clever for my taste.
+b) change the store code to return error conditions from a fixed list.  So anyting like
+if(ec == std::errc) is going to fail at compile time.  This would require that store translate errors from system to nudb space.  A little extra work - but would make it a lot easier for users.
+c) have the user handle the errors he want's to handle and throw on the rest
+
+
+http://www.boost.org/doc/libs/1_62_0/libs/system/doc/index.html
+
+
+
