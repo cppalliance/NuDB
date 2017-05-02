@@ -3,6 +3,7 @@
 * Better CMakeLists.txt for finding Boost
 * Fix typo in nudb tool
 * Remove error::success (API Change)
+* Update Travis to Boost 1.61.0
 
 ---
 
