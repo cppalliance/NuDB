@@ -398,7 +398,8 @@ write(File& f, key_file_header const& kh, error_code& ec)
         ec = error::invalid_block_size;
         return;
     }
-    std::fill(buf.get(), buf.get() + buf.size(), 0);
+    std::fill(buf.get(), buf.get() + buf.size(),
+        (unsigned char)0);
     ostream os{buf.get(), buf.size()};
     write(os, kh);
     f.write(0, buf.get(), buf.size(), ec);

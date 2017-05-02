@@ -1,6 +1,7 @@
 1.0.2
 
 * Better CMakeLists.txt for finding Boost
+* Remove error::success (API Change)
 
 ---
 

@@ -27,9 +27,7 @@ nudb_category()
         {
             switch(static_cast<error>(ev))
             {
-            case error::success:
-                return "the operation completed successfully";
-
+            default:
             case error::key_not_found:
                 return "key not found";
 
@@ -146,9 +144,6 @@ nudb_category()
 
             case error::duplicate_value:
                 return "duplicate value";
-
-            default:
-                return "nudb error";
             }
         }
 

@@ -33,7 +33,6 @@ public:
     {
         nudb_category().message(0);
         nudb_category().message(99999);
-        check("nudb", error::success);
         check("nudb", error::key_not_found);
         check("nudb", error::key_exists);
         check("nudb", error::short_read);
