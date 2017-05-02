@@ -1,3 +1,9 @@
+1.0.2
+
+* Better CMakeLists.txt for finding Boost
+
+---
+
 1.0.1
 
 * Travis: Limit the number of jobs

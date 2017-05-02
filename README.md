@@ -61,6 +61,12 @@ database sizes over 3 terabytes.
 * C++11 or greater
 * SSD drive, or equivalent device with high IOPS
 
+These components are optionally required in order to build the
+tests and examples:
+
+* CMake 3.7.2 or later (optional)
+* Properly configured bjam/b2 (optional)
+
 ## Example
 
 This complete program creates a database, opens the database,
