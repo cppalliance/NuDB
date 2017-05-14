@@ -23,33 +23,53 @@ namespace nudb {
 
 /** A high performance, insert-only key/value database for SSDs.
 
-    To create a database first call the @ref create
-    free function. Then construct a @ref basic_store and
-    call @ref open on it:
+    A database is represented by triplet of three files: the data file, the key file, and the log file.
+    These files together constitute a database of key/value pairs. Each file has a distinct header in a 
+    well known format. The data file holds all of the key/value pairs and is serially iterable. 
+    The key file holds a hash table indexing all of the contents in the data file. 
+    The log file holds information used to roll the database back in the event of a failure.
 
-    @code
-        error_code ec;
-        create<xxhasher>(
-            "db.dat", "db.key", "db.log",
-                1, make_salt(), 8, 4096, 0.5f, ec);
-        basic_store<xxhasher, native_file> db;
-        db.open("db.dat", "db.key", "db.log", ec);
-    @endcode
+    Operations which apply to the database as whole such as create, recover are implemented as free 
+    functions which include the names of the data, key and log files as parameters.
+
+    In order to alter or access of the contents of a database, one creates a data structure of 
+    type "basic_store". Operations on the contents of the database such as insertions, 
+    fetches implemented as member functions of the "basic_store" type.
 
     @tparam Hasher The hash function to use. This type
     must meet the requirements of @b Hasher.
 
     @tparam File The type of File object to use. This type
     must meet the requirements of @b File.
+    
+    @par Models
+    The simplest and most common usage of basic_store class template is the store class 
+    which is defined like this:
+
+    @code
+    #include <nudb/native_file.hpp>
+    #include <nudb/xxhasher.hpp>
+    using store = basic_store< xxhasher, native_file >;
+    @endcode
+
+    @par Example
+    @code
+    #include <nudb/store.hpp>
+    #include <nudb/error.hpp>
+    nudb::store db;
+    nudb::error_code ec;
+    db.open("db.dat", "db.key", "db.log", ec);
+    @endcode
+
 */
 template<class Hasher, class File>
 class basic_store
 {
-public:
+private:
     using hash_type = Hasher;
+
     using file_type = File;
 
-private:
     using clock_type =
         std::chrono::steady_clock;
 

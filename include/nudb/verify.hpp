@@ -151,17 +151,16 @@ struct verify_info
     a buffer size that is too large to be of extra use, the
     fast algorithm will simply allocate what it needs.
 
-    @par Template Parameters
-
     @tparam Hasher The hash function to use. This type must
     meet the requirements of @b HashFunction. The hash function
     must be the same as that used to create the database, or
     else an error is returned.
 
-    @param info A structure which will be default constructed
-    inside this function, and filled in if the operation completes
-    successfully. If an error is indicated, the contents of this
-    variable are undefined.
+    @param info A reference to a structure of type 
+    @ref verify_info which will be filled in.
+    Upon return the contents of this structure are defined
+    if and only if the verify function completes successfully
+    as indicated by the ec parameter.
 
     @param dat_path The path to the data file.
 
@@ -171,17 +170,29 @@ struct verify_info
     If this number is too small, or zero, a slower algorithm will be
     used that does not require a buffer.
 
-    @param progress A function which will be called periodically
-    as the algorithm proceeds. The equivalent signature of the
-    progress function must be:
+    @param progress
+    A function address, function object or lambda
+    with the following signature:
     @code
     void progress(
         std::uint64_t amount,   // Amount of work done so far
         std::uint64_t total     // Total amount of work to do
     );
     @endcode
+    This function will be called periodically as the algorithm
+    proceeds so that the user code can monitor the progress
+    of the operation and calculate how much time remains to
+    complete the operation. The library contains a default function object,
+    [no_progress](@ref no_progress), which matches the above signature
+    but does nothing.
 
     @param ec Set to the error, if any occurred.
+    
+    @par Associated Types
+
+    @li verify_info - Information returned by verify function
+
+    @li no_progress - Function of type Progress which does nothing
 */
 template<class Hasher, class Progress>
 void

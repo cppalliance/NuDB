@@ -14,7 +14,7 @@ unit-test test-all :
     callgrind_test.cpp
     concepts.cpp
     create.cpp
-    error.cpp
+    # error.cpp
     file.cpp
     native_file.cpp
     posix_file.cpp

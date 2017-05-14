@@ -7,6 +7,6 @@
 
 import os ;
 
-exe example :
-    example.cpp
-    ;
+exe example : example.cpp ;
+exe crash : crash.cpp ;
+exe recover : recover.cpp ;

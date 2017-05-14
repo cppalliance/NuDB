@@ -23,6 +23,7 @@
 [template indexterm1[term1] '''<indexterm><primary>'''[term1]'''</primary></indexterm>''']
 [template indexterm2[term1 term2] '''<indexterm><primary>'''[term1]'''</primary><secondary>'''[term2]'''</secondary></indexterm>''']
 
+[/
 [variablelist
   [[
     [link nudb.introduction Introduction]
@@ -53,33 +54,40 @@
   ][
   ]]
   [[
+    [link nudb.ref Reference]
+  ][
+  ]]
+  [[
     [link nudb.index Index]
   ][
     Book-style text index of the documentation.
   ]]
 ]
+]
 
 [section:introduction Introduction]
 
-NuDB is an append only, key/value store specifically optimized for random
-read performance on modern SSDs or equivalent high-IOPS devices. The most
-common application for NuDB is content addressible storage where a
-cryptographic digest of the data is used as the key. The read performance
+NuDB is an append only, key/value store specifically optimized for sequential
+write and random read performance on modern SSDs or equivalent high-IOPS devices.
+It does not support deletion of data. Both the write/append, read performance
 and memory usage are independent of the size of the database.
+A common application for NuDB is storage where write/append performance is
+important but where a key may be used to retrieve previously stored records.
 
-[heading Example]
+The design emphasizes two goals: simplicitly and robustness/recoverability.
 
-This complete program creates a database, opens the database, inserts several
-key/value pairs, fetches the key/value pairs, closes the database, then erases
-the database files. Source code for this program is located in the examples
+[heading Simplicity]
+
+This complete program demonstrates how easy the library is easy to use. It creates
+a database, opens the database, inserts several key/value pairs, reads them back
+and displays them. Source code for this program is located in the examples
 directory.
 
-[import ../examples/example.cpp]
-[main]
+[import ../examples/example.cpp][simple_example]
 
 [variablelist Notes
 [
-    [(1) Files]
+    [(1) File names]
     [
     A database is represented by three files: the data file, the key file,
     and the log file. Each file has a distinct header in a well known format.
@@ -92,7 +100,7 @@ directory.
 [
     [(2) Create a new database]
     [
-    The `create` function creates a new data file and key
+    The [link nudb.ref.nudb__create `create`] function creates a new data file and key
     file for a database with the specified parameters. The caller specifies
     the hash function to use as a template argument, the file paths,
     and the database constants.
@@ -101,45 +109,112 @@ directory.
 [
     [(3) Open an existing database]
     [
-    The `open` function prepares a database for
-    insertion and/or reading.
+    The [link nudb.ref.nudb__basic_store.open `open`] function
+    prepares a database for insertion and/or reading.
     ]
 ]
 [
-    [(4) Insert a key/value pair]
+    [(4) Insert key/value pairs]
     [
-    Once a database is open, it becomes possible to insert new key/value pairs.
+    Once a database is open, call the [link nudb.ref.nudb__basic_store.insert `insert`]
+    function to insert new key/value pairs.
     If the key already exists, the error is set to
-    [link nudb.ref.nudb__error.key_exists error::key_exists]. All keys in a NuDB
-    database must be unique. Multiple threads can call insert at the same time.
-    Internally however, insertions are serialized to present a consistent view
-    of the database to callers.
+    [link nudb.ref.nudb__error `error::key_exists`]
+    All keys in a NuDB database must be unique. Multiple threads can call
+    insert at the same time. Internally however, insertions are serialized to
+    present a consistent view of the database to callers.
     ]
 ]
 [
     [(5) Fetch a value given it's key]
     [
-    The fetch function takes a callback object as a parameter which is
-    invoked when the value is retrieved.
+    The function [link nudb.ref.nudb__basic_store.fetch `fetch`] takes a callback object
+    as a parameter which is invoked when the value is retrieved.  If there is
+    no record in the database which corresponds to the key, the error code
+    returns a value of [link nudb.ref.nudb__error `error::key_not_found`]
     ]
 ]
 [
     [(6) Terminate access to the database]
     [
-    All resources used by the database
-    structures are freed.
-    ]
-]
-[
-    [(7) Delete the database]
-    [
-    To delete the database, delete the triplet of files which define it.
+    The function [link nudb.ref.nudb__basic_store.close `close`] frees all the resources
+    used by the database.
     ]
 ]
 ]
 
-Any NuDB function may return `error_code` values from different sources.
-So error_codes should be checked against both lists of error codes used.
+[heading Robustness]
+
+A second goal of the library is to create database as resistent to corruption
+as possible.  Ideally, this would guarantee that any time the insert function
+successfully returns, the database is still readable an that the there is one
+and only more record appended to the database.
+
+The enforcement of such a guarantee would depend on the implementation of
+the interface to underlying file system.  In practice this means judicious
+usage of a "sync" function which most file systems provide in one form or
+another.  The common understanding of this "sync" function is that it guarantees
+that all file operations on the files have been completed and that they are
+all reflected in the files themselves.
+
+Unfortunately, it seems that most current file systems make no such
+guarantee.  See
+[@ https://www.usenix.org/system/files/conference/osdi14/osdi14-paper-pillai.pdf
+On the Complexity of Crafting Crash-Consistent Applications
+].
+
+In fact, the whole question regarding robustness turns out to be quite
+complicated as evidenced by the discussion on ths
+[@ http://boost.2283326.n4.nabble.com/NuDB-A-fast-key-value-insert-only-database-for-SSD-drives-in-C-11-tp4692735.html Boost Developers mailing list].
+
+One simple way to investigate how this works on one's' own system is illustrated
+by the example here.  The first is a program named crash.cpp which opens an
+existing database, appends one record and invokes `std::abort()`.  This program
+is meant to simulate a system failure such as a power outtage at the most
+inconvenient time.
+
+[import ../examples/crash.cpp][crash]
+
+After running this program, the database would be in some unknown state.
+Specifically, does the database contain the record for the name "george".
+In fact, it's not even clear that the database is readable at all.
+
+This last program opens up the database and lists all it's members. The
+includes a function named [link nudb.ref.nudb__recover `recover`] for
+fixing errors in a corrupted database such as one which might be result
+from a crashed environment.  But it is not necessary to invoke it
+explicitly as the normal [link nudb.ref.nudb__basic_store.open `open`]
+includes that functionality.  So we can just open the database and list
+all the records counting on the libary implementation to detect any
+corruption resulting from previous operations.
+
+Listing all the contents of the database invokes a user specified
+function for each pair of key and value.  Here is a simple program
+which lists all the data in our sample.
+
+[import ../examples/recover.cpp][recover]
+
+Invoking this program on our test database produces the followning
+output.
+[pre
+open successful
+key: 123456789
+name: bob
+key: 666666666
+name: alice
+key: 987654321
+name: ted
+key: 999999999
+name: carol
+]
+
+which shows that on this particular platform (Mac OSX), return
+from an insert operation does not guarantee that a record is
+actually appended to the database.
+
+The library includes an test suite with more examples similar to the
+above which can be used to get a better understanding of the utility
+and robustness in one's own environment.
 
 [endsect]
 
@@ -147,13 +222,22 @@ So error_codes should be checked against both lists of error codes used.
 [include type_requirements/File.qbk]
 [include type_requirements/Hasher.qbk]
 [include type_requirements/Progress.qbk]
-[endsect]
+[endsect][/ type_requirements]
 
-[section:types Types]
-[include types/error_code.qbk]
-[include types/verify_info.qbk]
-[include types/store.qbk]
-[endsect][/ types]
+[section:functions Free Functions]
+
+[/ note the following doesn't work - so hack by linking to the html
+[section [link nudb.ref.nudb__create create]][endsect]
+]
+
+[section [@./html/nudb/ref/nudb__create.html create]][endsect]
+[section [@./html/nudb/ref/nudb__recover.html recover]][endsect]
+[section [@./html/nudb/ref/nudb__rekey.html rekey]][endsect]
+[section [@./html/nudb/ref/nudb__verify.html verify]][endsect]
+[section [@./html/nudb/ref/nudb__visit.html visit]][endsect]
+[section [@./html/nudb/ref/nudb__make_salt.html make_salt]][endsect]
+
+[endsect][/ functions]
 
 [section:applications Applications]
 
@@ -339,7 +423,9 @@ db.insert(key, data, bytes, ec);
 ```
 
 If the key already exists, the error is set to
-[link nudb.ref.nudb__error.key_exists error::key_exists]. All keys in a NuDB
+[link nudb.ref.nudb__error.key_exists `error::key_exists`].
+
+All keys in a NuDB
 database must be unique. Multiple threads can call insert at the same time.
 Internally however, insertions are serialized to present a consistent view
 of the database to callers.
