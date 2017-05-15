@@ -26,11 +26,6 @@ of work required.
 [table
 [[operation] [type] [semantics, pre/post-conditions]]
 [
-    [`P()`]
-    []
-    [Default constructor]
-]
-[
     [`p(n, d)`]
     [ ]
     [
@@ -40,6 +35,13 @@ of work required.
         total amount of work required. The fraction of completed work is
         therefore `n/d`, with zero representing no work complete, and one
         represents all work complete.
+    ]
+]
+[
+    [`is_Progress<H>`]
+    [`std::true_type`]
+    [
+        returns `std::true_type` for `P`. Otherwise returns `std::false_type`
     ]
 ]
 ]

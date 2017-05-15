@@ -46,6 +46,13 @@ digests NuDB needs to effectively implement a hash table.
 
     ]
 ]
+[
+    [`is_Hasher<H>`]
+    [`std::true_type`]
+    [
+        returns `std::true_type` for `H`. Otherwise returns `std::false_type`
+    ]
+]
 ]
 
 [heading Models]

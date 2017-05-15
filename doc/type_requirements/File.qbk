@@ -166,7 +166,8 @@ to exercise all failure paths in the implementation.
     [`is_File<F>`]
     [`std::true_type`]
     [
-        returns `std::true_type` for `F`. Otherwise returns `std::false_type`]
+        returns `std::true_type` for `F`. Otherwise returns `std::false_type`
+    ]
 ]
 ]
 

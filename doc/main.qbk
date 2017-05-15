@@ -224,6 +224,12 @@ and robustness in one's own environment.
 [include type_requirements/Progress.qbk]
 [endsect][/ type_requirements]
 
+[section:types Types]
+[include types/error_code.qbk]
+[include types/verify_info.qbk]
+[include types/store.qbk]
+[endsect][/ types]
+
 [section:functions Free Functions]
 
 [/ note the following doesn't work - so hack by linking to the html
