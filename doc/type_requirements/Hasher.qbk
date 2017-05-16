@@ -10,6 +10,16 @@
 A type [@Hasher] implements a hash algorithm. This is used to compute the small
 digests NuDB needs to effectively implement a hash table.
 
+The NuDB database stores and retrieves key/value pairs.  This storage is
+organized as "buckets" where each bucket forms the start of a linked list.
+Given a key, one must caluculate which bucket it the key should be
+added to. The library includes code to guarantee that any set of
+keys will map to a more or less even distribution of buckets, thus
+ensuring that the array of buckets is utilized efficiently.  A key
+element in this code is a call to the Hasher function. This is why
+the Hasher function sould be designed to generate a uniform
+distribution of integers for any random collection of keys.
+
 [heading Notation]
 * `H` is a hasher class
 * `h` is an instance of type `H`

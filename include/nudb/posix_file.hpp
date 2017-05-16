@@ -35,6 +35,9 @@
 
 namespace nudb {
 
+/** A a posix file.
+This class provides a posix implementation of the @b File concept.
+*/
 class posix_file
 {
     int fd_ = -1;

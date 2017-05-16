@@ -12,7 +12,6 @@
 #include <nudb/create.hpp>
 #include <nudb/error.hpp>
 #include <nudb/file.hpp>
-#include <nudb/posix_file.hpp>
 #include <nudb/progress.hpp>
 #include <nudb/recover.hpp>
 #include <nudb/rekey.hpp>
@@ -21,7 +20,8 @@
 #include <nudb/verify.hpp>
 #include <nudb/version.hpp>
 #include <nudb/visit.hpp>
-#include <nudb/win32_file.hpp>
 #include <nudb/xxhasher.hpp>
+
+#include <nudb/native_file.hpp>
 
 #endif

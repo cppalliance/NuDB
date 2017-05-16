@@ -10,9 +10,7 @@
 The [*File] concept abstracts access to files in the underlying file system.
 
 To support interfaces other than Win32 or POSIX, callers may provide their
-own [*File] type that meets these requirements. The unit test code also provides
-its own [*File] type which causes simulated operating system file failures
-to exercise all failure paths in the implementation.
+own [*File] type that meets these requirements.
 
 [heading Associated Types]
 * [link nudb.ref.nudb__path_type path_type]

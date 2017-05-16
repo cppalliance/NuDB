@@ -8,68 +8,28 @@
 #ifndef NUDB_NATIVE_FILE_HPP
 #define NUDB_NATIVE_FILE_HPP
 
-#include <nudb/error.hpp>
-#include <nudb/file.hpp>
-#include <nudb/posix_file.hpp>
+
+#if ! GENERATING_DOCS
+
+#ifdef _MSC_VER
 #include <nudb/win32_file.hpp>
-#include <string>
+#else
+#include <nudb/posix_file.hpp>
+#endif
+
+#endif //GENERATING_DOCS
+
 
 namespace nudb {
 
 /** A native file handle.
-
-    This type is set to the appropriate platform-specific
-    implementation to meet the file wrapper requirements.
+This class provides an implementation of the @b File concept for the native file system.
 */
-using native_file =
-#ifdef _MSC_VER
-    win32_file;
+#ifndef _MSC_VER
+using native_file = win32_file;
 #else
-    posix_file;
+using native_file = posix_file;
 #endif
-
-/** Erase a file if it exists.
-
-    This function attempts to erase the specified file.
-    No error is generated if the file does not already
-    exist.
-
-    @param path The path to the file to erase.
-
-    @param ec Set to the error, if any occurred.
-
-    @tparam File A type meeting the requirements of @b File.
-    If this type is unspecified, @ref native_file is used.
-*/
-template<class File = native_file>
-inline
-void
-erase_file(path_type const& path, error_code& ec)
-{
-    native_file::erase(path, ec);
-    if(ec == errc::no_such_file_or_directory)
-        ec = {};
-}
-
-/** Erase a file without returnign an error.
-
-    This function attempts to erase the specified file.
-    Any errors are ignored, including if the file does
-    not exist.
-
-    @param path The path to the file to erase.
-
-    @tparam File A type meeting the requirements of @b File.
-    If this type is unspecified, @ref native_file is used.
-*/
-template<class File = native_file>
-inline
-void
-erase_file(path_type const& path)
-{
-    error_code ec;
-    File::erase(path, ec);
-}
 
 } // nudb
 

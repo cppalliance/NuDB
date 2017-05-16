@@ -8,12 +8,12 @@
 [section:Progress Progress]
 
 An instance of type [*Progress] feedback to callers on the progress of
-long running operations such as calls to [link nudb.ref.nudb__verify verify] or
-[link nudb.ref.nudb__rekey rekey] which can take days or weeks for databases that
-measure in the terabytes. These objects are used by passing them as parameters
-to the appropriate functions, where the will be called periodically with
-numbers that indicate the amount of work completed, versus the total amount
-of work required.
+long running operations such as calls to [link nudb.ref.nudb__verify verify],
+[link nudb.ref.nudb__visit visit] or [link nudb.ref.nudb__rekey rekey]
+which can take days or weeks for databases that measure in the terabytes.
+These objects are used by passing them as parameters to the appropriate functions,
+where the will be called periodically with numbers that indicate the amount of
+work completed, versus the total amount of work required.
 
 [heading Notation]
 * `P` is a progress class
@@ -38,7 +38,7 @@ of work required.
     ]
 ]
 [
-    [`is_Progress<H>`]
+    [`is_Progress<P>`]
     [`std::true_type`]
     [
         returns `std::true_type` for `P`. Otherwise returns `std::false_type`
