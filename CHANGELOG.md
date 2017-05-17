@@ -1,3 +1,9 @@
+1.0.3
+
+* Update Beast subtree to v41
+
+--------------------------------------------------------------------------------
+
 1.0.2
 
 * Better CMakeLists.txt for finding Boost
