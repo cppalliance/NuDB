@@ -7,6 +7,14 @@
 
 import os ;
 
+exe crash :
+    crash.cpp
+    ;
+
 exe example :
     example.cpp
+    ;
+
+exe recover :
+    recover.cpp
     ;
