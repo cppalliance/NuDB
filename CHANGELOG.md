@@ -3,6 +3,7 @@
 * Update Beast subtree to v41
 * Update Travis targets and build scripts
 * Update example programs
+* Split up doc files
 
 --------------------------------------------------------------------------------
 

@@ -1,0 +1,19 @@
+[/
+    Copyright (c) 2013-2016 Vinnie Falco (vinnie dot falco at gmail dot com)
+
+    Distributed under the Boost Software License, Version 1.0. (See accompanying
+    file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+]
+
+[section:tool Command Line Tool]
+
+To allow administration, NuDB comes with the "nudb" command line tool,
+which may be built using b2 or CMake. Files for the tool are located in
+the "tools" directory. Once the tool is built, and located in your path,
+execute this command for additional instructions:
+
+```
+nudb help
+```
+
+[endsect]

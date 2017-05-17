@@ -1,0 +1,122 @@
+[/
+    Copyright (c) 2013-2016 Vinnie Falco (vinnie dot falco at gmail dot com)
+
+    Distributed under the Boost Software License, Version 1.0. (See accompanying
+    file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+]
+
+[section:usage Usage]
+
+[heading Files]
+
+A database is represented by three files: the data file, the key file,
+and the log file. Each file has a distinct header in a well known format.
+The data file holds all of the key/value pairs and is serially iterable. The
+key file holds a hash table indexing all of the contents in the data file.
+The log file holds information used to roll the database back in the event
+of a failure.
+
+[heading Create/Open]
+
+The [link nudb.ref.nudb__create create] function creates a new data file and key
+file for a database with the specified parameters. The caller specifies
+the hash function to use as a template argument, the file paths,
+and the database constants:
+
+[note
+    Sample code and identifiers mentioned in this section are written
+    as if the following declarations are in effect:
+    ```
+    #include <nudb/nudb.hpp>
+    using namespace nudb;
+    error_code ec;
+    ```
+]
+
+```
+create<xxhasher>(
+    "nudb.dat",             // Path to data file
+    "nudb.key",             // Path to key file
+    "nudb.log",             // Path to log file
+    1,                      // Application-defined constant
+    make_salt(),            // A random integer
+    4,                      // The size of keys
+    block_size(".")         // Block size in key file
+    0.5f                    // The load factor
+    ec);
+```
+
+The application-defined constant is a 64-bit unsigned integer which the
+caller may set to any value. This value can be retrieved from an open
+database, where it will be equal to the value used at creation time. This
+constant can be used for any purpose. For example, to inform the application
+of what application-specific version was used to create the database.
+
+The salt is a 64-bit unsigned integer used to prevent algorithmic complexity
+attacks. Hash functions used during database operations are constructed with
+the salt, providing an opportunity to permute the hash function. This feature
+is useful when inserted database keys come from untrusted sources, such as the
+network.
+
+The key size is specified when the database is created, and cannot be changed.
+All key files indexing the same data file will use the key size of the data
+file.
+
+The block size indicates the size of buckets in the key file. The best choice
+for the block size is the natural sector size of the device. For most SSDs
+in production today this is 4096, or less often 8192 or 16384. The function
+[link nudb.ref.nudb__block_size block_size] returns the best guess of the block
+size used by the device mounted at the specified path.
+
+The load factor determines the target bucket occupancy fraction. There is
+almost never a need to specify anything other than the recommended value of
+0.5, which strikes the perfect balance of space-efficiency and fast lookup.
+
+An open database is represented by objects of type
+[link nudb.ref.nudb__basic_store basic_store], templated on the hasher. The type
+alias [link nudb.ref.nudb__store store] represents a database using
+[link nudb.ref.nudb__xxhasher xxhasher], the default hash function. To open
+a database, declare a database object and then call the
+[link nudb.ref.nudb__basic_store.open open] member function:
+
+```
+store db;
+db.open("nudb.dat", "nudb.key", "nudb.log", ec);
+```
+
+When opening a database that was previously opened by a program that was
+terminated abnormally, the implementation automatically invokes the
+recovery process. This process restores the integrity of the database by
+replaying the log file if it is present.
+
+[heading Insert/Fetch]
+
+Once a database is open, it becomes possible to insert new key/value pairs
+and look them up. Insertions are straightforward:
+
+```
+db.insert(key, data, bytes, ec);
+```
+
+If the key already exists, the error is set to
+[link nudb.ref.nudb__error.key_exists error::key_exists]. All keys in a NuDB
+database must be unique. Multiple threads can call insert at the same time.
+Internally however, insertions are serialized to present a consistent view
+of the database to callers.
+
+Retrieving a key/value pair if it exists is similarly straightforward:
+
+```
+db.fetch(key,
+    [&](void const* buffer, std::size_t size)
+    {
+        ...
+    }, ec);
+```
+
+To give callers control over memory allocation strategies, the fetch
+function takes a callback object as a parameter. The callback is invoked
+with a pointer to the data and size, if the item exists in the database.
+The callback can decide how to store this information, if at all.
+
+[endsect]

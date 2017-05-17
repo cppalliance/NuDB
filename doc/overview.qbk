@@ -1,0 +1,100 @@
+[/
+    Copyright (c) 2013-2016 Vinnie Falco (vinnie dot falco at gmail dot com)
+
+    Distributed under the Boost Software License, Version 1.0. (See accompanying
+    file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+]
+
+[section:overview Overview]
+
+NuDB is an append only, key/value store specifically optimized for random
+read performance on modern SSDs or equivalent high-IOPS devices. The most
+common application for NuDB is content addressible storage where a
+cryptographic digest of the data is used as the key. The read performance
+and memory usage are independent of the size of the database. These are
+some other features:
+
+[heading History]
+
+The first versions of rippled, the application behind the Ripple consensus
+network, used SQLite as their back end for unstructured data. The
+performance quickly became a limiting factor.
+
+Then rippled then went through a series of back ends including LMDB, LevelDB, and
+RocksDB. Each of these databases performed well at first, but as the data
+size increased, memory usage increased and performance dropped off drastically.
+
+The problem is caching. Each of these databases relies on some O(n) data
+structure, such as a Bloom filter, to improve their performance. These work
+well until the structures no longer fit in memory. In addition, many virtual
+machines are memory constrained.
+
+To address this issue, the developers performed a thought experiment -- if
+you assume the data size is so large that no O(n) caching is effective, what
+is the best read performance you could expect? They reached the following
+conclusions:
+
+1) Writes should not block reads.
+2) Reads should be limited only by the SSD's IOPS limit.
+3) A read for a non-present key should require one IOP.
+4) A read for a present key whose data can be read in a single IOP should
+only require two IOPs, one to figure out where it is and one to read it in.
+
+NuDB is designed to come as close to this ideal as possible.
+
+[heading Design]
+
+NuDB uses three files to hold the data and indexes. The data file is append
+only and contains sufficient information to rebuild the index. The index
+file is random access and contains hash buckets. When an update is in
+progress, a temporary journal file is used to roll the update back if
+needed.
+
+NuDB uses linear hashing to dynamically increase the number of buckets in
+the index file as the data size grows. Bucket overflows are handled by
+adding "overflow" records to the data file. Bucket overflows can be
+minimized by increasing the number of buckets, leading to a size/speed
+tradeoff. Typical databases keep the average bucket half full (or half
+empty, depending on your point of view) resulting in spill records
+accounting for less than 1% of reads.
+
+Inserts are buffered in memory and appended to the data file immediately.
+Updates to the index file are performed as an atomic operation. Fetch
+operations retrieve records in the process of being modified from memory
+during the update operation so that writes do not block fetches.
+
+Before the index file is modified, a journal file is created to recover
+consistency in the event of a crash during the update. The recovery process
+will index all records written to the data file, so the aggregation of index
+updates does not increase the time which a crash would result in loss of
+data.
+
+Iteration can be performed on the data file directly. Since it is append
+only, there is no risk of other operations corrupting an iteration in
+progress.
+
+[heading Performance]
+
+Writes do not block reads. Read rates are typically around 90% of the SSD's
+IOPS limit. An average fetch for a non-present key typically requires fewer
+than 1.01 IOPs. An average fetch for a present key requires fewer than 1.01
+IOPs plus however many IOPs it takes to read the data.
+
+[heading Applications]
+
+Content addressable storage associates data with its cryptographic digest.
+This type of storage is commonly used in decentralized blockchain applications.
+
+Often these applications require following hash chains -- where one object
+contains the hash of another object that ultimately leads to the object
+desired. NuDB's low latency and high speed are particularly advantageous
+in these kinds of applications.
+
+NuDB is append only and does not support a delete operation. To support
+retaining limited historical information, NuDB is often used in a dual
+database configuration. One database is older and is read only, the other
+is newer and is read/write. Periodically, the older database is discarded and
+the newer database becomes the new read only database and a new read/write
+database is created.
+
+[endsect]
