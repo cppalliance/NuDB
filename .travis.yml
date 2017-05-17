@@ -1,3 +1,7 @@
+notifications:
+  email:
+    false
+
 language: cpp
 
 env:
@@ -13,27 +17,28 @@ env:
     - BOOST_ROOT=$HOME/boost_1_61_0
     - BOOST_URL='http://sourceforge.net/projects/boost/files/boost/1.61.0/boost_1_61_0.tar.gz'
 
-packages: &gcc5_pkgs
-  - gcc-5
-  - g++-5
-  - python-software-properties
-  - libssl-dev
-  - libffi-dev
-  - libstdc++6
-  - binutils-gold
-  # Provides a backtrace if the unittests crash
-  - gdb
-  # Needed for installing valgrind
-  - subversion
-  - automake
-  - autotools-dev
-  - libc6-dbg
-  # Needed to build rocksdb
-  - libsnappy-dev
+addons:
+  apt:
+    sources: &base_sources
+      - ubuntu-toolchain-r-test
+    packages: &base_packages
+      - python-software-properties
+      - libffi-dev
+      - libstdc++6
+      - binutils-gold
+      # Provides a backtrace if the unittests crash
+      - gdb
+      # Needed for installing valgrind
+      - subversion
+      - automake
+      - autotools-dev
+      - libc6-dbg
+      # Needed to build rocksdb
+      - libsnappy-dev
 
 matrix:
   include:
-    # GCC/Coverage/Autobahn
+    # gcc coverage (+valgrind if master or develop)
     - compiler: gcc
       env:
         - GCC_VER=5
@@ -41,33 +46,66 @@ matrix:
         - ADDRESS_MODEL=64
         - BUILD_SYSTEM=cmake
         - PATH=$PWD/cmake/bin:$PATH
-      addons: &ao_gcc5
+      addons:
         apt:
-          sources: ['ubuntu-toolchain-r-test']
-          packages: *gcc5_pkgs
+          packages:
+            - gcc-5
+            - g++-5
+            - *base_packages
+          sources:
+            - *base_sources
 
-    # Clang/UndefinedBehaviourSanitizer
+    # older GCC, release
+    - compiler: gcc
+      env:
+        - GCC_VER=4.9
+        - VARIANT=release
+        - ADDRESS_MODEL=64
+      addons:
+        apt:
+          packages:
+            - gcc-4.9
+            - g++-4.9
+            - *base_packages
+          sources:
+            - *base_sources
+
+    # later GCC
+    - compiler: gcc
+      env:
+        - GCC_VER=6
+        - VARIANT=release
+        - ADDRESS_MODEL=64
+        - BUILD_SYSTEM=cmake
+        - PATH=$PWD/cmake/bin:$PATH
+      addons:
+        apt:
+          packages:
+            - gcc-6
+            - g++-6
+            - *base_packages
+          sources:
+            - *base_sources
+
+    # clang ubsan+asan
     - compiler: clang
       env:
         - GCC_VER=5
-        - VARIANT=usan
+        - VARIANT=ubasan
         - CLANG_VER=3.8
         - ADDRESS_MODEL=64
         - UBSAN_OPTIONS='print_stacktrace=1'
         - BUILD_SYSTEM=cmake
         - PATH=$PWD/cmake/bin:$PATH
         - PATH=$PWD/llvm-$LLVM_VERSION/bin:$PATH
-      addons: *ao_gcc5
-
-    # Clang/AddressSanitizer
-    - compiler: clang
-      env:
-        - GCC_VER=5
-        - VARIANT=asan
-        - CLANG_VER=3.8
-        - ADDRESS_MODEL=64
-        - PATH=$PWD/llvm-$LLVM_VERSION/bin:$PATH
-      addons: *ao_gcc5
+      addons:
+        apt:
+          packages:
+            - gcc-5
+            - g++-5
+            - *base_packages
+          sources:
+            - *base_sources
 
 cache:
   directories:
@@ -84,7 +122,3 @@ script:
 
 after_script:
   - cat nohup.out || echo "nohup.out already deleted"
-
-notifications:
-  email:
-    false

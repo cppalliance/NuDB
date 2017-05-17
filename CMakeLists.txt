@@ -82,25 +82,24 @@ endfunction ()
 #-------------------------------------------------------------------------------
 
 if ("${VARIANT}" STREQUAL "coverage")
-    set (CMAKE_CXX_FLAGS
+    set(CMAKE_CXX_FLAGS
       "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
-    set (CMAKE_BUILD_TYPE RELWITHDEBINFO)
+    set(CMAKE_BUILD_TYPE RELWITHDEBINFO)
     set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lgcov")
-elseif ("${VARIANT}" STREQUAL "asan")
-    set (CMAKE_CXX_FLAGS
-      "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
-    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
-    set (CMAKE_BUILD_TYPE RELWITHDEBINFO)
-elseif ("${VARIANT}" STREQUAL "usan")
-    set (CMAKE_CXX_FLAGS
-      "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-omit-frame-pointer")
-    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined")
-    set (CMAKE_BUILD_TYPE RELWITHDEBINFO)
+
+elseif ("${VARIANT}" STREQUAL "ubasan")
+    set(CMAKE_CXX_FLAGS
+      "${CMAKE_CXX_FLAGS} -funsigned-char -fno-omit-frame-pointer -fsanitize=address,undefined")
+    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address,undefined")
+    set(CMAKE_BUILD_TYPE RELWITHDEBINFO)
+
 elseif ("${VARIANT}" STREQUAL "debug")
-    set (CMAKE_BUILD_TYPE DEBUG)
+    set(CMAKE_BUILD_TYPE DEBUG)
+
 elseif ("${VARIANT}" STREQUAL "release")
-    set (CMAKE_BUILD_TYPE RELEASE)
-endif ()
+    set(CMAKE_BUILD_TYPE RELEASE)
+
+endif()
 
 include_directories (
     include
