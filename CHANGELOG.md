@@ -4,6 +4,7 @@
 * Update Travis targets and build scripts
 * Update example programs
 * Split up doc files
+* Add introduction to doc
 
 --------------------------------------------------------------------------------
 

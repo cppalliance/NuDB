@@ -25,6 +25,12 @@
 
 [variablelist
   [[
+    [link nudb.intro Introduction]
+  ][
+    A description of what the library does, and its target audience.
+  ]]
+
+  [[
     [link nudb.overview Overview]
   ][
     An overview of features, requirements, and credits, plus
@@ -62,6 +68,7 @@
   ]]
 ]
 
+[include intro.qbk]
 [include overview.qbk]
 [include example.qbk]
 [include usage.qbk]
