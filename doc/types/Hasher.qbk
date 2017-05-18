@@ -27,8 +27,8 @@ distribution of integers for any random collection of keys.
 * `p` denotes a value of type `void const*`
 * `n` denotes a value of type `std::size_t`
 
-[heading Hasher requirements]
-[table
+[heading Hasher Requirements]
+[table Valid Expressions
 [[operation] [type] [semantics, pre/post-conditions]]
 [
     [`H{s}`]
@@ -37,7 +37,9 @@ distribution of integers for any random collection of keys.
         `H` is constructed with a seed value integer `s`. To achieve resistance
         from algorithmic complexity attacks, an implementation of [*Hasher]
         should ensure that values returned from the hash function will be
-        distinctly different for different values of `s`.
+        distinctly different for different values of `s`. If algorithmic
+        complexity attack resistance is not a requirement, the seed may be
+        ignored upon construction.
     ]
 ]
 [
@@ -60,14 +62,15 @@ distribution of integers for any random collection of keys.
     [`is_Hasher<H>`]
     [`std::true_type`]
     [
-        returns `std::true_type` for `H`. Otherwise returns `std::false_type`
+        An alias for `std::true_type` for `H`. Otherwise equivalent
+        to `std::false_type`.
     ]
 ]
 ]
 
 [heading Models]
 * [link nudb.ref.nudb__xxhasher xxhasher]
-[br]
+
 NuDB provides the default implementation , which is
 suitable for most use cases. For advanced applications, users may
 supply their own implementation which fulfills the above requirements.
