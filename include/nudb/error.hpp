@@ -228,7 +228,7 @@ enum class error
 error_category const&
 nudb_category();
 
-/** Returns a database error code.
+/** Constructs a database error code.
 
     This function is used by the implementation to convert
     @ref error values into @ref error_code objects.
