@@ -8,130 +8,124 @@
 [section:File File]
 
 The [*File] concept abstracts access to files in the underlying file system.
-Two implementations are provided, one for the Win32 API and the other for
-POSIX compliant systems. The [link nudb.ref.nudb__native_file native_file] type
-alias is automatically set to either [link nudb.ref.nudb__win32_file win32_file]
-or [link nudb.ref.nudb__posix_file posix_file] as appropriate.
 
 To support interfaces other than Win32 or POSIX, callers may provide their
-own [*File] type that meets these requirements. The unit test code also provides
-its own [*File] type which causes simulated operating system file failures
-to exercise all failure paths in the implementation.
+own [*File] type that meets these requirements.
 
-In the table below:
+[heading Associated Types]
+* [link nudb.ref.nudb__path_type path_type]
+* [link nudb.ref.nudb__file_mode file_mode]
+* [link nudb.ref.nudb__error_code error_code]
 
-* `X` denotes a [*File] type
-* `a` and `b` denote values of type `X`
-* `c` denotes a (possibly const) value of type `X`
-* `m` denotes a value of type [link nudb.ref.nudb__file_mode file_mode]
-* `f` denotes a value of type [link nudb.ref.nudb__path_type path_type]
-* `q` denotes a value of type `void*`
-* `p` denotes a value of type `void const*`
-* `ec` denotes a value of type [link nudb.ref.nudb__error_code error_code]
+[heading Notation]
 
+* `F` a [*File] type
+* `f` an instance of type F
+* `p` an instance of type [link nudb.ref.nudb__path_type path_type]
+* `m` an instance of the type [link nudb.ref.nudb__file_mode file_mode]
+* `ec` an instance of a reference to the type
+      [link nudb.ref.nudb__error_code error_code]
+* `n` a number of bytes. Type is `std::size_t`
+* 'o' an offset from the beginning of a file. Type is `std::size_t`
+* 'a' a memory address of type void *
 
-* `o` denotes a value of type `std::uint64_t`
-* `n` denotes a value of type `std::size_t`
-
-[table File requirements
-[[operation] [type] [semantics, pre/post-conditions]]
+[heading Valid Expressions]
+[table Valid Expressions
+[[Operation] [Return Type] [Semantics, Pre/Post-conditions]]
 [
-    [`X a{std::move(b)}`]
+    [`F()`]
     [ ]
     [
-        `X` is `MoveConstructible`
+        Default constructable
     ]
 ]
 [
-    [`c.is_open()`]
+    [`F(f)`]
+    [ ]
+    [
+        Move constructable.  Note NOT copy constructable.
+    ]
+]
+
+[
+    [`f.is_open()`]
     [`bool`]
     [
-        Returns `true` if `c` refers to an open file.
+        Returns `true` if `f` refers to an open file, false otherwise.
     ]
 ]
 [
-    [`a.close()`]
-    [ ]
+    [`f.close()`]
+    [`void`]
     [
-        If `a` refers to an open file, closes the file. Does nothing if
-        `a` does not refer to an open file. After this call, `a.open()`
-        will return `false`.
+        If `f` refers to an open file, closes the file. Otherwise, does
+        nothing. After this call, `f.is_open()` will return `false`.
     ]
 ]
 [
-    [`a.create(m,f,ec)`]
-    [ ]
+    [`f.create(m,p,ec)`]
+    [`void`]
     [
-        Attempts to create a file at the path specified by `f`, and
+        Attempts to create a file at the path specified by `p`, and
         open it with the mode specified by `m`. If an error occurs,
         `ec` is set to the system specific error code. If no error
-        occurs, a subsequent call to `a.is_open()` will return `true`.
-        Undefined behavior if `a` already refers to an open file.
+        occurs, a subsequent call to `f.is_open()` will return `true`.
+        Behavior is undefined if `f` already refers to an open file.
     ]
 ]
 [
-    [`a.open(m,f,ec)`]
-    [ ]
+    [`f.open(m,p,ec)`]
+    [`void`]
     [
-        Attempts to open the file at the path specified by `f`. If
+        Attempts to open the file at the path specified by `p`. If
         an error occurs, `ec` is set to the system specific error
-        code. If no error occurs, a subsequent call to `a.is_open()`
-        will return `true`. Undefined behavior if `a` already refers
-        to an open file.
+        code. If no error occurs, a subsequent call to `f.is_open()`
+        will return `true`. Behavior is undefined if `f` already
+        refers to an open file.
     ]
 ]
 [
-    [`X::erase(f,ec)`]
-    [ ]
+    [`F::erase(p,ec)`]
+    [`void`]
     [
-        Attempts to delete the file at the path specified by `f`.
+        Attempts to delete the file at the path specified by `p`.
         If an error occurs, `ec` is set to the system specific error
         code.
     ]
 ]
 [
-    [`c.size(ec)`]
-    [ `std::uint64_t` ]
+    [`f.size(ec)`]
+    [`std::size_t`]
     [
         Returns the size of the file in bytes. This value is also equal to
         lowest byte offset for which a read will always return a
-        [link nudb.ref.nudb__error short_read] error. Undefined
-        behavior if `a` does not refer to an open file.
+        [link nudb.ref.nudb__error short_read] error. Behavior is undefined
+        if `f` does not refer to an open file.
     ]
 ]
 [
-    [`a.read(o,p,n,ec)`]
-    [ ]
+    [`f.read(o,a,n,ec)`]
+    [`void`]
     [
-        Attempts to read `n` bytes from the open file referred to by `a`,
-        starting at offset `o`, and storing the results in the memory
-        pointed to by `p`, which must be at least of size `n` bytes.
-        If an error occurs, `ec` is set to the system specific error
-        code. Undefined behavior if `a` does not refer to an open file.
+        Attempts to read `n` bytes starting at file offset `o`
+        from the open file referred to by `f`. Bytes read are stored
+        in the memory buffer at address 'a'. The memory buffer at 'a'
+        must be at least n bytes long. If an error occurs, `ec` is set
+        to the system specific error code. Behavior is undefined if `f`
+        does not refer file opened with [link nudb.ref.nudb__file_mode file_mode]
+        equal to scan or read.
     ]
 ]
 [
-    [`a.write(o,q,n,ec)`]
-    [ ]
-    [
-        Attempts to write `n` bytes to the open file referred to by `a`
-        and opened with a write mode, starting at offset `o`, and storing
-        the results in the memory pointed to by `p`, which must be at
-        least of size `n` bytes. If an error occurs, `ec` is set to the
-        system specific error code. Undefined behavior if `a` does not
-        refer to an open file.
-    ]
-]
-[
-    [`a.sync(ec)`]
-    [ ]
+    [`f.sync(ec)`]
+    [`void`]
     [
         Attempts to synchronize the file on disk. This instructs the
         operating system to ensure that any data which resides in caches
         or buffers is fully written to the underlying storage device
         before this call returns. If an error occurs, `ec` is set to the
-        system specific error code. Undefined behavior if `a` does not
-        refer to an open file.
+        system specific error code. Behavior is undefined if
+        `f` does not refer to an open file.
 
         NuDB's database integrity guarantees are only valid if the
         implementation of `sync` assures that all data is fully written
@@ -139,14 +133,26 @@ In the table below:
     ]
 ]
 [
-    [`a.trunc(o,ec)`]
-    [ ]
+    [`f.write(o,a,n,ec)`]
+    [`void`]
     [
-        Attempts to change the size of the open file referred to by `a`
-        and opened with a write mode, to the size in bytes specified
-        by `o`. If an error occurs, `ec` is set to the system specific
-        error code. Undefined behavior if `a` does not refer to an open
-        file. After a successful call, `a.size(ec)` will return `o`.
+        Attempts to write `n` bytes starting at file offset `o`
+        to the open file referred to by `f`.  The memory buffer at
+        `a` should contain the `n` bytes meant to be copied to the file.
+        If an error occurs, `ec` is set to the system specific error code.
+        Behavior is undefined if `f` does not refer a file opened with
+        [link nudb.ref.nudb__file_mode file_mode] equal to write or append.
+    ]
+]
+[
+    [`f.trunc(o,ec)`]
+    [`void`]
+    [
+        Attempts to change the size of the open file referred to by `f`
+        to the size in bytes specified by `o`. If an error occurs, `ec`
+        is set to the system specific error code. Behavior is undefined if
+        `f` does not refer to an open file. After a successful call,
+        `a.size(ec)` will return `o`.
 
         NuDB's database integrity guarantees are only valid if the
         implementation of `trunc` assures that subsequent calls to
@@ -154,6 +160,24 @@ In the table below:
         device is taken offline before calling `size`.
     ]
 ]
+[
+    [`is_File<F>`]
+    [`std::true_type`]
+    [
+        returns `std::true_type` for `F`. Otherwise returns `std::false_type`
+    ]
 ]
+]
+
+[heading Associated Functions]
+* [link nudb.ref.nudb__block_size block_size]
+* [link nudb.ref.nudb__erase_file erase_file]
+
+[heading Models]
+* [link nudb.ref.nudb__posix_file posix_file]
+* [link nudb.ref.nudb__win32_file win32_file]
+* [link nudb.ref.nudb__native_file native_file]
+
+native file is just an alias which selects one of the previous two depending on the operating system on which the code is compiled.
 
 [endsect]
