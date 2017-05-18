@@ -9,6 +9,7 @@
 * Update File concept doc
 * Update Hasher concept doc
 * Update Progress concept doc
+* Add error_code doc section
 
 --------------------------------------------------------------------------------
 

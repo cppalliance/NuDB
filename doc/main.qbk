@@ -50,6 +50,12 @@
   ]]
 
   [[
+    [link nudb.error_code Error Codes]
+  ][
+    A treatment of the C++ error_code facility, and NuDB.
+  ]]
+
+  [[
     [link nudb.tool Command Line Tool]
   ][
     Instructions on using the nudb command line tool.
@@ -72,6 +78,7 @@
 [include overview.qbk]
 [include example.qbk]
 [include usage.qbk]
+[include types/error_code.qbk]
 [include tool.qbk]
 
 [section:ref Reference]
