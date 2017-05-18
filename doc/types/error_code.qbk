@@ -4,7 +4,7 @@
     file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 ]
 [/
-[section:error_code [@http://www.boost.org/doc/libs/1_64_0/libs/system/doc/reference.html#Class-error_code] `boost::system::error_code`]
+[section:error_code [@http://www.boost.orglibs/system/doc/reference.html#Class-error_code] `boost::system::error_code`]
 ]
 [section:error_code error_code]
 Invoking functions in this library can result in errors.  Such errors might
@@ -18,7 +18,7 @@ the scope of this documentation, but fortunately there are various sources which
 together provide a good explanation of how to use it.
 [variablelist
   [[
-    [@http://www.boost.org/doc/libs/1_64_0/libs/system/doc/index.html
+    [@http://www.boost.org/libs/system/doc/index.html
     Boost System Library]
   ][
     This is the official documentation for the Boost System Library which
@@ -44,15 +44,15 @@ together provide a good explanation of how to use it.
 [heading Associated Types]
 [itemized_list
 [
-    [@http://www.boost.org/doc/libs/1_64_0/libs/system/doc/reference.html#Header-error_code `boost::system::error::ercc`]
+    [@http://www.boost.org/libs/system/doc/reference.html#Header-error_code `boost::system::error::ercc`]
     list of values which might be used as values by
-    [@http://www.boost.org/doc/libs/1_64_0/libs/system/doc/reference.html#Class-error_code `boost::system::error_code`].
+    [@http://www.boost.org/libs/system/doc/reference.html#Class-error_code `boost::system::error_code`].
 ]
 [
     [link nudb.ref.nudb__error error] list of values which might be used as values NuDB library functions.
 ]
 [
-    [@http://www.boost.org/doc/libs/1_64_0/libs/system/doc/reference.html#Class-system_error `boost::system::error::system_error`]
+    [@http://www.boost.org/libs/system/doc/reference.html#Class-system_error `boost::system::error::system_error`]
 ]
 ]
 Any NuDB function may return `error_code` values from either of the above sources.
@@ -63,7 +63,7 @@ So error_codes should be checked against both lists of error codes used.
     [`ec` an instance of a reference to the type `boost::system::error_code`.]
     [<enum value> a value listed in either `boost::system::errc` or `nudb::error`.
     [`se` an instance of the type
-        [@http://www.boost.org/doc/libs/1_64_0/libs/system/doc/reference.html#Class-system_error `boost::system::error::system_error`
+        [@http://www.boost.org/libs/system/doc/reference.html#Class-system_error `boost::system::error::system_error`
         ].
     ]
 ]
@@ -73,14 +73,14 @@ So error_codes should be checked against both lists of error codes used.
 [table
     [[Operation] [Return Type] [Description]]
     [
-        [[@http://www.boost.org/doc/libs/1_64_0/libs/system/doc/reference.html#Class-error_code-observers `ec.message()`]]
+        [[@http://www.boost.orglibs/system/doc/reference.html#Class-error_code-observers `ec.message()`]]
         [`std::string`]
         [
             Return an explanation of the error code as a string
         ]
     ]
     [
-        [[@http://www.boost.org/doc/libs/1_64_0/libs/system/doc/reference.html#Class-system_error `boost::system::error::system_error(ec)`]]
+        [[@http://www.boost.orglibs/system/doc/reference.html#Class-system_error `boost::system::error::system_error(ec)`]]
         [`se`]
         [
             Construct a standard exception type.  The result can be the object
@@ -111,7 +111,7 @@ So error_codes should be checked against both lists of error codes used.
 ]
 
 [heading Header]
-[@http://www.boost.org/doc/libs/1_64_0/libs/system/doc/reference.html#Header-error_code `#include <boost/system/error_code.hpp>`]
+[@http://www.boost.orglibs/system/doc/reference.html#Header-error_code `#include <boost/system/error_code.hpp>`]
 [br]
 [@../../include/nudb/error.hpp `#include <nudb/error.hpp>`]
 
