@@ -112,7 +112,7 @@ So error_codes should be checked against both lists of error codes used.
 
 [heading Header]
 [@http://www.boost.orglibs/system/doc/reference.html#Header-error_code `#include <boost/system/error_code.hpp>`]
-[br]
+
 [@../../include/nudb/error.hpp `#include <nudb/error.hpp>`]
 
 [heading Example]
