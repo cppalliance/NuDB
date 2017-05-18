@@ -48,7 +48,7 @@
 
 namespace nudb {
 
-/** A descriptor to a Win32 file.
+/** A Win32 file.
 
     This class provides a Win32 implementation of the @b File
     concept.

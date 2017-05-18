@@ -12,6 +12,7 @@
 * Add error_code doc section
 * Update basic_store javadoc
 * Edit error_code javadoc
+* Update file javadocs
 
 --------------------------------------------------------------------------------
 
