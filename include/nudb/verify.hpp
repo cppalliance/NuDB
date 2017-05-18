@@ -119,69 +119,61 @@ struct verify_info
 };
 
 /** Verify consistency of the key and data files.
-
     This function opens the key and data files, and
     performs the following checks on the contents:
-
     @li Data file header validity
-
     @li Key file header validity
-
     @li Data and key file header agreements
-
     @li Check that each value is contained in a bucket
-
     @li Check that each bucket item reflects a value
-
     @li Ensure no values with duplicate keys
-
     Undefined behavior results when verifying a database
     that still has a log file. Use @ref recover on such
     databases first.
-
     This function selects one of two algorithms to use, the
     normal version, and a faster version that can take advantage
     of a buffer of sufficient size. Depending on the value of
     the bufferSize argument, the appropriate algorithm is chosen.
-
     A good value of bufferSize is one that is a large fraction
     of the key file size. For example, 20% of the size of the
     key file. Larger is better, with the highest usable value
     depending on the size of the key file. If presented with
     a buffer size that is too large to be of extra use, the
     fast algorithm will simply allocate what it needs.
-
-    @par Template Parameters
-
     @tparam Hasher The hash function to use. This type must
     meet the requirements of @b HashFunction. The hash function
     must be the same as that used to create the database, or
     else an error is returned.
-
-    @param info A structure which will be default constructed
-    inside this function, and filled in if the operation completes
-    successfully. If an error is indicated, the contents of this
-    variable are undefined.
-
+    @param info A reference to a structure of type 
+    @ref verify_info which will be filled in.
+    Upon return the contents of this structure are defined
+    if and only if the verify function completes successfully
+    as indicated by the ec parameter.
     @param dat_path The path to the data file.
-
     @param key_path The path to the key file.
-
     @param bufferSize The number of bytes to allocate for the buffer.
     If this number is too small, or zero, a slower algorithm will be
     used that does not require a buffer.
-
-    @param progress A function which will be called periodically
-    as the algorithm proceeds. The equivalent signature of the
-    progress function must be:
+    @param progress
+    A function address, function object or lambda
+    with the following signature:
     @code
     void progress(
         std::uint64_t amount,   // Amount of work done so far
         std::uint64_t total     // Total amount of work to do
     );
     @endcode
-
+    This function will be called periodically as the algorithm
+    proceeds so that the user code can monitor the progress
+    of the operation and calculate how much time remains to
+    complete the operation. The library contains a default function object,
+    [no_progress](@ref no_progress), which matches the above signature
+    but does nothing.
     @param ec Set to the error, if any occurred.
+    
+    @par Associated Types
+    @li @ref verify_info - Information returned by verify function
+    @li @ref no_progress - Function of type Progress which does nothing
 */
 template<class Hasher, class Progress>
 void

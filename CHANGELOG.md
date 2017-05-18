@@ -13,6 +13,7 @@
 * Update basic_store javadoc
 * Edit error_code javadoc
 * Update file javadocs
+* Update verify javadoc
 
 --------------------------------------------------------------------------------
 
