@@ -7,37 +7,42 @@
 
 [section:Hasher Hasher]
 
-A [@Hasher] implements a hash algorithm. This is used to compute the small
-digests NuDB needs to effectively implement a hash table. NuDB provides
-the default implementation [link nudb.ref.nudb__xxhasher xxhasher], which is
-suitable for most use cases. For advanced applications, a user supplied
-hash function may be supplied which must meet these requirements.
+A type [@Hasher] implements a hash algorithm. This is used to compute the small
+digests NuDB needs to effectively implement a hash table.
 
-In the table below:
+The NuDB database stores and retrieves key/value pairs.  This storage is
+organized as "buckets" where each bucket forms the start of a linked list.
+Given a key, one must caluculate which bucket it the key should be
+added to. The library includes code to guarantee that any set of
+keys will map to a more or less even distribution of buckets, thus
+ensuring that the array of buckets is utilized efficiently.  A key
+element in this code is a call to the Hasher function. This is why
+the Hasher function sould be designed to generate a uniform
+distribution of integers for any random collection of keys.
 
-* `X` denotes a hasher class
-* `a` denotes a value of type `X const`
-* `s` denotes a value of type `std::uint64_t`
+[heading Notation]
+* `H` is a hasher class
+* `h` is an instance of type `H`
+* `s` is a random seed of type `std::uint64_t`
 * `p` denotes a value of type `void const*`
 * `n` denotes a value of type `std::size_t`
 
-[table Hasher requirements
+[heading Hasher requirements]
+[table
 [[operation] [type] [semantics, pre/post-conditions]]
 [
-    [`X a{s}`]
-    [ ]
+    [`H{s}`]
+    [`H`]
     [
-        `a` is constructed with a seed value integer. To achieve resistance
+        `H` is constructed with a seed value integer `s`. To achieve resistance
         from algorithmic complexity attacks, an implementation of [*Hasher]
         should ensure that values returned from the hash function will be
-        distinctly different for different values of `s` given the same
-        inputs. If algorithmic complexity attack resistance is not a
-        requirement, the seed may be ignored upon construction.
+        distinctly different for different values of `s`.
     ]
 ]
 [
-    [`a(p,n)`]
-    [ `std::uint64_t` ]
+    [`h(p,n)`]
+    [`std::uint64_t`]
     [
         Returns the digest of the memory `n` bytes in size and pointed
         to by `p`. `n` will never be zero. A good hash function will
@@ -51,6 +56,20 @@ In the table below:
 
     ]
 ]
+[
+    [`is_Hasher<H>`]
+    [`std::true_type`]
+    [
+        returns `std::true_type` for `H`. Otherwise returns `std::false_type`
+    ]
 ]
+]
+
+[heading Models]
+* [link nudb.ref.nudb__xxhasher xxhasher]
+[br]
+NuDB provides the default implementation , which is
+suitable for most use cases. For advanced applications, users may
+supply their own implementation which fulfills the above requirements.
 
 [endsect]

@@ -7,6 +7,7 @@
 * Add introduction to doc
 * Tidy up doc build script
 * Update File concept doc
+* Update Hasher concept doc
 
 --------------------------------------------------------------------------------
 
