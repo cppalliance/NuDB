@@ -21,9 +21,8 @@ work completed, versus the total amount of work required.
 * `n` is a value of type `std::uint64_t` representng numerator of the fraction of work done.
 * `d` is a value of type `std::uint64_t` representng denominator of the fraction of work done.
 
-[heading Valid Expressions]
-
-[table
+[heading Progress Requirements]
+[table Valid Expressions
 [[operation] [type] [semantics, pre/post-conditions]]
 [
     [`p(n, d)`]
@@ -41,14 +40,15 @@ work completed, versus the total amount of work required.
     [`is_Progress<P>`]
     [`std::true_type`]
     [
-        returns `std::true_type` for `P`. Otherwise returns `std::false_type`
+        An alias for `std::true_type` for `P`. Otherwise equivalent
+        to `std::false_type`
     ]
 ]
 ]
 
 [heading Models]
 * [link nudb.ref.nudb__no_progress no_progress]
-[br]
+
 This is a default implementation which does nothing.
 
 [endsect]
