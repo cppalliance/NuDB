@@ -29,7 +29,7 @@ own [*File] type that meets these requirements.
 * 'o' an offset from the beginning of a file. Type is `std::size_t`
 * 'a' a memory address of type void *
 
-[heading Valid Expressions]
+[heading File Requirements]
 [table Valid Expressions
 [[Operation] [Return Type] [Semantics, Pre/Post-conditions]]
 [
