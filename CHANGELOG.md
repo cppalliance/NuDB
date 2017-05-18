@@ -8,6 +8,7 @@
 * Tidy up doc build script
 * Update File concept doc
 * Update Hasher concept doc
+* Update Progress concept doc
 
 --------------------------------------------------------------------------------
 
