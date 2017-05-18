@@ -164,7 +164,8 @@ own [*File] type that meets these requirements.
     [`is_File<F>`]
     [`std::true_type`]
     [
-        returns `std::true_type` for `F`. Otherwise returns `std::false_type`
+        An alias for `std::true_type` for `F`. Otherwise equivalent
+        to `std::false_type`.
     ]
 ]
 ]
