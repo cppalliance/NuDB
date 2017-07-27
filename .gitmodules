@@ -1,6 +1,6 @@
 [submodule "extras/beast"]
 	path = extras/beast
-	url = https://github.com/vinniefalco/Beast.git
+	url = https://github.com/boostorg/beast.git
 [submodule "extras/rocksdb"]
 	path = extras/rocksdb
 	url = https://github.com/facebook/rocksdb.git
