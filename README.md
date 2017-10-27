@@ -15,7 +15,7 @@
 - [Example](#example)
 - [Building](#building)
 - [Algorithm](#algorithm)
-- [Licence](#licence)
+- [License](#license)
 - [Contact](#contact)
 
 ---
