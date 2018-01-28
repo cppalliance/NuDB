@@ -34,8 +34,8 @@ endif ()
 
 option (Boost_USE_STATIC_LIBS "Use static libraries for boost" ON)
 
-set (Boost_NO_SYSTEM_PATHS ON)
-set (Boost_USE_MULTITHREADED ON)
+set (Boost_NO_SYSTEM_PATHS CACHE BOOL ON)
+set (Boost_USE_MULTITHREADED CACHE BOOL ON)
 
 unset (Boost_INCLUDE_DIR CACHE)
 unset (Boost_LIBRARY_DIRS CACHE)
