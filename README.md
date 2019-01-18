@@ -57,7 +57,7 @@ database sizes over 3 terabytes.
 
 ## Requirements
 
-* Boost 1.58 or higher
+* Boost 1.61 or higher
 * C++11 or greater
 * SSD drive, or equivalent device with high IOPS
 
