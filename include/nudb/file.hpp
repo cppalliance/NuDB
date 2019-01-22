@@ -8,6 +8,7 @@
 #ifndef NUDB_FILE_HPP
 #define NUDB_FILE_HPP
 
+#include <boost/core/ignore_unused.hpp>
 #include <cstddef>
 #include <string>
 
@@ -25,6 +26,7 @@ inline
 std::size_t
 block_size(path_type const& path)
 {
+    boost::ignore_unused(path);
     // A reasonable default for many SSD devices
     return 4096;
 }

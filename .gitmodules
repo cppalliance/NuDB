@@ -1,6 +1,3 @@
-[submodule "extras/beast"]
-	path = extras/beast
-	url = https://github.com/vinniefalco/Beast.git
 [submodule "extras/rocksdb"]
 	path = extras/rocksdb
 	url = https://github.com/facebook/rocksdb.git

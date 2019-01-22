@@ -5,8 +5,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef UTIL_HPP
-#define UTIL_HPP
+#ifndef NUDB_UTIL_HPP
+#define NUDB_UTIL_HPP
 
 #include "basic_seconds_clock.hpp"
 

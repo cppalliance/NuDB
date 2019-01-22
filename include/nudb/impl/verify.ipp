@@ -14,6 +14,7 @@
 #include <nudb/detail/bucket.hpp>
 #include <nudb/detail/bulkio.hpp>
 #include <nudb/detail/format.hpp>
+#include <boost/core/ignore_unused.hpp>
 #include <algorithm>
 #include <cstddef>
 #include <limits>
@@ -45,6 +46,7 @@ verify_normal(
         "Hasher requirements not met");
     static_assert(is_Progress<Progress>::value,
         "Progress requirements not met");
+    boost::ignore_unused(dh);
     info.algorithm = 0;
     auto const readSize = 1024 * kh.block_size;
 
@@ -287,6 +289,8 @@ verify_fast(
     Progress&& progress,
     error_code& ec)
 {
+    boost::ignore_unused(dh);
+
     info.algorithm = 1;
     auto const readSize = 1024 * kh.block_size;
 

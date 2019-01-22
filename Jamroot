@@ -43,6 +43,8 @@ variant usan
     <linkflags>"-fsanitize=undefined"
   ;
 
+path-constant TEST_MAIN : $(BOOST_ROOT)/boost/beast/_experimental/unit_test/main.cpp ;
+
 project nudb
   : requirements
     <include>./extras

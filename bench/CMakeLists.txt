@@ -1,12 +1,5 @@
 cmake_minimum_required (VERSION 3.2)
 
-GroupSources(bench /)
-GroupSources(include/nudb nudb)
-GroupSources(extras/nudb extras)
-GroupSources(extras/beast/include/beast beast)
-GroupSources(extras/beast/extras/beast beast)
-GroupSources(extras/rocksdb rocksdb)
-
 if (WIN32)
   set(CMAKE_CONFIGURATION_TYPES Release)
 endif ()

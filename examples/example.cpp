@@ -35,7 +35,7 @@ int main()
     // Fetch
     for(key_type i = 0; i < N; ++i)
         db.fetch(&i,
-            [&](void const* buffer, std::size_t size)
+            [&](void const*, std::size_t)
         {
             // do something with buffer, size
         }, ec);

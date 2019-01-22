@@ -8,15 +8,17 @@
 // Test that header file is self-contained
 #include <nudb/verify.hpp>
 
-#include <nudb/test/test_store.hpp>
+#include "suite.hpp"
+
+#include <boost/beast/_experimental/unit_test/suite.hpp>
+#include <nudb/_experimental/test/test_store.hpp>
 #include <nudb/progress.hpp>
 #include <nudb/verify.hpp>
-#include <beast/unit_test/suite.hpp>
 
 namespace nudb {
 namespace test {
 
-class verify_test : public beast::unit_test::suite
+class verify_test : public boost::beast::unit_test::suite
 {
 public:
     // File doesn't exist
@@ -88,7 +90,7 @@ public:
     }
 };
 
-BEAST_DEFINE_TESTSUITE(verify, test, nudb);
+DEFINE_TESTSUITE(nudb,test,verify);
 
 } // test
 } // nudb

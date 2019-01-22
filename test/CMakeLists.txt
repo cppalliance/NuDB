@@ -1,16 +1,16 @@
-# Part of nudb
+#
+# Copyright (c) 2019 Vinnie Falco (vinnie dot falco at gmail dot com)
+#
+# Distributed under the Boost Software License, Version 1.0. (See accompanying
+# file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+#
+# Official repository: https://github.com/vinniefalco/NuDB
+#
 
-GroupSources(test "/")
-GroupSources(include/nudb nudb)
-GroupSources(extras/nudb extras)
-GroupSources(extras/beast/include/beast beast)
-GroupSources(extras/beast/extras/beast beast)
+set (TEST_MAIN ${Boost_INCLUDE_DIR}/boost/beast/_experimental/unit_test/main.cpp)
 
-add_executable(test-all
-    ${EXTRAS_INCLUDES}
-    ${NUDB_INCLUDES}
-    ${BEAST_INCLUDES}
-    ../extras/beast/extras/beast/unit_test/main.cpp
+set (SOURCE_FILES
+    Jamfile
     basic_store.cpp
     buffer.cpp
     callgrind_test.cpp
@@ -31,8 +31,14 @@ add_executable(test-all
     xxhasher.cpp
 )
 
-if (WIN32)
-    target_link_libraries(test-all ${Boost_LIBRARIES})
-else ()
-    target_link_libraries(test-all ${Boost_LIBRARIES} rt Threads::Threads)
-endif ()
+source_group (TREE ${Boost_INCLUDE_DIR}/boost/beast PREFIX beast FILES ${BEAST_FILES})
+source_group (TREE ${PROJECT_SOURCE_DIR}/include/nudb PREFIX nudb FILES ${NUDB_FILES})
+source_group (TREE ${PROJECT_SOURCE_DIR}/test PREFIX "" FILES ${SOURCE_FILES})
+source_group ("" FILES ${TEST_MAIN})
+
+add_executable(test-all
+    ${BEAST_FILES}
+    ${TEST_MAIN}
+    ${NUDB_FILES}
+    ${SOURCE_FILES}
+)

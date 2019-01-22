@@ -5,8 +5,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef CHRONO_UTIL_HPP
-#define CHRONO_UTIL_HPP
+#ifndef NUDB_EXPERIMENTAL_CHRONO_UTIL_HPP
+#define NUDB_EXPERIMENTAL_CHRONO_UTIL_HPP
 
 #include <chrono>
 

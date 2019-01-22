@@ -8,11 +8,13 @@
 // Test that header file is self-contained
 #include <nudb/rekey.hpp>
 
-#include <nudb/test/fail_file.hpp>
-#include <nudb/test/test_store.hpp>
+#include "suite.hpp"
+
+#include <nudb/_experimental/test/fail_file.hpp>
+#include <nudb/_experimental/test/test_store.hpp>
 #include <nudb/progress.hpp>
 #include <nudb/verify.hpp>
-#include <beast/unit_test/suite.hpp>
+#include <boost/beast/_experimental/unit_test/suite.hpp>
 
 namespace nudb {
 namespace test {
@@ -20,7 +22,7 @@ namespace test {
 // Simple test to check that rekey works, and
 // also to exercise all its failure paths.
 //
-class rekey_test : public beast::unit_test::suite
+class rekey_test : public boost::beast::unit_test::suite
 {
 public:
     void
@@ -130,7 +132,7 @@ public:
     }
 };
 
-BEAST_DEFINE_TESTSUITE(rekey, test, nudb);
+DEFINE_TESTSUITE(nudb,test,rekey);
 
 } // test
 } // nudb

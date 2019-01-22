@@ -5,8 +5,10 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <nudb/test/test_store.hpp>
-#include <beast/unit_test/suite.hpp>
+#include "suite.hpp"
+
+#include <nudb/_experimental/test/test_store.hpp>
+#include <boost/beast/_experimental/unit_test/suite.hpp>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -18,7 +20,7 @@ namespace test {
 
 // This test is designed for callgrind runs to find hotspots
 
-class callgrind_test : public beast::unit_test::suite
+class callgrind_test : public boost::beast::unit_test::suite
 {
 public:
     // Creates and opens a database, performs a bunch
@@ -86,7 +88,7 @@ public:
     }
 };
 
-BEAST_DEFINE_TESTSUITE(callgrind, test, nudb);
+DEFINE_TESTSUITE(nudb,test,callgrind);
 
 } // test
 } // nudb

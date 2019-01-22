@@ -8,15 +8,17 @@
 // Test that header file is self-contained
 #include <nudb/visit.hpp>
 
-#include <nudb/test/test_store.hpp>
+#include "suite.hpp"
+
+#include <nudb/_experimental/test/test_store.hpp>
 #include <nudb/progress.hpp>
-#include <beast/unit_test/suite.hpp>
+#include <boost/beast/_experimental/unit_test/suite.hpp>
 #include <unordered_map>
 
 namespace nudb {
 namespace test {
 
-class visit_test : public beast::unit_test::suite
+class visit_test : public boost::beast::unit_test::suite
 {
 public:
     void
@@ -32,9 +34,9 @@ public:
 
         // File not present
         visit(ts.dp,
-            [&](void const* key, std::size_t keySize,
-                void const* data, std::size_t dataSize,
-                error_code& ec)
+            [&](void const*, std::size_t,
+                void const*, std::size_t,
+                error_code&)
             {
             }, no_progress{}, ec);
         if(! BEAST_EXPECTS(ec ==
@@ -108,7 +110,7 @@ public:
     }
 };
 
-BEAST_DEFINE_TESTSUITE(visit, test, nudb);
+DEFINE_TESTSUITE(nudb,test,visit);
 
 } // test
 } // nudb

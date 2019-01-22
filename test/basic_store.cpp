@@ -8,13 +8,15 @@
 // Test that header file is self-contained
 #include <nudb/basic_store.hpp>
 
-#include <nudb/test/test_store.hpp>
+#include "suite.hpp"
+
+#include <nudb/_experimental/test/test_store.hpp>
 #include <nudb/detail/arena.hpp>
 #include <nudb/detail/cache.hpp>
 #include <nudb/detail/pool.hpp>
 #include <nudb/progress.hpp>
 #include <nudb/verify.hpp>
-#include <beast/unit_test/suite.hpp>
+#include <boost/beast/_experimental/unit_test/suite.hpp>
 #include <limits>
 #include <type_traits>
 
@@ -41,7 +43,7 @@ static_assert(!std::is_move_assignable      <pool>{}, "");
 
 namespace test {
 
-class basic_store_test : public beast::unit_test::suite
+class basic_store_test : public boost::beast::unit_test::suite
 {
 public:
     void
@@ -243,7 +245,7 @@ public:
     }
 };
 
-BEAST_DEFINE_TESTSUITE(basic_store, test, nudb);
+DEFINE_TESTSUITE(nudb,test,basic_store);
 
 } // test
 } // nudb

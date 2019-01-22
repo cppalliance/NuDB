@@ -6,7 +6,7 @@
 //
 
 #include <nudb/nudb.hpp>
-#include <nudb/util.hpp>
+#include <nudb/_experimental/util.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <chrono>
@@ -481,7 +481,7 @@ private:
         visit(path,
             [&](void const*, std::size_t,
                 void const*, std::size_t data_size,
-                error_code& ec)
+                error_code&)
             {
                 ++n;
                 ++hist[log2(data_size)];

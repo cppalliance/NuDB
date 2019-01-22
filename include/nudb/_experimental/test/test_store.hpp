@@ -8,9 +8,9 @@
 #ifndef NUDB_TEST_TEST_STORE_HPP
 #define NUDB_TEST_TEST_STORE_HPP
 
-#include <nudb/util.hpp>
-#include <nudb/test/temp_dir.hpp>
-#include <nudb/test/xor_shift_engine.hpp>
+#include <nudb/_experimental/util.hpp>
+#include <nudb/_experimental/test/temp_dir.hpp>
+#include <nudb/_experimental/test/xor_shift_engine.hpp>
 #include <nudb/create.hpp>
 #include <nudb/native_file.hpp>
 #include <nudb/store.hpp>
