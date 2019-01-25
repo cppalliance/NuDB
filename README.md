@@ -153,8 +153,9 @@ cd bin
 cmake ..                                    # for 32-bit Windows build
 
 cd ../bin64
-cmake ..                                    # for Linux/Mac builds, OR
-cmake -G"Visual Studio 14 2015 Win64" ..    # for 64-bit Windows builds
+cmake ..                                    # for Linux/Mac builds, or
+cmake -G"Visual Studio 14 2015 Win64" ..    # for 64-bit Windows builds (VS2015), or
+cmake -G"Visual Studio 15 2017 Win64" ..    # for 64-bit Windows builds (VS2017)
 ```
 
 To build with Boost.Build, it is necessary to have the b2 executable
