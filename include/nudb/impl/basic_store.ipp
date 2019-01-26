@@ -184,7 +184,7 @@ open(
     logWriteSize_ = 32 * nudb::block_size(log_path);
     s_.emplace(std::move(*s));
     open_ = true;
-    t_ = std::thread(&basic_store::run, this);
+    ctx_->insert(*this);
 }
 
 template<class Hasher, class File>
@@ -195,8 +195,15 @@ close(error_code& ec)
     if(open_)
     {
         open_ = false;
-        cv_.notify_all();
-        t_.join();
+        ctx_->erase(*this);
+        if(! s_->p1.empty())
+        {
+            std::size_t work;
+            detail::unique_lock_type m{m_};
+            commit(m, work, ec_);
+            if (ec_)
+                ecb_.store(true);
+        }
         if(ecb_)
         {
             ec = ec_;
@@ -626,7 +633,7 @@ commit(detail::unique_lock_type& m,
         }
         // Do inserts, splits, and build view
         // of original and modified buckets
-        for(auto const e : s_->p0)
+        for(auto const& e : s_->p0)
         {
             // VFALCO Should this be >= or > ?
             if((frac_ += 65536) >= thresh_)
@@ -733,7 +740,7 @@ commit(detail::unique_lock_type& m,
 template<class Hasher, class File>
 void
 basic_store<Hasher, File>::
-run()
+flush()
 {
     using namespace std::chrono;
     using namespace detail;
@@ -741,7 +748,6 @@ run()
 #if NUDB_DEBUG_LOG
     beast::unit_test::dstream dout{std::cout};
 #endif
-    for(;;)
     {
         unique_lock_type m{m_};
         if(! s_->p1.empty())
@@ -768,24 +774,10 @@ run()
         #endif
         }
         s_->p1.periodic_activity();
-
-        cv_.wait_until(m, s_->when + seconds{1},
-            [this]{ return ! open_; });
-        if(! open_)
-            break;
         s_->when = clock_type::now();
     }
-    {
-        unique_lock_type m{m_};
-        std::size_t work;
-        if(! s_->p1.empty())
-            commit(m, work, ec_);
-    }
     if(ec_)
-    {
         ecb_.store(true);
-        return;
-    }
 }
 
 } // nudb

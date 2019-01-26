@@ -8,16 +8,16 @@
 #ifndef NUDB_BASIC_STORE_HPP
 #define NUDB_BASIC_STORE_HPP
 
+#include <nudb/context.hpp>
 #include <nudb/file.hpp>
 #include <nudb/type_traits.hpp>
 #include <nudb/detail/cache.hpp>
 #include <nudb/detail/gentex.hpp>
 #include <nudb/detail/mutex.hpp>
 #include <nudb/detail/pool.hpp>
+#include <nudb/detail/store_base.hpp>
 #include <boost/optional.hpp>
 #include <chrono>
-#include <mutex>
-#include <thread>
 
 namespace nudb {
 
@@ -44,6 +44,9 @@ namespace nudb {
 */
 template<class Hasher, class File>
 class basic_store
+#if ! NUDB_DOXYGEN
+        : private detail::store_base
+#endif
 {
 public:
     using hash_type = Hasher;
@@ -100,8 +103,6 @@ private:
     std::mutex u_;                  // serializes insert()
     detail::gentex g_;
     boost::shared_mutex m_;
-    std::thread t_;
-    std::condition_variable_any cv_;
 
     error_code ec_;
     std::atomic<bool> ecb_;         // `true` when ec_ set
@@ -109,12 +110,32 @@ private:
     std::size_t dataWriteSize_;
     std::size_t logWriteSize_;
 
+    struct deleter
+    {
+        deleter() = default;
+        deleter(bool) : free_(true) {}
+        void operator() (context* p) const
+        {
+            if (free_)
+                delete p;
+        }
+
+        bool free_ = false;
+    };
+
+    std::unique_ptr<context, deleter> ctx_;
+
 public:
     /** Default constructor.
 
         A default constructed database is initially closed.
     */
-    basic_store() = default;
+    basic_store() : ctx_(new context, true)
+    {
+        ctx_->start();
+    }
+
+    basic_store(context& ctx) : ctx_(&ctx) {}
 
     /// Copy constructor (disallowed)
     basic_store(basic_store const&) = delete;
@@ -426,7 +447,7 @@ private:
         std::size_t& work, error_code& ec);
 
     void
-    run();
+    flush() override;
 };
 
 } // nudb

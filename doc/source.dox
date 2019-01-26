@@ -278,7 +278,8 @@ INCLUDE_FILE_PATTERNS  =
 PREDEFINED             = DOXYGEN \
                          GENERATING_DOCS \
                          _MSC_VER \
-                         NUDB_POSIX_FILE=1
+                         NUDB_POSIX_FILE=1 \
+                         NUDB_DOXYGEN
 
 EXPAND_AS_DEFINED      =
 SKIP_FUNCTION_MACROS   = YES
