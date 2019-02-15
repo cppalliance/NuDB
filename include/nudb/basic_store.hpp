@@ -59,6 +59,10 @@ private:
     using time_point =
         typename clock_type::time_point;
 
+#if ! NUDB_DOXYGEN
+    friend class test::context_test;
+#endif
+
     struct state
     {
         File df;

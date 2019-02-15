@@ -22,6 +22,10 @@ protected:
     virtual void flush() = 0;
 
 private:
+#if ! NUDB_DOXYGEN
+    friend class test::context_test;
+#endif
+
     enum class state
     {
         waiting,
