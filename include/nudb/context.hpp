@@ -16,6 +16,11 @@
 #define NUDB_DECL inline
 
 namespace nudb {
+
+namespace test {
+    class context_test;
+} // test
+
 namespace detail {
     class store_base;
 } // detail
@@ -77,6 +82,9 @@ private:
     using store_base = detail::store_base;
 
     template<class, class> friend class basic_store;
+#if ! NUDB_DOXYGEN
+    friend class test::context_test;
+#endif
 
     NUDB_DECL
     void

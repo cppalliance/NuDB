@@ -13,6 +13,7 @@ unit-test test-all :
     buffer.cpp
     callgrind_test.cpp
     concepts.cpp
+    context.cpp
     create.cpp
     error.cpp
     file.cpp
