@@ -5,23 +5,44 @@
 # 2) The last namepart of BOOST_ROOT matches the
 # folder name internal to boost's .tar.gz
 # When testing you can force a boost build by clearing travis caches:
-# https://travis-ci.org/ripple/rippled/caches
+# https://travis-ci.org/vinniefalco/nudb/caches
 set -eu
-if [ ! -d "$BOOST_ROOT/lib" ]
-then
-  wget $BOOST_URL -O /tmp/boost.tar.gz
-  cd `dirname $BOOST_ROOT`
-  rm -fr ${BOOST_ROOT}
-  tar xzf /tmp/boost.tar.gz
 
-  params="define=_GLIBCXX_USE_CXX11_ABI=0 \
-          address-model=$ADDRESS_MODEL --with-program_options \
-          --with-system --with-coroutine --with-filesystem"
-  cd $BOOST_ROOT && \
-    ./bootstrap.sh --prefix=$BOOST_ROOT && \
-    ./b2 -d1 $params && \
-    ./b2 -d0 $params install
-else
+if [[ -d "$BOOST_ROOT/lib" || -d "${BOOST_ROOT}/stage/lib" ]] ; then
   echo "Using cached boost at $BOOST_ROOT"
+  exit
+fi
+
+fn=$(basename -- "$BOOST_URL")
+ext="${fn##*.}"
+wget --quiet $BOOST_URL -O /tmp/boost.tar.${ext}
+cd $(dirname $BOOST_ROOT)
+rm -fr ${BOOST_ROOT}
+tar xf /tmp/boost.tar.${ext}
+cd $BOOST_ROOT
+
+if [[ -z ${COMSPEC:-} ]]; then
+  params="cxxflags=\"-std=c++14\" \
+    --with-program_options --with-system --with-date_time \
+    --with-coroutine --with-filesystem --with-atomic"
+  ./bootstrap.sh --prefix=$BOOST_ROOT
+  eval ./b2 -d1 -j2 $params
+  eval ./b2 -d0 -j2 $params install
+else
+  cmd /E:ON /D /S /C"bootstrap.bat"
+  ./b2.exe -j2 \
+    --toolset=msvc-14.1 \
+    address-model=64 \
+    architecture=x86 \
+    link=static \
+    threading=multi \
+    runtime-link="shared,static" \
+    --with-program_options \
+    --with-system \
+    --with-date_time \
+    --with-coroutine \
+    --with-filesystem \
+    --with-atomic \
+    stage
 fi
 

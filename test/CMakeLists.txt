@@ -7,7 +7,11 @@
 # Official repository: https://github.com/vinniefalco/NuDB
 #
 
-set (TEST_MAIN ${Boost_INCLUDE_DIR}/boost/beast/_experimental/unit_test/main.cpp)
+# FIXME: this _experimental path is not part of official boost beast yet.
+# Determine this path from one of the boost targets when it's official,
+# but for now get from our local FetchContent
+get_target_property(beast_extras_include beast_extras INTERFACE_INCLUDE_DIRECTORIES)
+set (TEST_MAIN ${beast_extras_include}/boost/beast/_experimental/unit_test/main.cpp)
 
 set (SOURCE_FILES
     Jamfile
@@ -32,13 +36,8 @@ set (SOURCE_FILES
 )
 
 source_group (TREE ${Boost_INCLUDE_DIR}/boost/beast PREFIX beast FILES ${BEAST_FILES})
-source_group (TREE ${PROJECT_SOURCE_DIR}/include/nudb PREFIX nudb FILES ${NUDB_FILES})
 source_group (TREE ${PROJECT_SOURCE_DIR}/test PREFIX "" FILES ${SOURCE_FILES})
 source_group ("" FILES ${TEST_MAIN})
 
-add_executable(test-all
-    ${BEAST_FILES}
-    ${TEST_MAIN}
-    ${NUDB_FILES}
-    ${SOURCE_FILES}
-)
+add_executable(test-all ${SOURCE_FILES} ${TEST_MAIN})
+target_link_libraries(test-all NuDB::nudb NuDB::common)

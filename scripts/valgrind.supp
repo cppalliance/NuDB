@@ -1,0 +1,9 @@
+{
+   Boost filesystem directory_iterator
+   Memcheck:Cond
+   ...
+   fun:_ZN5boost10filesystem6detail28directory_iterator_incrementERNS0_18directory_iteratorEPNS_6system10error_codeE
+   fun:_ZN5boost10filesystem6detail28directory_iterator_constructERNS0_18directory_iteratorERKNS0_4pathEPNS_6system10error_codeE
+   ...
+}
+

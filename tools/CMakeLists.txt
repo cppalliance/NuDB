@@ -13,11 +13,8 @@ set (SOURCE_FILES
 )
 
 source_group (TREE ${Boost_INCLUDE_DIR}/boost/beast PREFIX beast FILES ${BEAST_FILES})
-source_group (TREE ${PROJECT_SOURCE_DIR}/include/nudb PREFIX nudb FILES ${NUDB_FILES})
 source_group (TREE ${PROJECT_SOURCE_DIR}/tools PREFIX "" FILES ${SOURCE_FILES})
 source_group ("" FILES ${TEST_MAIN})
 
-add_executable (nudb
-    ${NUDB_FILES}
-    ${SOURCE_FILES}
-)
+add_executable (nudb ${SOURCE_FILES})
+target_link_libraries(nudb NuDB::nudb NuDB::common)
