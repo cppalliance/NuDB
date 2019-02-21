@@ -7,155 +7,281 @@
 # Official repository: https://github.com/vinniefalco/NuDB
 #
 
-cmake_minimum_required (VERSION 3.5.2)
-
+cmake_minimum_required (VERSION 3.11)
+set (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/scripts ${CMAKE_MODULE_PATH})
 project (NuDB VERSION 1.1)
 
-set_property (GLOBAL PROPERTY USE_FOLDERS ON)
-
-if (MSVC)
-    set (CMAKE_VERBOSE_MAKEFILE FALSE)
-
-    add_definitions (
-        -D_WIN32_WINNT=0x0601
-        -D_SCL_SECURE_NO_WARNINGS=1
-        -D_CRT_SECURE_NO_WARNINGS=1
-        #-D_SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING
-        #-D_SILENCE_CXX17_ADAPTOR_TYPEDEFS_DEPRECATION_WARNING
-    )
-
-    add_compile_options(
-        /bigobj       # large object file format
-        /permissive-  # strict C++
-        #/wd4503      # decorated name length exceeded, name was truncated
-        /W4           # enable all warnings
-        /MP           # Multi-processor compilation
-        )
-
-    set (Boost_USE_STATIC_RUNTIME ON)
-
-    set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
-    set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Ob2 /Oi /Ot /GL /MT")
-    set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /Oi /Ot /MT")
-
-    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO")
-    set (CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LTCG")
-
-    # for RelWithDebInfo builds, disable incremental linking
-    # since CMake sets it ON by default for that build type and it
-    # causes warnings
-    #
-    string (REPLACE "/INCREMENTAL" "/INCREMENTAL:NO" replacement_flags
-        ${CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO})
-    set (CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO ${replacement_flags})
-
-else ()
-    set (THREADS_PREFER_PTHREAD_FLAG ON)
-    find_package (Threads)
-
-    set( CMAKE_CXX_FLAGS
-      "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -Wpedantic -Wno-unused-parameter")
-
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wrange-loop-analysis")
-    endif ()
+if (POLICY CMP0074)
+  cmake_policy(SET CMP0074 NEW)
 endif ()
 
-# Must come before Boost includes, otherwise the
-# IDE sees the wrong file due to boost/ symlinks.
-#include_directories (include)
+get_directory_property(has_parent PARENT_DIRECTORY)
+if (has_parent)
+  set (is_root_project OFF)
+else ()
+  set (is_root_project ON)
+endif ()
 
-#-------------------------------------------------------------------------------
-#
-# Boost
-#
+set_property (GLOBAL PROPERTY USE_FOLDERS ON)
+set_property (DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT nudb)
 
-set (Boost_NO_SYSTEM_PATHS ON)
-set (Boost_USE_MULTITHREADED ON)
-#target_compile_definitions("BOOST_ALL_NO_LIB=1")
+if (NOT MSVC)
+  set (THREADS_PREFER_PTHREAD_FLAG ON)
+  find_package (Threads)
+endif ()
+
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES ".*Clang") # both Clang and AppleClang
+  set (is_clang TRUE)
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  set (is_gcc TRUE)
+endif ()
+
+option (coverage "enable coverage build" OFF)
+option (asan "enable address sanitizer" OFF)
+option (usan "enable undefined behavior sanitizer" OFF)
+option (werr "treat warnings as errors" OFF)
+
+# hacky legacy handling of options via VARIANT variable
+if (NOT DEFINED VARIANT AND DEFINED ENV{VARIANT})
+  set (VARIANT $ENV{VARIANT} CACHE STRING "" FORCE)
+endif ()
+if ("${VARIANT}" STREQUAL "coverage")
+  set(coverage ON CACHE BOOL "" FORCE)
+elseif ("${VARIANT}" STREQUAL "asan")
+  set(asan ON CACHE BOOL "" FORCE)
+elseif ("${VARIANT}" STREQUAL "usan")
+  set(usan ON CACHE BOOL "" FORCE)
+elseif ("${VARIANT}" STREQUAL "debug")
+  set (CMAKE_BUILD_TYPE Debug)
+elseif ("${VARIANT}" STREQUAL "release")
+  set (CMAKE_BUILD_TYPE Release)
+elseif ("${VARIANT}" STREQUAL "reldeb")
+  set (CMAKE_BUILD_TYPE RelWithDebInfo)
+endif ()
+
+if (coverage OR usan OR asan)
+  set (CMAKE_BUILD_TYPE RelWithDebInfo)
+endif ()
+
+if (NOT CMAKE_BUILD_TYPE AND NOT is_multiconfig)
+  message (STATUS "Build type not specified - defaulting to Release")
+  set (CMAKE_BUILD_TYPE Release CACHE STRING "build type" FORCE)
+endif ()
+
+#[===================================================================[
+  honor a reusable location for EP/FC
+#]===================================================================]
+
+get_property (is_multiconfig GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+if (NOT DEFINED EP_CACHE_ROOT AND DEFINED ENV{EP_CACHE_ROOT})
+  set (EP_CACHE_ROOT $ENV{EP_CACHE_ROOT} CACHE STRING "" FORCE)
+endif ()
+if (NOT EP_CACHE_ROOT)
+  set (EP_CACHE_ROOT ${CMAKE_BINARY_DIR}/vendor CACHE STRING "" FORCE)
+endif ()
+string (REGEX REPLACE "[ \\/%]+" "_" gen_for_path ${CMAKE_GENERATOR})
+string (TOLOWER ${gen_for_path} gen_for_path)
+set (ep_cache_path
+  "${EP_CACHE_ROOT}/${gen_for_path}/${CMAKE_CXX_COMPILER_ID}_${CMAKE_CXX_COMPILER_VERSION}")
+if (NOT is_multiconfig)
+  set (ep_cache_path "${ep_cache_path}/${CMAKE_BUILD_TYPE}")
+endif ()
+file(TO_CMAKE_PATH "${ep_cache_path}" ep_cache_path)
+message (STATUS "EP cache path: ${ep_cache_path}")
+set (FETCHCONTENT_BASE_DIR ${ep_cache_path} CACHE STRING "" FORCE)
+
+#[===================================================================[
+  locate boost
+#]===================================================================]
+
+if ((NOT DEFINED BOOST_ROOT) AND (DEFINED ENV{BOOST_ROOT}))
+  set (BOOST_ROOT $ENV{BOOST_ROOT})
+endif ()
+file (TO_CMAKE_PATH "${BOOST_ROOT}" BOOST_ROOT)
 set (Boost_USE_STATIC_LIBS ON)
+if (MSVC)
+  set (Boost_USE_STATIC_RUNTIME ON)
+endif ()
+set (Boost_USE_MULTITHREADED ON)
+set (Boost_NO_SYSTEM_PATHS ON)
+find_package (Boost 1.69 REQUIRED COMPONENTS
+  filesystem
+  program_options
+  system
+  thread
+)
 
-unset (Boost_INCLUDE_DIR CACHE)
-unset (Boost_LIBRARY_DIRS CACHE)
-find_package (Boost 1.69 REQUIRED
-    filesystem
-    program_options
-    system
-    thread
-    )
+# We also need the beast _experimental files for
+# unit tests. boost 1.69 as released doesn't have
+# these files, so we do a FetchContent at config time
+# to get them.
+# THIS CAN BE REMOVED WHEN the official boost version
+# found above has these files.
+include (FetchContent)
+FetchContent_Declare(
+  beast_extras_src
+  GIT_REPOSITORY https://github.com/boostorg/beast
+  GIT_TAG boost-1.70.0.beta1
+)
+FetchContent_GetProperties(beast_extras_src)
+if(NOT beast_extras_src_POPULATED)
+  message (STATUS "Pausing to download Beast (for unit tests)...")
+  FetchContent_Populate(beast_extras_src)
+endif()
+file(TO_CMAKE_PATH "${beast_extras_src_SOURCE_DIR}" beast_extras_src_SOURCE_DIR)
+add_library (beast_extras INTERFACE)
+add_library (NuDB::beast_extras ALIAS beast_extras)
+target_include_directories (beast_extras
+  INTERFACE
+    ${beast_extras_src_SOURCE_DIR}/include)
 
-link_libraries(
-    Boost::boost
-    Boost::filesystem
-    Boost::thread
-    Boost::system
-    Boost::program_options
-    Boost::disable_autolinking)
+#[===================================================================[
+  include the primary target: nudb interface (header only) lib
+#]===================================================================]
+
+add_subdirectory (include/nudb)
+# if we are included as a subdir, then we only need the core
+# lib definition...exit here
+if (NOT is_root_project)
+  return ()
+endif ()
+
+#[===================================================================[
+   define a secondary private target (not exported)
+   that encapsulates common macros/link flags used for
+   internal targets (tests, benchmarks). These settings
+   are candidates for compiler toolchain files in the future
+#]===================================================================]
+
+add_library (common INTERFACE)
+add_library (NuDB::common ALIAS common)
+set_target_properties (common
+  PROPERTIES INTERFACE_POSITION_INDEPENDENT_CODE ON)
+target_compile_features (common INTERFACE cxx_std_14)
+if (MSVC)
+  target_compile_definitions (common INTERFACE
+    _WIN32_WINNT=0x0601
+    _SCL_SECURE_NO_WARNINGS=1
+    _CRT_SECURE_NO_WARNINGS=1
+    #_SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING
+    #_SILENCE_CXX17_ADAPTOR_TYPEDEFS_DEPRECATION_WARNING
+  )
+  target_compile_options (common INTERFACE
+    -bigobj       # large object file format
+    -permissive-  # strict C++
+    #-wd4503      # decorated name length exceeded, name was truncated
+    -W4           # enable all warnings
+    -MP           # Multi-processor compilation
+    $<$<CONFIG:Debug>:-MTd>
+    $<$<NOT:$<CONFIG:Debug>>:-Oi -Ot -MT>
+    $<$<CONFIG:Release>:-GL>
+    $<$<BOOL:${werr}>:-WX>
+  )
+  target_link_libraries (common INTERFACE
+    -safeseh:no
+    $<$<CONFIG:Release>:-ltcg>
+    $<$<CONFIG:RelWithDebInfo>:-incremental:no>
+  )
+else ()
+  target_compile_options (common INTERFACE
+    -Wall
+    -Wextra
+    -Wpedantic
+    -Wno-unused-parameter
+    $<$<BOOL:${is_clang}>:-Wrange-loop-analysis -fvisibility=hidden>
+    $<$<BOOL:${werr}>:-Werror>
+  )
+endif ()
+
+target_link_libraries (common INTERFACE
+  Boost::boost
+  Boost::filesystem
+  Boost::thread
+  Boost::system
+  Boost::program_options
+  Boost::disable_autolinking
+  NuDB::beast_extras
+)
+
+#[===================================================================[
+  interface lib for ubsan
+#]===================================================================]
+
+add_library (ubsan_lib INTERFACE)
+add_library (NuDB::ubsan ALIAS ubsan_lib)
+target_compile_options (ubsan_lib INTERFACE
+  -fsanitize=undefined
+  -fno-omit-frame-pointer
+)
+target_link_libraries (ubsan_lib INTERFACE
+  -fsanitize=undefined
+  $<$<BOOL:${is_gcc}>:ubsan>
+)
+if (usan)
+  target_link_libraries (common INTERFACE NuDB::ubsan)
+endif ()
+
+#[===================================================================[
+  interface lib for asan
+#]===================================================================]
+
+add_library (asan_lib INTERFACE)
+add_library (NuDB::asan ALIAS asan_lib)
+target_compile_options (asan_lib INTERFACE
+  -fsanitize=address
+  -fno-omit-frame-pointer
+)
+target_link_libraries (asan_lib INTERFACE
+  -fsanitize=address
+  $<$<BOOL:${is_gcc}>:asan>
+)
+if (asan)
+  target_link_libraries (common INTERFACE NuDB::asan)
+endif ()
+
+#[===================================================================[
+  interface lib for coverage options
+#]===================================================================]
+
+add_library (cov_lib INTERFACE)
+add_library (NuDB::coverage ALIAS cov_lib)
+target_compile_options (cov_lib INTERFACE
+  $<$<BOOL:${is_gcc}>:-fprofile-arcs -ftest-coverage>
+  $<$<BOOL:${is_clang}>:-fprofile-instr-generate -fcoverage-mapping>
+)
+target_link_libraries (cov_lib INTERFACE
+  $<$<BOOL:${is_gcc}>:-lgcov -fprofile-arcs -ftest-coverage>
+  $<$<BOOL:${is_clang}>:-fprofile-instr-generate -fcoverage-mapping>
+)
+if (coverage)
+  target_link_libraries (common INTERFACE NuDB::coverage)
+endif ()
+
+#[===================================================================[
+  function to help with VS organization
+#]===================================================================]
 
 file (GLOB_RECURSE BEAST_FILES
-    ${Boost_INCLUDE_DIR}/boost/beast/*.hpp
-    ${Boost_INCLUDE_DIR}/boost/beast/*.ipp
+  ${Boost_INCLUDE_DIR}/boost/beast/*.hpp
+  ${Boost_INCLUDE_DIR}/boost/beast/*.ipp
 )
+file(GLOB_RECURSE CORE_FILES
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/nudb/*.*)
 
-#-------------------------------------------------------------------------------
+# header files added as "sources" ONLY for convenience so that
+# IDEs like VisualStudio will show them
+macro(common_sources_tree target)
+  target_sources (${target} PRIVATE ${CORE_FILES} ${BEAST_FILES})
+  source_group (TREE ${Boost_INCLUDE_DIR}/boost/beast PREFIX "beast" FILES ${BEAST_FILES})
+  source_group (TREE ${CMAKE_SOURCE_DIR}/include/nudb PREFIX "nudb" FILES ${CORE_FILES})
+endmacro()
 
-function (DoGroupSources curdir rootdir folder)
-    file (GLOB children RELATIVE ${PROJECT_SOURCE_DIR}/${curdir} ${PROJECT_SOURCE_DIR}/${curdir}/*)
-    foreach (child ${children})
-        if (IS_DIRECTORY ${PROJECT_SOURCE_DIR}/${curdir}/${child})
-            DoGroupSources (${curdir}/${child} ${rootdir} ${folder})
-        elseif (${child} STREQUAL "CMakeLists.txt")
-            source_group("" FILES ${PROJECT_SOURCE_DIR}/${curdir}/${child})
-        else()
-            string (REGEX REPLACE ^${rootdir} ${folder} groupname ${curdir})
-            string (REPLACE "/" "\\" groupname ${groupname})
-            source_group (${groupname} FILES ${PROJECT_SOURCE_DIR}/${curdir}/${child})
-        endif()
-    endforeach()
-endfunction()
-
-function (GroupSources curdir folder)
-    DoGroupSources (${curdir} ${curdir} ${folder})
-endfunction()
-
-#-------------------------------------------------------------------------------
-#
-# NuDB
-#
-
-file (GLOB_RECURSE NUDB_FILES
-    ${PROJECT_SOURCE_DIR}/include/nudb/*.hpp
-    ${PROJECT_SOURCE_DIR}/include/nudb/*.ipp
-)
-
-if ("${VARIANT}" STREQUAL "coverage")
-    set (CMAKE_CXX_FLAGS
-      "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
-    set (CMAKE_BUILD_TYPE RELWITHDEBINFO)
-    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lgcov")
-elseif ("${VARIANT}" STREQUAL "asan")
-    set (CMAKE_CXX_FLAGS
-      "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
-    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
-    set (CMAKE_BUILD_TYPE RELWITHDEBINFO)
-elseif ("${VARIANT}" STREQUAL "usan")
-    set (CMAKE_CXX_FLAGS
-      "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-omit-frame-pointer")
-    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined")
-    set (CMAKE_BUILD_TYPE RELWITHDEBINFO)
-elseif ("${VARIANT}" STREQUAL "debug")
-    set (CMAKE_BUILD_TYPE DEBUG)
-elseif ("${VARIANT}" STREQUAL "release")
-    set (CMAKE_BUILD_TYPE RELEASE)
-endif ()
-
-include_directories (
-    include
-    extras
-    extras/beast/extras
-    )
+#[===================================================================[
+   tests/tools
+#]===================================================================]
 
 add_subdirectory (bench)
 add_subdirectory (examples)
 add_subdirectory (test)
 add_subdirectory (tools)
+

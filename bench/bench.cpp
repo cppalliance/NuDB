@@ -5,15 +5,12 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <nudb/test/test_store.hpp>
-#include <nudb/util.hpp>
-#include <beast/unit_test/dstream.hpp>
+#include <nudb/_experimental/test/test_store.hpp>
+#include <nudb/_experimental/util.hpp>
+#include <boost/beast/_experimental/unit_test/dstream.hpp>
 
 #if WITH_ROCKSDB
 #include "rocksdb/db.h"
-
-char const* rocksdb_build_git_sha="Benchmark Dummy Sha";
-char const* rocksdb_build_compile_date="Benchmark Dummy Compile Date";
 #endif
 
 #include <boost/container/flat_map.hpp>
@@ -36,8 +33,8 @@ char const* rocksdb_build_compile_date="Benchmark Dummy Compile Date";
 namespace nudb {
 namespace test {
 
-beast::unit_test::dstream dout{std::cout};
-beast::unit_test::dstream derr{std::cerr};
+boost::beast::unit_test::dstream dout{std::cout};
+boost::beast::unit_test::dstream derr{std::cerr};
 
 struct stop_watch
 {
@@ -375,8 +372,8 @@ main(int argc, char** argv)
         }
     }
 
-    auto const batch_size = get_opt<size_t>(vm, "batch_size", 20000);
-    auto const num_batches = get_opt<size_t>(vm, "num_batches", 500);
+    auto const batch_size = get_opt<std::uint64_t>(vm, "batch_size", 20000);
+    auto const num_batches = get_opt<std::uint64_t>(vm, "num_batches", 500);
     auto const block_size = get_opt<size_t>(vm, "block_size", 4096);
     auto const load_factor = get_opt<float>(vm, "load_factor", 0.5f);
     auto const key_size = get_opt<size_t>(vm, "key_size", 64);

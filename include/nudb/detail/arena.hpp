@@ -17,7 +17,7 @@
 #include <memory>
 
 #if NUDB_DEBUG_ARENA
-#include <beast/unit_test/dstream.hpp>
+#include <boost/beast/_experimental/unit_test/dstream.hpp>
 #include <iostream>
 #endif
 

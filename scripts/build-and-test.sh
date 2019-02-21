@@ -26,12 +26,10 @@ shopt -s globstar
 if [[ -z ${CI:-} ]]; then
   : ${TRAVIS_BRANCH:=feature}
   : ${CC:=gcc}
-  : ${ADDRESS_MODEL:=64}
   : ${VARIANT:=debug}
   # If running locally we assume we have lcov/valgrind on PATH
-else
-  export PATH=${VALGRIND_ROOT}/bin:${LCOV_ROOT}/usr/bin:${PATH}
 fi
+: ${WITH_VALGRIND:=0}
 
 MAIN_BRANCH=0
 # For builds not triggered by a pull request TRAVIS_BRANCH is the name of the
@@ -43,21 +41,9 @@ if [[ ${TRAVIS_BRANCH} == master || ${TRAVIS_BRANCH} == develop ]]; then
 fi
 
 num_jobs=2
-#if [[ $(uname) == Darwin ]]; then
-#  num_jobs=$(sysctl -n hw.physicalcpu)
-#elif [[ $(uname -s) == Linux ]]; then
-#  # CircleCI returns 32 phys procs, but 2 virt proc
-#  num_proc_units=$(nproc)
-#  # Physical cores
-#  num_jobs=$(lscpu -p | grep -v '^#' | sort -u -t, -k 2,4 | wc -l)
-#  if ((${num_proc_units} < ${num_jobs})); then
-#      num_jobs=${num_proc_units}
-#  fi
-#fi
 
 echo "using toolset: ${CC}"
 echo "using variant: ${VARIANT}"
-echo "using address-model: ${ADDRESS_MODEL}"
 echo "using PATH: ${PATH}"
 echo "using MAIN_BRANCH: ${MAIN_BRANCH}"
 echo "using BOOST_ROOT: ${BOOST_ROOT}"
@@ -77,74 +63,95 @@ function run_tests {
 }
 
 function run_benchmark {
-    for x in bin/**/${VARIANT}/**/bench; do
-        ${x} --inserts=10000
-    done
-}
-
-function run_tests_with_valgrind {
-  for x in bin/**/${VARIANT}/**/test-all; do
-    # TODO --max-stackframe=8388608
-    # see: https://travis-ci.org/vinniefalco/Beast/jobs/132486245
-    valgrind --error-exitcode=1 "${x}"
+  for x in bin/**/${VARIANT}/**/bench; do
+    ${x} --batch_size=10000 --num_batches=100
   done
 }
 
+function run_tests_with_valgrind {
+  if ! command -v valgrind >/dev/null 2>&1 ; then
+    if [[ ! -z ${VALGRIND_ROOT:-} ]]; then
+      export PATH=${VALGRIND_ROOT}/bin:${PATH}
+    fi
+  fi
+  for x in bin/**/${VARIANT}/**/test-all; do
+    valgrind \
+      --error-exitcode=1 \
+      --leak-check=full \
+      --track-origins=yes \
+      --suppressions=scripts/valgrind.supp \
+      --gen-suppressions=all \
+      "${x}"
+  done
+}
+
+: ${ADDRESS_MODEL:=64}
 function build_bjam {
+  echo "using address-model: ${ADDRESS_MODEL}"
   ${BOOST_ROOT}/bjam toolset=${CC} \
     variant=${VARIANT} \
     address-model=${ADDRESS_MODEL} \
     -j${num_jobs}
 }
 
+: ${CMAKE_ROOT:="${HOME}/cmake"}
+: ${CMAKE_EXTRA_OPTS:=""}
 function build_cmake {
-    mkdir -p build
-    pushd build > /dev/null
-    cmake -DVARIANT=${VARIANT} ..
-    make -j${num_jobs}
-    mkdir -p ../bin/${VARIANT}
-    find . -executable -type f -exec cp {} ../bin/${VARIANT}/. \;
-    popd > /dev/null
+  exeperms=$(test $(uname) = "Linux" && echo "/111" || echo "+111")
+  mkdir -p build
+  pushd build > /dev/null
+  gen=$(command -v ninja >/dev/null && echo "Ninja" || echo "Unix Makefiles")
+  eval cmake -DVARIANT=${VARIANT} -G"${gen}" -DCMAKE_VERBOSE_MAKEFILE=ON ${CMAKE_EXTRA_OPTS} ..
+  cmake --build . -j ${num_jobs} --verbose
+  mkdir -p ../bin/${VARIANT}
+  find . -perm ${exeperms} -type f -exec cp {} ../bin/${VARIANT}/. \;
+  popd > /dev/null
 }
 
 ##################################### BUILD ####################################
 
 if [[ ${BUILD_SYSTEM:-} == cmake ]]; then
-    build_cmake
+  build_cmake
 else
-    build_bjam
+  build_bjam
 fi
 
 ##################################### TESTS ####################################
 
 if [[ ${VARIANT} == coverage ]]; then
+  if ! command -v lcov >/dev/null 2>&1 ; then
+    if [[ ! -z ${LCOV_ROOT:-} ]]; then
+      export PATH=${LCOV_ROOT}/usr/bin:${PATH}
+    fi
+  fi
+
   find . -name "*.gcda" | xargs rm -f
   rm *.info -f
   # Create baseline coverage data file
   lcov --no-external -c -i -d . -o baseline.info > /dev/null
+fi
 
-  # Perform test
-  if [[ ${MAIN_BRANCH} == 1 ]]; then
-    run_tests_with_valgrind
-  else
-    run_tests
-  fi
+# Perform test
+if [[ ${WITH_VALGRIND} -ge 1 ]]; then
+  run_tests_with_valgrind
+else
+  run_tests
+fi
 
+if [[ ${VARIANT} == coverage ]]; then
   # Create test coverage data file
   lcov --no-external -c -d . -o testrun.info > /dev/null
-
   # Combine baseline and test coverage data
   lcov -a baseline.info -a testrun.info -o lcov-all.info > /dev/null
-
   # Extract only include/*, and don\'t report on examples or test
   lcov -e "lcov-all.info" "${PWD}/include/nudb/*" -o lcov.info > /dev/null
-
-  ~/.local/bin/codecov -X gcov
+  lcov --remove "lcov.info" "${PWD}/include/nudb/_experimental/*" -o lcov.info > /dev/null
+  ~/.local/bin/codecov -X gcov -f lcov.info
   cat lcov.info | node_modules/.bin/coveralls
-
   # Clean up these stragglers so BOOST_ROOT cache is clean
   find ${BOOST_ROOT}/bin.v2 -name "*.gcda" | xargs rm -f
 else
-  run_tests_with_debugger
+  # only run benchmark for non-coverage builds
   run_benchmark
 fi
+

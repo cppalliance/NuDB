@@ -18,7 +18,7 @@
 #define NUDB_DEBUG_LOG 0
 #endif
 #if NUDB_DEBUG_LOG
-#include <beast/unit_test/dstream.hpp>
+#include <boost/beast/_experimental/unit_test/dstream.hpp>
 #include <iostream>
 #endif
 

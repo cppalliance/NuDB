@@ -1,89 +1,283 @@
 language: cpp
+sudo: false
 
 env:
   global:
-    - LLVM_VERSION=3.8.0
-    # Maintenance note: to move to a new version
-    # of boost, update both BOOST_ROOT and BOOST_URL.
-    # Note that for simplicity, BOOST_ROOT's final
-    # namepart must match the folder name internal
-    # to boost's .tar.gz.
-    - LCOV_ROOT=$HOME/lcov
-    - VALGRIND_ROOT=$HOME/valgrind-install
-    - BOOST_ROOT=$HOME/boost_1_61_0
-    - BOOST_URL='http://sourceforge.net/projects/boost/files/boost/1.61.0/boost_1_61_0.tar.gz'
+    - BUILD_SYSTEM=cmake
+    - BOOST_URL='https://dl.bintray.com/boostorg/release/1.69.0/source/boost_1_69_0.tar.bz2'
+    - BOOST_ROOT=$TRAVIS_BUILD_DIR/_cache/boost_1_69_0
+    - EP_CACHE_ROOT=$TRAVIS_BUILD_DIR/_cache/cmake_ep
+    - CMAKE_ROOT=$TRAVIS_BUILD_DIR/_cache/cmake
+    - LCOV_ROOT=$TRAVIS_BUILD_DIR/_cache/lcov
+    - VALGRIND_ROOT=$TRAVIS_BUILD_DIR/_cache/valgrind
+    # enable this once ready for warnings-as-errors in travis builds:
+    # - CMAKE_EXTRA_OPTS="-Dwerr=ON"
+cache:
+  timeout: 1000
+  directories:
+    - _cache
 
-packages: &gcc5_pkgs
-  - gcc-5
-  - g++-5
-  - python-software-properties
-  - libssl-dev
-  - libffi-dev
-  - libstdc++6
-  - binutils-gold
-  # Provides a backtrace if the unittests crash
-  - gdb
-  # Needed for installing valgrind
-  - subversion
-  - automake
-  - autotools-dev
-  - libc6-dbg
-  # Needed to build rocksdb
-  - libsnappy-dev
+addons:
+  apt:
+    sources: &base_linux_sources
+      - ubuntu-toolchain-r-test
+    packages: &base_linux_packages
+      - software-properties-common
+      - wget
+      - python-software-properties
+      - libstdc++6
+      - binutils-gold
+      - gdb
+      - make
+      - ninja-build
+      - ccache
+      - python-pip
+      - npm
+      - libc6-dbg
 
 matrix:
   include:
-    # GCC/Coverage/Autobahn
-    - compiler: gcc
-      env:
-        - GCC_VER=5
-        - VARIANT=coverage
-        - ADDRESS_MODEL=64
-        - BUILD_SYSTEM=cmake
-        - PATH=$PWD/cmake/bin:$PATH
-      addons: &ao_gcc5
+    - os: linux
+      compiler: gcc-7
+      dist: xenial
+      addons:
         apt:
-          sources: ['ubuntu-toolchain-r-test']
-          packages: *gcc5_pkgs
-
-    # Clang/UndefinedBehaviourSanitizer
-    - compiler: clang
+          packages:
+            - g++-7
+            - *base_linux_packages
+          sources:
+            - *base_linux_sources
       env:
-        - GCC_VER=5
+        - VARIANT=coverage
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+    - os: osx
+      osx_image: xcode10.1
+      addons:
+        homebrew:
+          packages:
+            - bash
+            - ninja
+          update: false
+      env:
+        - VARIANT=debug
+    - os: osx
+      osx_image: xcode10.1
+      addons:
+        homebrew:
+          packages:
+            - bash
+            - ninja
+          update: false
+      env:
+        - VARIANT=release
+    - os: linux
+      compiler: gcc-5
+      dist: xenial
+      addons:
+        apt:
+          packages:
+            - g++-5
+            - *base_linux_packages
+          sources:
+            - *base_linux_sources
+      env:
+        - VARIANT=debug
+        - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+    - os: linux
+      compiler: gcc-6
+      dist: xenial
+      addons:
+        apt:
+          packages:
+            - g++-6
+            - *base_linux_packages
+          sources:
+            - *base_linux_sources
+      env:
+        - VARIANT=debug
+        - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+    - os: linux
+      compiler: gcc-7
+      dist: xenial
+      addons:
+        apt:
+          packages:
+            - g++-7
+            - *base_linux_packages
+          sources:
+            - *base_linux_sources
+      env:
+        - VARIANT=debug
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+    - os: linux
+      compiler: gcc-8
+      dist: xenial
+      addons:
+        apt:
+          packages:
+            - g++-8
+            - *base_linux_packages
+          sources:
+            - *base_linux_sources
+      env:
+        - VARIANT=debug
+        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
+    - os: linux
+      compiler: gcc-8
+      dist: xenial
+      addons:
+        apt:
+          packages:
+            - g++-8
+            - *base_linux_packages
+          sources:
+            - *base_linux_sources
+      env:
+        - VARIANT=release
+        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
+    - os: linux
+      compiler: gcc-8
+      dist: xenial
+      addons:
+        apt:
+          packages:
+            - g++-8
+            - *base_linux_packages
+          sources:
+            - *base_linux_sources
+      env:
+        - VARIANT=reldeb
+        - WITH_VALGRIND=1
+        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
+      before_script:
+        - scripts/install-valgrind.sh
+        - export PATH="${VALGRIND_ROOT}/bin:${PATH}"
+    - os: linux
+      compiler: clang-6.0
+      dist: xenial
+      addons:
+        apt:
+          packages:
+            - *base_linux_packages
+            - clang-6.0
+          sources:
+            - *base_linux_sources
+            - llvm-toolchain-xenial-6.0
+      env:
+        - VARIANT=debug
+        - MATRIX_EVAL="CC=clang-6.0 && CXX=clang++-6.0"
+    - os: linux
+      compiler: clang-7
+      dist: xenial
+      addons:
+        apt:
+          packages:
+            - *base_linux_packages
+            - clang-7
+          sources:
+            - *base_linux_sources
+            - llvm-toolchain-xenial-7
+      env:
+        - VARIANT=debug
+        - MATRIX_EVAL="CC=clang-7 && CXX=clang++-7"
+    - os: linux
+      compiler: clang-8
+      dist: xenial
+      addons:
+        apt:
+          packages:
+            - *base_linux_packages
+            - clang-8
+          sources:
+            - *base_linux_sources
+            - llvm-toolchain-xenial-8
+      env:
+        - VARIANT=debug
+        - MATRIX_EVAL="CC=clang-8 && CXX=clang++-8"
+    - os: linux
+      compiler: clang-8
+      dist: xenial
+      addons:
+        apt:
+          packages:
+            - *base_linux_packages
+            - clang-8
+            - libclang-common-8-dev
+          sources:
+            - *base_linux_sources
+            - llvm-toolchain-xenial-8
+      env:
         - VARIANT=usan
-        - CLANG_VER=3.8
-        - ADDRESS_MODEL=64
+        - MATRIX_EVAL="CC=clang-8 && CXX=clang++-8"
         - UBSAN_OPTIONS='print_stacktrace=1'
-        - BUILD_SYSTEM=cmake
-        - PATH=$PWD/cmake/bin:$PATH
-        - PATH=$PWD/llvm-$LLVM_VERSION/bin:$PATH
-      addons: *ao_gcc5
-
-    # Clang/AddressSanitizer
-    - compiler: clang
+        - UBSAN_SYMBOLIZER_PATH=$(which llvm-symbolizer-8)
+    - os: linux
+      compiler: clang-8
+      dist: xenial
+      addons:
+        apt:
+          packages:
+            - *base_linux_packages
+            - clang-8
+            - libclang-common-8-dev
+            - llvm-8
+          sources:
+            - *base_linux_sources
+            - llvm-toolchain-xenial-8
       env:
-        - GCC_VER=5
         - VARIANT=asan
-        - CLANG_VER=3.8
-        - ADDRESS_MODEL=64
-        - PATH=$PWD/llvm-$LLVM_VERSION/bin:$PATH
-      addons: *ao_gcc5
-
-cache:
-  directories:
-  - $BOOST_ROOT
-  - $VALGRIND_ROOT
-  - llvm-$LLVM_VERSION
-  - cmake
+        - MATRIX_EVAL="CC=clang-8 && CXX=clang++-8"
+      before_script:
+        - sudo ln -s $(which llvm-symbolizer-8) /usr/bin/llvm-symbolizer
+# TODO: windows slaves in travis are very buggy and slow (2019/03/22)
+#   revisit when they improve
+#    - os: windows
+#      env:
+#        # GENERATOR not currently used, but there to make cache key unique
+#        - GENERATOR=msvc
+#        - MATRIX_EVAL="CC=cl.exe && CXX=cl.exe"
+#      install:
+#        - choco upgrade cmake.install
+#        - scripts/install-boost.sh
+#      script:
+#        - mkdir -p build.ms && cd build.ms
+#        - cmake -G "Visual Studio 15 2017 Win64" -DCMAKE_VERBOSE_MAKEFILE=ON ..
+#        - travis_wait 35 cmake --build . -j 2 --verbose --config Debug
+#        - ./test/Debug/test-all.exe
+#        - ./bench/Debug/bench.exe --batch_size=10000 --num_batches=100
+#    - os: windows
+#      env:
+#        # GENERATOR not currently used, but there to make cache key unique
+#        - GENERATOR=ninja
+#        - MATRIX_EVAL="CC=cl.exe && CXX=cl.exe"
+#      install:
+#        - choco upgrade cmake.install
+#        - |-
+#          ls -la $BOOST_ROOT || echo "boost path not found"
+#        - scripts/install-boost.sh
+#        - choco install ninja
+#        - choco install visualstudio2017-workload-vctools -y
+#      script:
+#        - . ./scripts/setup-msvc.sh
+#        - mkdir -p build.ninja && cd build.ninja
+#        - cmake -G Ninja -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Debug ..
+#        - travis_wait 35 cmake --build . -j 2 --verbose
+#        - ./test/test-all.exe
+#        - ./bench/bench.exe --batch_size=10000 --num_batches=100
 
 before_install:
-  - scripts/install-dependencies.sh
+  - if [ "${MATRIX_EVAL}" != "" ] ; then eval "${MATRIX_EVAL}"; fi
+
+install:
+  - scripts/install-cmake.sh 3.14.0
+  - if [ $(uname) = "Darwin" ] ; then export PATH="${CMAKE_ROOT}/CMake.app/Contents/bin:${PATH}"; fi
+  - if [ $(uname) = "Linux" ] ; then export PATH="${CMAKE_ROOT}/bin:${PATH}"; fi
+  - scripts/install-boost.sh
+  - scripts/install-coverage.sh
+  - export PATH="${LCOV_ROOT}/bin:${PATH}"
 
 script:
-  - scripts/build-and-test.sh
-
-after_script:
-  - cat nohup.out || echo "nohup.out already deleted"
+  - travis_wait 35 scripts/build-and-test.sh
 
 notifications:
   email:
