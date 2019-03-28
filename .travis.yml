@@ -10,6 +10,8 @@ env:
     - CMAKE_ROOT=$TRAVIS_BUILD_DIR/_cache/cmake
     - LCOV_ROOT=$TRAVIS_BUILD_DIR/_cache/lcov
     - VALGRIND_ROOT=$TRAVIS_BUILD_DIR/_cache/valgrind
+    # enable this once ready for warnings-as-errors in travis builds:
+    # - CMAKE_EXTRA_OPTS="-Dwerr=ON"
 cache:
   timeout: 1000
   directories:

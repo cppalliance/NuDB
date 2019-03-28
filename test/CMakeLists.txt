@@ -14,7 +14,6 @@ get_target_property(beast_extras_include beast_extras INTERFACE_INCLUDE_DIRECTOR
 set (TEST_MAIN ${beast_extras_include}/boost/beast/_experimental/unit_test/main.cpp)
 
 set (SOURCE_FILES
-    Jamfile
     basic_store.cpp
     buffer.cpp
     callgrind_test.cpp
@@ -35,9 +34,9 @@ set (SOURCE_FILES
     xxhasher.cpp
 )
 
-source_group (TREE ${Boost_INCLUDE_DIR}/boost/beast PREFIX beast FILES ${BEAST_FILES})
-source_group (TREE ${PROJECT_SOURCE_DIR}/test PREFIX "" FILES ${SOURCE_FILES})
-source_group ("" FILES ${TEST_MAIN})
-
 add_executable(test-all ${SOURCE_FILES} ${TEST_MAIN})
 target_link_libraries(test-all NuDB::nudb NuDB::common)
+source_group ("" FILES ${TEST_MAIN} ${SOURCE_FILES})
+common_sources_tree (test-all)
+
+

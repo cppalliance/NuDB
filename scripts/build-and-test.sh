@@ -95,12 +95,13 @@ function build_bjam {
 }
 
 : ${CMAKE_ROOT:="${HOME}/cmake"}
+: ${CMAKE_EXTRA_OPTS:=""}
 function build_cmake {
   exeperms=$(test $(uname) = "Linux" && echo "/111" || echo "+111")
   mkdir -p build
   pushd build > /dev/null
   gen=$(command -v ninja >/dev/null && echo "Ninja" || echo "Unix Makefiles")
-  cmake -DVARIANT=${VARIANT} -G"${gen}" -DCMAKE_VERBOSE_MAKEFILE=ON ..
+  eval cmake -DVARIANT=${VARIANT} -G"${gen}" -DCMAKE_VERBOSE_MAKEFILE=ON ${CMAKE_EXTRA_OPTS} ..
   cmake --build . -j ${num_jobs} --verbose
   mkdir -p ../bin/${VARIANT}
   find . -perm ${exeperms} -type f -exec cp {} ../bin/${VARIANT}/. \;

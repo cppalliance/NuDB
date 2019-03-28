@@ -23,6 +23,7 @@ else ()
 endif ()
 
 set_property (GLOBAL PROPERTY USE_FOLDERS ON)
+set_property (DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT nudb)
 
 if (NOT MSVC)
   set (THREADS_PREFER_PTHREAD_FLAG ON)
@@ -261,33 +262,19 @@ endif ()
 #]===================================================================]
 
 file (GLOB_RECURSE BEAST_FILES
-    ${Boost_INCLUDE_DIR}/boost/beast/*.hpp
-    ${Boost_INCLUDE_DIR}/boost/beast/*.ipp
+  ${Boost_INCLUDE_DIR}/boost/beast/*.hpp
+  ${Boost_INCLUDE_DIR}/boost/beast/*.ipp
 )
+file(GLOB_RECURSE CORE_FILES
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/nudb/*.*)
 
-function (DoGroupSources curdir rootdir folder)
-    file (GLOB children RELATIVE ${PROJECT_SOURCE_DIR}/${curdir} ${PROJECT_SOURCE_DIR}/${curdir}/*)
-    foreach (child ${children})
-        if (IS_DIRECTORY ${PROJECT_SOURCE_DIR}/${curdir}/${child})
-            DoGroupSources (${curdir}/${child} ${rootdir} ${folder})
-        elseif (${child} STREQUAL "CMakeLists.txt")
-            source_group("" FILES ${PROJECT_SOURCE_DIR}/${curdir}/${child})
-        else()
-            string (REGEX REPLACE ^${rootdir} ${folder} groupname ${curdir})
-            string (REPLACE "/" "\\" groupname ${groupname})
-            source_group (${groupname} FILES ${PROJECT_SOURCE_DIR}/${curdir}/${child})
-        endif()
-    endforeach()
-endfunction()
-
-function (GroupSources curdir folder)
-    DoGroupSources (${curdir} ${curdir} ${folder})
-endfunction()
-
-GroupSources(include/nudb nudb)
-GroupSources(bench bench)
-GroupSources(test test)
-GroupSources(tools tools)
+# header files added as "sources" ONLY for convenience so that
+# IDEs like VisualStudio will show them
+macro(common_sources_tree target)
+  target_sources (${target} PRIVATE ${CORE_FILES} ${BEAST_FILES})
+  source_group (TREE ${Boost_INCLUDE_DIR}/boost/beast PREFIX "beast" FILES ${BEAST_FILES})
+  source_group (TREE ${CMAKE_SOURCE_DIR}/include/nudb PREFIX "nudb" FILES ${CORE_FILES})
+endmacro()
 
 #[===================================================================[
    tests/tools
@@ -297,5 +284,4 @@ add_subdirectory (bench)
 add_subdirectory (examples)
 add_subdirectory (test)
 add_subdirectory (tools)
-
 

@@ -8,13 +8,11 @@
 #
 
 set (SOURCE_FILES
-    Jamfile
     example.cpp
 )
 
-source_group (TREE ${Boost_INCLUDE_DIR}/boost/beast PREFIX beast FILES ${BEAST_FILES})
-source_group (TREE ${PROJECT_SOURCE_DIR}/examples PREFIX "" FILES ${SOURCE_FILES})
-source_group ("" FILES ${TEST_MAIN})
-
 add_executable (example ${SOURCE_FILES})
 target_link_libraries(example NuDB::nudb NuDB::common)
+source_group ("" FILES ${SOURCE_FILES})
+common_sources_tree (example)
+

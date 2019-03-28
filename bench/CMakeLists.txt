@@ -211,7 +211,7 @@ if(MSVC)
     -wd4800            # Disable C4800(int to bool performance)
     -wd4503            # Decorated name length exceeded, name was truncated
     -W3
-    -WX-
+    $<$<BOOL:${werr}>:-WX>
     -EHa
     -GR
     $<$<CONFIG:Release>:-Ox>
@@ -237,4 +237,5 @@ else ()
     Threads::Threads
     $<$<NOT:$<BOOL:${APPLE}>>:rt>)
 endif ()
-
+source_group ("" FILES bench.cpp)
+common_sources_tree (bench)
