@@ -14,8 +14,8 @@
 //  NUDB_VERSION / 100 % 1000 is the minor version
 //  NUDB_VERSION / 100000 is the major version
 //
-#define NUDB_VERSION 100002
+#define NUDB_VERSION 200000
 
-#define NUDB_VERSION_STRING "1.0.2"
+#define NUDB_VERSION_STRING "2.0.0"
 
 #endif
