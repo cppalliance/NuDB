@@ -344,6 +344,10 @@ insert(
     auto const sleep =
         s_->rate && rate > s_->rate;
     m.unlock();
+
+    // The caller of insert must be blocked when the rate of insertion
+    // (measured in approximate bytes per second) exceeds the maximum rate
+    // that can be flushed. The precise sleep duration is not important.
     if(sleep)
         std::this_thread::sleep_for(milliseconds{25});
 }
@@ -750,6 +754,7 @@ flush()
 #endif
     {
         unique_lock_type m{m_};
+        s_->when = clock_type::now();
         if(! s_->p1.empty())
         {
             std::size_t work;
@@ -774,7 +779,6 @@ flush()
         #endif
         }
         s_->p1.periodic_activity();
-        s_->when = clock_type::now();
     }
     if(ec_)
         ecb_.store(true);

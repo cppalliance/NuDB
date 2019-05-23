@@ -1,3 +1,16 @@
+2.0.1
+
+* Fixed a bug introduced in 2.0 where flush time was incorrectly updated 
+* Improved thread management in context class
+
+---
+
+2.0.0
+
+* Add thread management context class
+
+---
+
 1.0.2
 
 * Better CMakeLists.txt for finding Boost

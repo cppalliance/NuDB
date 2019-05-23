@@ -73,11 +73,10 @@ run()
                 break;
             if(first)
             {
-                auto const status = cv_f_.wait_until(
-                    lock, when + std::chrono::seconds{1});
+                cv_f_.wait_until(lock, when + std::chrono::seconds{1});
                 if(stop_)
                     break;
-                if(status == std::cv_status::timeout && ! waiting_.empty())
+                if(! waiting_.empty())
                 {
                     // Move everything in waiting_ to flushing_
                     for(auto store = waiting_.head_; store;
@@ -89,7 +88,13 @@ run()
                 when = clock_type::now();
                 if(flushing_.empty())
                     continue;
-                cv_f_.notify_all();
+
+                if (num_threads_ > 1)
+                {
+                    // Let other threads flush while this one splices
+                    cv_f_.notify_all();
+                    continue;
+                }
             }
             else
             {
@@ -103,7 +108,7 @@ run()
             }
         }
 
-        // process everything in flushing_
+        // Process everything in flushing_
         for(;;)
             if(! flush_one())
                 break;
