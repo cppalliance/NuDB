@@ -57,7 +57,7 @@ matrix:
           packages:
             - bash
             - ninja
-          update: false
+          update: true
       env:
         - VARIANT=debug
     - os: osx
@@ -67,7 +67,7 @@ matrix:
           packages:
             - bash
             - ninja
-          update: false
+          update: true
       env:
         - VARIANT=release
     - os: linux
