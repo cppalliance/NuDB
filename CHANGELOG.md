@@ -1,3 +1,9 @@
+2.0.2
+
+* Add default success error_code to enum class error
+
+---
+
 2.0.1
 
 * Fixed a bug introduced in 2.0 where flush time was incorrectly updated 
