@@ -81,6 +81,12 @@ namespace errc = boost::system::errc;
 /// Database error codes.
 enum class error
 {
+    /** Operation succeeded
+
+        Default error_code value.
+     */
+    success = 0,
+
     /** The specified key was not found.
 
         Returned when @ref basic_store::fetch does not
