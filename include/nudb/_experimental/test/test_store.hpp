@@ -201,10 +201,12 @@ class basic_test_store
     temp_dir td_;
     std::uniform_int_distribution<std::size_t> sizef_;
     std::function<void(error_code&)> createf_;
+    std::function<void(error_code&)> create_dirf_;
     std::function<void(error_code&)> openf_;
     Buffer buf_;
 
 public:
+    path_type const dirp;
     path_type const dp;
     path_type const kp;
     path_type const lp;
@@ -233,6 +235,9 @@ public:
 
     void
     create(error_code& ec);
+
+    void
+    create_dir(error_code& ec);
 
     void
     open(error_code& ec);
@@ -270,11 +275,20 @@ basic_test_store<File>::basic_test_store(
                     keySize, blockSize, loadFactor, ec,
                     args...);
             })
+        , create_dirf_(
+            [this, args...](error_code& ec)
+            {
+                nudb::create<Hasher, File>(
+                    dirp, appnum, salt,
+                    keySize, blockSize, loadFactor, ec,
+                    args...);
+            })
         , openf_(
             [this, args...](error_code& ec)
             {
                 db.open(dp, kp, lp, ec, args...);
             })
+        , dirp(td_.path())
         , dp(td_.file("nudb.dat"))
         , kp(td_.file("nudb.key"))
         , lp(td_.file("nudb.log"))
@@ -329,6 +343,15 @@ create(error_code& ec)
 {
     createf_(ec);
 }
+
+template<class File>
+void
+basic_test_store<File>::
+create_dir(error_code& ec)
+{
+    create_dirf_(ec);
+}
+
 
 template<class File>
 void

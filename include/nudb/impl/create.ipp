@@ -158,6 +158,46 @@ fail:
         erase_file(log_path);
 }
 
+template<
+    class Hasher,
+    class File,
+    class... Args
+>
+void
+create(
+    path_type const& dir_path,
+    std::uint64_t appnum,
+    std::uint64_t salt,
+    nsize_t key_size,
+    nsize_t blockSize,
+    float load_factor,
+    error_code& ec,
+    Args&&... args)
+{
+  if(!is_dir(dir_path))
+      mkdir_p(dir_path);
+
+  path_type dat_path = path_cat(dir_path,
+      detail::default_dat_file());
+
+  path_type key_path = path_cat(dir_path,
+      detail::default_key_file());
+
+  path_type log_path = path_cat(dir_path,
+      detail::default_log_file());
+
+  create<Hasher, File, Args...>(dat_path,
+                                key_path,
+                                log_path,
+                                appnum,
+                                salt,
+                                key_size,
+                                blockSize,
+                                load_factor,
+                                ec,
+                                args...);
+}
+
 } // nudb
 
 #endif
