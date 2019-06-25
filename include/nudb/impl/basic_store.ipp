@@ -46,6 +46,25 @@ state(File&& df_, File&& kf_, File&& lf_,
         "File requirements not met");
 }
 
+template<class Hasher, class File>
+basic_store<Hasher, File>::state::
+state(File&& df_, File&& kf_,
+    path_type const& dp_, path_type const& kp_,
+        detail::key_file_header const& kh_)
+    : df(std::move(df_))
+    , kf(std::move(kf_))
+    , dp(dp_)
+    , kp(kp_)
+    , hasher(kh_.salt)
+    , p0(kh_.key_size, "p0")
+    , p1(kh_.key_size, "p1")
+    , c1(kh_.key_size, kh_.block_size, "c1")
+    , kh(kh_)
+{
+    BOOST_STATIC_ASSERT_MSG(is_File<File>::value,
+        "File requirements not met");
+}
+
 //------------------------------------------------------------------------------
 
 template<class Hasher, class File>
@@ -122,9 +141,12 @@ open(
     path_type const& dat_path,
     path_type const& key_path,
     path_type const& log_path,
+    open_mode mode,
     error_code& ec,
     Args&&... args)
 {
+    bool writable = mode == open_mode::read_write;
+
     static_assert(is_Hasher<Hasher>::value,
         "Hasher requirements not met");
     using namespace detail;
@@ -138,17 +160,23 @@ open(
     File df(args...);
     File kf(args...);
     File lf(args...);
-    df.open(file_mode::append, dat_path, ec);
+    df.open(writable ? file_mode::append : file_mode::read,
+        dat_path, ec);
     if(ec)
         return;
-    kf.open(file_mode::write, key_path, ec);
+    kf.open(writable ? file_mode::write : file_mode::read,
+        key_path, ec);
     if(ec)
         return;
-    lf.create(file_mode::append, log_path, ec);
-    if(ec)
-        return;
-    // VFALCO TODO Erase empty log file if this
-    //             function subsequently fails.
+
+    if(writable){
+        lf.create(file_mode::append, log_path, ec);
+        if(ec)
+            return;
+        // VFALCO TODO Erase empty log file if this
+        //             function subsequently fails.
+    }
+
     dat_file_header dh;
     read(df, dh, ec);
     if(ec)
@@ -167,8 +195,12 @@ open(
     if(ec)
         return;
     boost::optional<state> s;
-    s.emplace(std::move(df), std::move(kf), std::move(lf),
-        dat_path, key_path, log_path, kh);
+    if(writable)
+        s.emplace(std::move(df), std::move(kf), std::move(lf),
+            dat_path, key_path, log_path, kh);
+    else
+        s.emplace(std::move(df), std::move(kf),
+            dat_path, key_path, kh);
     thresh_ = std::max<std::size_t>(65536UL,
         kh.load_factor * kh.capacity);
     frac_ = thresh_ / 2;
@@ -180,10 +212,13 @@ open(
         ec = error::short_key_file;
         return;
     }
-    dataWriteSize_ = 32 * nudb::block_size(dat_path);
-    logWriteSize_ = 32 * nudb::block_size(log_path);
+    if(writable){
+        dataWriteSize_ = 32 * nudb::block_size(dat_path);
+        logWriteSize_ = 32 * nudb::block_size(log_path);
+    }
     s_.emplace(std::move(*s));
     open_ = true;
+    is_writable_ = writable;
     ctx_->insert(*this);
 }
 

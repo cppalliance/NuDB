@@ -286,7 +286,7 @@ basic_test_store<File>::basic_test_store(
         , openf_(
             [this, args...](error_code& ec)
             {
-                db.open(dp, kp, lp, ec, args...);
+                db.open(dp, kp, lp, basic_store<Hasher, File>::open_mode::read_write, ec, args...);
             })
         , dirp(td_.path())
         , dp(td_.file("nudb.dat"))
