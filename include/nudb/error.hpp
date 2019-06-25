@@ -221,7 +221,10 @@ enum class error
     size_mismatch,
 
     /// duplicate value
-    duplicate_value
+    duplicate_value,
+
+    /// directory not found
+    dir_not_found
 };
 
 /// Returns the error category used for database error codes.

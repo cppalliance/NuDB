@@ -454,6 +454,40 @@ private:
     flush() override;
 };
 
+/** Open a database.
+
+    The database identified by the specified directory
+    under which default data and key paths are opened.
+
+    @par Requirements
+
+    The database must be not be open.
+
+    @par Thread safety
+
+    Not thread safe. The caller is responsible for
+    ensuring that no other store member functions are
+    called concurrently.
+
+    @param dir_path The path to the directory containing data
+    and key files.
+
+    @param store The store to open.
+
+    @param ec Set to the error, if any occurred.
+
+    @param args Optional arguments passed to @b File constructors.
+
+*/
+template<class Hasher, class File, class... Args>
+void
+open_dir(
+    path_type const& dir_path,
+    basic_store<Hasher, File>& store,
+    error_code& ec,
+    Args&&... args);
+
+
 } // nudb
 
 #include <nudb/impl/basic_store.ipp>

@@ -784,6 +784,32 @@ flush()
         ecb_.store(true);
 }
 
+template<class Hasher, class File, class... Args>
+void
+open_dir(
+    path_type const& dir_path,
+    basic_store<Hasher, File>& store,
+    error_code& ec,
+    Args&&... args)
+{
+  if(is_dir(dir_path)){
+    ec = error::dir_not_found;
+    return;
+  }
+
+  path_type dat_path = path_cat(dir_path,
+      detail::default_dat_file());
+
+  path_type key_path = path_cat(dir_path,
+      detail::default_key_file());
+
+  path_type log_path = path_cat(dir_path,
+      detail::default_log_file());
+
+  store.open(dat_path, key_path, log_path,
+      ec, args...);
+}
+
 } // nudb
 
 #endif

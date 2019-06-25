@@ -110,6 +110,31 @@ create(
     error_code& ec,
     Args&&... args);
 
+/** Create a new database in specified directory.
+
+    Similar to create method with explicit dat,
+    key, and log paths, with the default filenames
+    being used.
+
+    @param dir_path The path to the data file.
+
+*/
+template<
+    class Hasher,
+    class File = native_file,
+    class... Args
+>
+void
+create(
+    path_type const& dir_path,
+    std::uint64_t appnum,
+    std::uint64_t salt,
+    nsize_t key_size,
+    nsize_t blockSize,
+    float load_factor,
+    error_code& ec,
+    Args&&... args);
+
 } // nudb
 
 #include <nudb/impl/create.ipp>
