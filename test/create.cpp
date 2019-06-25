@@ -39,9 +39,28 @@ public:
     }
 
     void
+    test_create_dir()
+    {
+        std::size_t const keySize = 8;
+        std::size_t const blockSize = 256;
+        float const loadFactor = 0.5f;
+
+        error_code ec;
+        test_store ts{keySize, blockSize, loadFactor};
+        ts.create_dir(ec);
+        if(! BEAST_EXPECTS(! ec, ec.message()))
+            return;
+        ts.create_dir(ec);
+        if(! BEAST_EXPECTS(
+                ec == errc::file_exists, ec.message()))
+            return;
+    }
+
+    void
     run() override
     {
         test_create();
+        test_create_dir();
     }
 };
 

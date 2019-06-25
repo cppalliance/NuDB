@@ -50,6 +50,24 @@ enum class file_mode
     write
 };
 
+// Return boolean indicating if path exists
+bool path_exists(path_type const& path);
+
+// Return boolean indicating if path is a directory
+bool is_dir(path_type const& path);
+
+// Recursively make the specified dir tree
+bool mkdir_p(path_type const& path);
+
+// Append an rel-path to a local filesystem path.
+// The returned path is normalized for the platform.
+path_type
+path_cat(
+    path_type const& base,
+    path_type const& path);
+
 } // nudb
+
+#include <nudb/impl/file.ipp>
 
 #endif

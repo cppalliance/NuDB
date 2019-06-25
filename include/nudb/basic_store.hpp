@@ -52,6 +52,14 @@ public:
     using hash_type = Hasher;
     using file_type = File;
 
+    enum class open_mode {
+      /// Open the database for both read and write access
+      read_write,
+
+      /// Open the database for reach access only
+      read
+    };
+
 private:
     using clock_type =
         std::chrono::steady_clock;
@@ -90,9 +98,14 @@ private:
             path_type const& dp_, path_type const& kp_,
                 path_type const& lp_,
                     detail::key_file_header const& kh_);
+
+        state(File&& df_, File&& kf_,
+            path_type const& dp_, path_type const& kp_,
+                detail::key_file_header const& kh_);
     };
 
     bool open_ = false;
+    bool is_writable_;
 
     // Use optional because some
     // members cannot be default-constructed.
@@ -171,6 +184,19 @@ public:
     is_open() const
     {
         return open_;
+    }
+
+    /** Returns `true` if the database is writable
+
+        @par Thread safety
+
+        Safe to call concurrently with any function
+        except @ref open.
+    */
+    bool
+    is_writable() const
+    {
+        return is_writable_;
     }
 
     /** Return the path to the data file.
@@ -329,6 +355,8 @@ public:
 
         @param log_path The path to the log file.
 
+        @param open_mode Mode of database access
+
         @param ec Set to the error, if any occurred.
 
         @param args Optional arguments passed to @b File constructors.
@@ -340,6 +368,7 @@ public:
         path_type const& dat_path,
         path_type const& key_path,
         path_type const& log_path,
+        open_mode mode,
         error_code& ec,
         Args&&... args);
 
@@ -453,6 +482,40 @@ private:
     void
     flush() override;
 };
+
+/** Open a database.
+
+    The database identified by the specified directory
+    under which default data and key paths are opened.
+
+    @par Requirements
+
+    The database must be not be open.
+
+    @par Thread safety
+
+    Not thread safe. The caller is responsible for
+    ensuring that no other store member functions are
+    called concurrently.
+
+    @param dir_path The path to the directory containing data
+    and key files.
+
+    @param store The store to open.
+
+    @param ec Set to the error, if any occurred.
+
+    @param args Optional arguments passed to @b File constructors.
+
+*/
+template<class Hasher, class File, class... Args>
+void
+open_dir(
+    path_type const& dir_path,
+    basic_store<Hasher, File>& store,
+    error_code& ec,
+    Args&&... args);
+
 
 } // nudb
 

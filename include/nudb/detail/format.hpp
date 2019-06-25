@@ -46,6 +46,24 @@ value size          up to 32 bits (or 32-bit builds can't read it)
 
 static std::size_t constexpr currentVersion = 2;
 
+inline
+const path_type& default_dat_file() {
+  static const path_type ddf("nudb.dat");
+  return ddf;
+}
+
+inline
+const path_type& default_key_file() {
+  static const path_type dkf("nudb.key");
+  return dkf;
+}
+
+inline
+const path_type& default_log_file() {
+  static const path_type dkf("nudb.log");
+  return dkf;
+}
+
 struct dat_file_header
 {
     static std::size_t constexpr size =

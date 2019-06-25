@@ -27,7 +27,7 @@ int main()
         0.5f,
         ec);
     store db;
-    db.open(dat_path, key_path, log_path, ec);
+    db.open(dat_path, key_path, log_path, store::open_mode::read_write, ec);
     char data = 0;
     // Insert
     for(key_type i = 0; i < N; ++i)
