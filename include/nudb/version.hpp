@@ -16,6 +16,6 @@
 //
 #define NUDB_VERSION 200002
 
-#define NUDB_VERSION_STRING "2.0.2"
+#define NUDB_VERSION_STRING "2.0.3"
 
 #endif
