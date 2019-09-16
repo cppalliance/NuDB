@@ -1,3 +1,9 @@
+2.0.3
+
+* Update docca submodule
+
+---
+
 2.0.2
 
 * Add default success error_code to enum class error
