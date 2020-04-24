@@ -20,9 +20,7 @@
 
 namespace nudb {
 
-namespace detail {
-
-template<class = void>
+template<class>
 std::uint64_t
 make_uid()
 {
@@ -31,8 +29,6 @@ make_uid()
     std::uniform_int_distribution <std::size_t> dist;
     return dist(gen);
 }
-
-} // detail
 
 template<class>
 std::uint64_t
@@ -55,6 +51,7 @@ create(
     path_type const& key_path,
     path_type const& log_path,
     std::uint64_t appnum,
+    std::uint64_t uid,
     std::uint64_t salt,
     nsize_t key_size,
     nsize_t blockSize,
@@ -109,7 +106,7 @@ create(
         elf = true;
         dat_file_header dh;
         dh.version = currentVersion;
-        dh.uid = make_uid();
+        dh.uid = uid;
         dh.appnum = appnum;
         dh.key_size = key_size;
 
@@ -156,6 +153,29 @@ fail:
         erase_file(key_path);
     if(elf)
         erase_file(log_path);
+}
+
+template<
+    class Hasher,
+    class File,
+    class... Args
+>
+void
+create(
+    path_type const& dat_path,
+    path_type const& key_path,
+    path_type const& log_path,
+    std::uint64_t appnum,
+    std::uint64_t salt,
+    nsize_t key_size,
+    nsize_t blockSize,
+    float load_factor,
+    error_code& ec,
+    Args&&... args)
+{
+    create<Hasher>(dat_path, key_path, log_path,
+            appnum, make_uid(), salt, key_size, blockSize,
+            load_factor, ec, args...);
 }
 
 } // nudb
