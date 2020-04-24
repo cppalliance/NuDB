@@ -1,6 +1,7 @@
 2.0.3
 
 * Update docca submodule
+* Add version of create() with uid parameter
 
 ---
 
