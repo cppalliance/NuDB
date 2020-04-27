@@ -47,6 +47,8 @@
             <member><link linkend="nudb.ref.nudb__create">create</link></member>
             <member><link linkend="nudb.ref.nudb__erase_file">erase_file</link></member>
             <member><link linkend="nudb.ref.nudb__make_error_code">make_error_code</link></member>
+            <member><link linkend="nudb.ref.nudb__make_salt">make_salt</link></member>
+            <member><link linkend="nudb.ref.nudb__make_uid">make_uid</link></member>
             <member><link linkend="nudb.ref.nudb__recover">recover</link></member>
             <member><link linkend="nudb.ref.nudb__rekey">rekey</link></member>
             <member><link linkend="nudb.ref.nudb__verify">verify</link></member>
