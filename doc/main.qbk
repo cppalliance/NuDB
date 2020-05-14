@@ -54,7 +54,7 @@
 
 [section:overview Overview]
 
-NuDB is an append only, key/value store specifically optimized for random
+TEST NuDB is an append only, key/value store specifically optimized for random
 read performance on modern SSDs or equivalent high-IOPS devices. The most
 common application for NuDB is content addressible storage where a
 cryptographic digest of the data is used as the key. The read performance
