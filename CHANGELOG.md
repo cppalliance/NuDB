@@ -3,6 +3,7 @@
 * Update docca submodule
 * Add version of create() with uid parameter
 * Add make_salt and make_uid to quickref
+* Build docs in Travis
 
 ---
 
