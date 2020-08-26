@@ -1,3 +1,9 @@
+2.0.4
+
+* Add method context::flush() to manually flush all inserted records to disk.
+
+---
+
 2.0.3
 
 * Update docca submodule

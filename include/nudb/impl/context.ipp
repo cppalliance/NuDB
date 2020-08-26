@@ -121,6 +121,29 @@ run()
 
 void
 context::
+flush()
+{
+    {
+        std::lock_guard<std::mutex> lock(m_);
+
+        if (stop_ || num_threads_ > 0)
+            return;
+
+        // Move everything in waiting_ to flushing_
+        for(auto store = waiting_.head_; store;
+            store = store->next_)
+            store->state_ = store_base::state::flushing;
+        flushing_.splice(waiting_);
+    }
+
+    // Process everything in flushing_
+    for(;;)
+        if(! flush_one())
+            break;
+}
+
+void
+context::
 insert(store_base& store)
 {
     std::lock_guard<std::mutex> lock(m_);

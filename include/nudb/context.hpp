@@ -77,6 +77,18 @@ public:
     void
     run();
 
+    /** Flush function.
+
+        Manually flushes all inserted objects to the disk.
+        If using this function, @ref start should not be called.
+        If the context object has been started manually or by the default
+        constructor of @ref basic_store, a call to this function will be
+        ignored and do nothing.
+    */
+    NUDB_DECL
+    void
+    flush();
+
 private:
     using clock_type = std::chrono::steady_clock;
     using store_base = detail::store_base;
