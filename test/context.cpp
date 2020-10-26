@@ -242,6 +242,63 @@ public:
     }
 
     void
+    test_context_flush()
+    {
+        using state = detail::store_base::state;
+
+        context ctx;
+
+        BEAST_EXPECT(ctx.num_threads_ == 0);
+        BEAST_EXPECT(ctx.waiting_.empty());
+        BEAST_EXPECT(ctx.flushing_.empty());
+        BEAST_EXPECT(! ctx.stop_);
+
+        error_code ec;
+        std::function<void(std::thread::id)> f = [&](std::thread::id id) {};
+        auto db = std::make_unique<tmp_store>(ctx, f, ec);
+        if(! BEAST_EXPECTS(! ec, ec.message()))
+            return;
+
+        BEAST_EXPECT(db->state_ ==  state::none);
+        BEAST_EXPECT(ctx.num_threads_ == 0);
+        BEAST_EXPECT(ctx.waiting_.empty());
+        BEAST_EXPECT(ctx.flushing_.empty());
+        BEAST_EXPECT(! ctx.stop_);
+
+        db->open(
+            db->td_.file("nudb.dat"),
+            db->td_.file("nudb.key"),
+            db->td_.file("nudb.log"),
+            ec);
+        if(! BEAST_EXPECTS(! ec, ec.message()))
+            return;
+
+        BEAST_EXPECT(db->state_ == state::waiting);
+        BEAST_EXPECT(ctx.num_threads_ == 0);
+        BEAST_EXPECT(size(ctx.waiting_) == 1);
+        BEAST_EXPECT(ctx.flushing_.empty());
+        BEAST_EXPECT(! ctx.stop_);
+
+        for (int i = 0; i < 3; i++)
+        {
+            ctx.flush();
+
+            BEAST_EXPECT(db->state_ == state::waiting);
+            BEAST_EXPECT(ctx.num_threads_ == 0);
+            BEAST_EXPECT(size(ctx.waiting_) == 1);
+            BEAST_EXPECT(ctx.flushing_.empty());
+            BEAST_EXPECT(! ctx.stop_);
+        }
+
+        db.reset();
+
+        BEAST_EXPECT(ctx.num_threads_ == 0);
+        BEAST_EXPECT(ctx.waiting_.empty());
+        BEAST_EXPECT(ctx.flushing_.empty());
+        BEAST_EXPECT(! ctx.stop_);
+    }
+
+    void
     run() override
     {
         BOOST_STATIC_ASSERT(! std::is_copy_constructible<context>{});
@@ -251,6 +308,7 @@ public:
 
         test_list();
         test_context();
+        test_context_flush();
     }
 };
 
