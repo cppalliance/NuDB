@@ -342,12 +342,13 @@ insert(
     auto const rate = static_cast<std::size_t>(
         std::ceil(work / elapsed.count()));
     auto const sleep =
-        s_->rate && rate > s_->rate;
+        s_->rate && rate > s_->rate && work > s_->burst;
     m.unlock();
 
     // The caller of insert must be blocked when the rate of insertion
     // (measured in approximate bytes per second) exceeds the maximum rate
-    // that can be flushed. The precise sleep duration is not important.
+    // that can be flushed and a burst of data is already in memory.
+    // The precise sleep duration is not important.
     if(sleep)
         std::this_thread::sleep_for(milliseconds{25});
 }
@@ -450,6 +451,18 @@ exists(
             return false;
     }
     return false;
+}
+
+//  Set the burst size
+//
+template<class Hasher, class File>
+void
+basic_store<Hasher, File>::
+set_burst(
+    std::size_t burst_size)
+{
+    detail::unique_lock_type m{m_};
+    s_->burst = burst_size;
 }
 
 //  Split the bucket in b1 to b2
@@ -768,8 +781,13 @@ flush()
             auto const now = clock_type::now();
             auto const elapsed = duration_cast<duration<float>>(
                 now > s_->when ? now - s_->when : clock_type::duration{1});
-            s_->rate = static_cast<std::size_t>(
-                std::ceil(work / elapsed.count()));
+            auto const rate = std::ceil(work / elapsed.count());
+
+            // Writes below the burst size may be dominated by
+            // overhead and give an artificially low write rate
+            if (work > s_->burst)
+                s_->rate = rate;
+
         #if NUDB_DEBUG_LOG
             dout <<
                 "work=" << work <<
