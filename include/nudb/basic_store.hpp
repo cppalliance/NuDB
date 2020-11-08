@@ -78,6 +78,7 @@ private:
         detail::key_file_header kh;
 
         std::size_t rate = 0;
+        std::size_t burst = 4 * 1024 * 1024;
         time_point when = clock_type::now();
 
         state(state const&) = delete;
@@ -425,6 +426,22 @@ public:
     void
     insert(void const* key, void const* data,
         nsize_t bytes, error_code& ec);
+
+    /** Set the burst size
+
+        This function sets the amount of data that can be
+        cached before writing threads are throttled if the
+        sustained write flush rate is exceeded.
+
+        @par Thread safety
+
+        Safe to call concurrently with any function except
+        @ref close.
+
+        @param burst_size The number of bytes before throttling.
+    */
+    void
+    set_burst(std::size_t burst_size);
 
 private:
     template<class Callback>
