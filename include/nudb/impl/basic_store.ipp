@@ -781,7 +781,8 @@ flush()
             auto const now = clock_type::now();
             auto const elapsed = duration_cast<duration<float>>(
                 now > s_->when ? now - s_->when : clock_type::duration{1});
-            auto const rate = std::ceil(work / elapsed.count());
+            auto const rate = static_cast<std::size_t>(
+                std::ceil(work / elapsed.count()));
 
             // Writes below the burst size may be dominated by
             // overhead and give an artificially low write rate
