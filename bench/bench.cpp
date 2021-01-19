@@ -245,7 +245,7 @@ do_timings(std::string const& db_dir,
         };
 
         auto fetcher = [&ts, &ec](item_type const& v) {
-            ts.db.fetch(v.key, [&](void const* data, std::size_t size) {}, ec);
+            ts.db.fetch(v.key, [&](void const*, std::size_t) {}, ec);
             if (ec)
                 throw boost::system::system_error(ec);
         };
