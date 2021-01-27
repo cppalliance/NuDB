@@ -82,7 +82,7 @@ rekey(
     kh.pepper = pepper<Hasher>(kh.salt);
     kh.block_size = blockSize;
     kh.load_factor = std::min<std::size_t>(
-        static_cast<std::size_t>(65536.0f * loadFactor), 65535);
+        static_cast<std::size_t>(65536.0 * loadFactor), 65535);
     kh.buckets = static_cast<std::size_t>(
         std::ceil(itemCount /(
             bucket_capacity(kh.block_size) * loadFactor)));

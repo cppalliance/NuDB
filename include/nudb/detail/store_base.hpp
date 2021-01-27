@@ -16,8 +16,6 @@ namespace detail {
 
 class store_base
 {
-    virtual ~store_base() = default;
-
 protected:
     friend class nudb::context;
 

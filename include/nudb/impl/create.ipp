@@ -120,7 +120,7 @@ create(
         kh.block_size = blockSize;
         kh.load_factor = std::min<std::size_t>(
             static_cast<std::size_t>(
-                65536.0f * load_factor), 65535);
+                65536.0 * load_factor), 65535);
         write(df, dh, ec);
         if(ec)
             goto fail;
