@@ -12,7 +12,12 @@ if [[ $(uname) == "Linux" ]]; then
     npm install coveralls
 
     # We use this so we can filter the subtrees from our coverage report
-    pip install --user https://github.com/codecov/codecov-python/archive/master.zip
+    # pip install --upgrade pip==20.3.4
+    # pip install --user https://github.com/codecov/codecov-python/archive/master.zip
+    curl -s https://codecov.io/bash -o codecov
+    chmod 755 codecov
+    mkdir -p ~/.local/bin/
+    mv codecov ~/.local/bin
 
     cd /tmp
     wget https://github.com/linux-test-project/lcov/releases/download/v1.14/lcov-1.14.tar.gz

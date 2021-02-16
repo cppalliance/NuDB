@@ -4,7 +4,7 @@ sudo: false
 env:
   global:
     - BUILD_SYSTEM=cmake
-    - BOOST_URL='https://dl.bintray.com/boostorg/release/1.69.0/source/boost_1_69_0.tar.bz2'
+    - BOOST_URL=https://dl.bintray.com/boostorg/release/1.69.0/source/boost_1_69_0.tar.bz2
     - BOOST_ROOT=$TRAVIS_BUILD_DIR/_cache/boost_1_69_0
     - EP_CACHE_ROOT=$TRAVIS_BUILD_DIR/_cache/cmake_ep
     - CMAKE_ROOT=$TRAVIS_BUILD_DIR/_cache/cmake
@@ -51,6 +51,7 @@ matrix:
             - libsaxonhe-java
             - default-jre-headless
       install:
+        - if [ "${MATRIX_EVAL}" != "" ] ; then eval "${MATRIX_EVAL}"; fi
         - cd ..
         - mkdir tmp && cd tmp
         - git clone -b 'Release_1_8_15' --depth 1 https://github.com/doxygen/doxygen.git
@@ -317,10 +318,8 @@ matrix:
 #        - ./test/test-all.exe
 #        - ./bench/bench.exe --batch_size=10000 --num_batches=100
 
-before_install:
-  - if [ "${MATRIX_EVAL}" != "" ] ; then eval "${MATRIX_EVAL}"; fi
-
 install:
+  - if [ "${MATRIX_EVAL}" != "" ] ; then eval "${MATRIX_EVAL}"; fi
   - scripts/install-cmake.sh 3.14.0
   - if [ $(uname) = "Darwin" ] ; then export PATH="${CMAKE_ROOT}/CMake.app/Contents/bin:${PATH}"; fi
   - if [ $(uname) = "Linux" ] ; then export PATH="${CMAKE_ROOT}/bin:${PATH}"; fi
