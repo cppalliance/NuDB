@@ -111,10 +111,27 @@ function build_cmake {
 ##################################### BUILD ####################################
 
 if [[ ${BUILD_SYSTEM:-} == cmake ]]; then
-  build_cmake
+  build_cmake || true
 else
   build_bjam
 fi
+
+echo "_debugging_"	|| true
+shopt -s globstar
+for file in /drone/src/_cache/cmake_ep/ninja/*/Debug/src/rocksdb-stamp/rocksdb-build-*.log ; do
+  sleep 10		|| true
+  echo logfile is $file || true
+  ls -al $file		|| true
+  echo --		|| true
+  echo tail file:	|| true
+  echo --		|| true
+  tail -n 100 $file     || true
+  echo --		|| true
+  echo cat file: 	|| true
+  echo --		|| true
+  cat $file             || true
+done
+echo "_debugging_ _end_" || true
 
 ##################################### TESTS ####################################
 

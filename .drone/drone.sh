@@ -4,7 +4,7 @@
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE.txt or copy at http://boost.org/LICENSE_1_0.txt)
 
-set -e
+set -xe
 export TRAVIS_BUILD_DIR=$(pwd)
 export DRONE_BUILD_DIR=$(pwd)
 export TRAVIS_BRANCH=$DRONE_BRANCH
@@ -15,7 +15,7 @@ export REPO_NAME=$DRONE_REPO
 export USER=$(whoami)
 export CC=${CC:-gcc}
 export PATH=~/.local/bin:/usr/local/bin:$PATH
-export BOOST_ROOT="$TRAVIS_BUILD_DIR/_cache/boost_1_69_0"
+export BOOST_ROOT="$TRAVIS_BUILD_DIR/_cache/boost_1_77_0"
 export EP_CACHE_ROOT="$TRAVIS_BUILD_DIR/_cache/cmake_ep"
 export CMAKE_ROOT="$TRAVIS_BUILD_DIR/_cache/cmake"
 export LCOV_ROOT="$TRAVIS_BUILD_DIR/_cache/lcov"
@@ -25,6 +25,8 @@ if [ "$DRONE_JOB_BUILDTYPE" == "boost" ]; then
 
 echo '==================================> BEFORE_INSTALL'
 
+echo "Upgrading cmake"
+pip3 install cmake --upgrade
 . .drone/before-install.sh
 
 echo '==================================> INSTALL'
