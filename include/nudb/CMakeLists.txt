@@ -12,7 +12,7 @@ target_link_libraries (nudb_core
   INTERFACE
     Boost::thread
     Boost::system)
-# this is the min std required to use NuDB - should
+# TODO: this is the min std required to use NuDB - should
 # it be 11 or 14?
 target_compile_features (nudb_core INTERFACE cxx_std_11)
 add_library (NuDB::nudb ALIAS nudb_core)
@@ -20,6 +20,7 @@ install (
   FILES
     basic_store.hpp
     concepts.hpp
+    context.hpp
     create.hpp
     error.hpp
     file.hpp
@@ -55,6 +56,7 @@ install (
 install (
   FILES
     impl/basic_store.ipp
+    impl/context.ipp
     impl/create.ipp
     impl/error.ipp
     impl/posix_file.ipp
@@ -77,9 +79,10 @@ install (
     detail/gentex.hpp
     detail/mutex.hpp
     detail/pool.hpp
+    detail/store_base.hpp
     detail/stream.hpp
     detail/xxhash.hpp
-  DESTINATION include/nudb/impl)
+  DESTINATION include/nudb/detail)
 install (
   TARGETS nudb_core
   EXPORT NuDBExports
@@ -101,4 +104,3 @@ if (is_root_project)
       ${CMAKE_CURRENT_BINARY_DIR}/NuDBConfigVersion.cmake
     DESTINATION lib/cmake/nudb)
 endif ()
-
