@@ -9,6 +9,7 @@
 #define NUDB_IMPL_CONTEXT_IPP
 
 #include <nudb/detail/store_base.hpp>
+#include <stdexcept>
 
 namespace nudb {
 
