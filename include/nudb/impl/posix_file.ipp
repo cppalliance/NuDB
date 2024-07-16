@@ -240,6 +240,13 @@ flags(file_mode mode)
     #endif
         break;
     }
+
+#ifdef O_NOATIME
+    // Avoid updating the file's "last access time" with every
+    // read, if that's an option.
+    result.first |= O_NOATIME;
+#endif
+
     return result;
 }
 
